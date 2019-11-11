@@ -6,3 +6,5 @@ The project aim is to convert xml data from Ecospold2 files (from ecoinvent asso
 The convertion is in the basic format with only direct convertions done between the format fields.
 
 A portuguese excel sheet is presented with the desired correspondence between fields in the coding, also the xsd files of each format are presented.
+
+The convertion is based on Greendelta's converter https://github.com/GreenDelta/olca-conversion-service
