@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
+<ns5:flowPropertyDataSet xmlns="http://lca.jrc.it/ILCD/Common" xmlns:ns2="http://lca.jrc.it/ILCD/Process" xmlns:ns3="http://lca.jrc.it/ILCD/Flow" xmlns:ns4="http://lca.jrc.it/ILCD/Contact" xmlns:ns5="http://lca.jrc.it/ILCD/FlowProperty" xmlns:ns6="http://lca.jrc.it/ILCD/Source" xmlns:ns7="http://lca.jrc.it/ILCD/UnitGroup" xmlns:ns8="http://iai.kit.edu/ILCD/ProductModel" xmlns:ns9="http://lca.jrc.it/ILCD/Wrapper" xmlns:olca="http://openlca.org/ilcd-extensions" version="1.1">
+  <ns5:flowPropertiesInformation>
+    <ns5:dataSetInformation>
+      <UUID>ecbe0a5d-f397-4b74-993d-32d231e4bcf9</UUID>
+      <name xml:lang="en">Vehicle transport</name>
+      <ns5:classificationInformation>
+        <classification>
+          <classFP level="0" classId="87cfd36b-db77-3a88-8c0e-7102ce682690">Technical flow properties</classFP>
+        </classification>
+      </ns5:classificationInformation>
+    </ns5:dataSetInformation>
+    <ns5:quanatitativeReference>
+      <ns5:referenceToReferenceUnitGroup type="unit group data set" refObjectId="af16ae7e-3e04-408a-b8ae-5b3666dbe7f9" version="01.00.000" uri="../unitgroups/af16ae7e-3e04-408a-b8ae-5b3666dbe7f9">
+        <shortDescription>Units of vehicle transport</shortDescription>
+      </ns5:referenceToReferenceUnitGroup>
+    </ns5:quanatitativeReference>
+  </ns5:flowPropertiesInformation>
+  <ns5:adiministrativeInformation>
+    <ns5:dataEntryBy>
+      <referenceToDataSetFormat type="source data set" refObjectId="a97a0155-0234-4b87-b4ce-a45da52f2a40" version="01.01.000" uri="../sources/a97a0155-0234-4b87-b4ce-a45da52f2a40_01.01.000.xml">
+        <shortDescription>ILCD Format</shortDescription>
+      </referenceToDataSetFormat>
+    </ns5:dataEntryBy>
+    <ns5:publicationAndOwnership>
+      <dataSetVersionFP>00.00.000</dataSetVersionFP>
+      <permanentDataSetURI>http://openlca.org/ilcd/resource/flowproperties/ecbe0a5d-f397-4b74-993d-32d231e4bcf9</permanentDataSetURI>
+    </ns5:publicationAndOwnership>
+  </ns5:adiministrativeInformation>
+</ns5:flowPropertyDataSet>
