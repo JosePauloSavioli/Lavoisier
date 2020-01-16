@@ -878,14 +878,14 @@ if __name__ == '__main__':
             except OSError:
                 pass
             
-            shutil.copy("./ILCD - conversão/flow_properties/" + ref_id_unit + '.xml', "./ILCD-algorithm/flowproperties")
+            shutil.copy("./flow_properties/" + ref_id_unit + '.xml', "./ILCD-algorithm/flowproperties")
             
             try:
                 os.mkdir("./ILCD-algorithm/unitgroups")
             except OSError:
                 pass
             
-            shutil.copy("./ILCD - conversão/unit_groups/" + ref_id_unit_id + '.xml', "./ILCD-algorithm/unitgroups")
+            shutil.copy("./unit_groups/" + ref_id_unit_id + '.xml', "./ILCD-algorithm/unitgroups")
             
             #salvar arquivo de fluxo (flowDataSet)
             file_flow = "./ILCD-algorithm/flows/" + UUIDF.text + ".xml"
