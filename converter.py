@@ -911,7 +911,7 @@ if __name__ == '__main__':
             
             if flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}unitName") is not None:
                 comment.text = "Unidade: " + flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}unitName").text
-            if flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}comment").text is not None:
+            if flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}comment") is not None:
                 if comment.text is not None:
                     comment.text = comment.text + '\n' + flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}comment").text
                 else:
