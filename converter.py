@@ -7,9 +7,7 @@ PROB = Problema
 
 """
 
-#BKT Conversão específica de certas unidades (do mapping file)
 #BKT verificação com o relaxlxml dos arquivos xsd
-#BKT verificar as classificações
 #BKT Verificar LCIA e possíveis agregações de produtos (adicional)
 #BKT verificar fórmulas e parâmetros
 
@@ -54,31 +52,29 @@ def namespaces(link):
     return ns, NS
 
 def incerteza(flowDataECO, meanValue, parent, NS, gc):
-    uncertaintyDistribution = af.subelement("uncertaintyDistributionType", parent, NS)
-    
-    if parent.tag == '{http://lca.jrc.it/ILCD/Process}exchange':
-        comment = gc
-        comment.text = gc.text
-    else:
-        comment = af.subelement('comment', parent, NS)
-        comment.text = ''
-    
-    if flowDataECO.find("{http://www.EcoInvent.org/EcoSpold02}uncertainty") is not None: 
+
+    if flowDataECO.find("{http://www.EcoInvent.org/EcoSpold02}uncertainty") is not None:
+        if gc is not None:
+            minimumAmount = af.subelement("minimumAmount", parent, NS)
+            maximumAmount = af.subelement("maximumAmount", parent, NS)
+        else:
+            minimumAmount = af.subelement("minimumValue", parent, NS)
+            maximumAmount = af.subelement("maximumValue", parent, NS)
+        uncertaintyDistribution = af.subelement("uncertaintyDistributionType", parent, NS)
         uncertaintyDistribution.text = flowDataECO.find("{http://www.EcoInvent.org/EcoSpold02}uncertainty")[0].tag.split('}')[1]
     
         if uncertaintyDistribution.text == "lognormal":
             uncertaintyDistribution.text = "log-normal"
         
         relativeStandardDeviation95In = af.subelement("relativeStandardDeviation95In", parent, NS)
-        minimumAmount = af.subelement("minimumAmount", parent, NS)
-        maximumAmount = af.subelement("maximumAmount", parent, NS)
+        
         
         if uncertaintyDistribution.text == "log-normal":
-            relativeStandardDeviation95In.text = str(math.exp(float(flowDataECO.find("{http://www.EcoInvent.org/EcoSpold02}uncertainty")[0].attrib['varianceWithPedigreeUncertainty'])**(1/2))**2)
+            relativeStandardDeviation95In.text = str(round(math.exp(float(flowDataECO.find("{http://www.EcoInvent.org/EcoSpold02}uncertainty")[0].attrib['varianceWithPedigreeUncertainty'])**(1/2))**2,3))
             minimumAmount.text = str(float(meanValue.text)/float(relativeStandardDeviation95In.text))
             maximumAmount.text = str(float(meanValue.text)*float(relativeStandardDeviation95In.text))
         elif uncertaintyDistribution.text == "normal":
-            relativeStandardDeviation95In.text = str(2*(float(flowDataECO.find("{http://www.EcoInvent.org/EcoSpold02}uncertainty")[0].attrib['varianceWithPedigreeUncertainty'])**(1/2)))
+            relativeStandardDeviation95In.text = str(round(2*(float(flowDataECO.find("{http://www.EcoInvent.org/EcoSpold02}uncertainty")[0].attrib['varianceWithPedigreeUncertainty'])**(1/2),3)))
             minimumAmount.text = str(float(meanValue.text)-float(relativeStandardDeviation95In.text))
             maximumAmount.text = str(float(meanValue.text)+float(relativeStandardDeviation95In.text))
         elif uncertaintyDistribution.text == "triangular" or uncertaintyDistribution.text == "uniform":
@@ -87,7 +83,32 @@ def incerteza(flowDataECO, meanValue, parent, NS, gc):
         elif uncertaintyDistribution.text == "undefined":
             pass
         else:
-            comment.text = comment.text + "A incerteza deste dataset não é suportada pelo ILCD (Beta, Gamma ou Binomial)"
+            comment = af.subelement('comment', parent, NS)
+            comment.text = "A incerteza deste dataset não é suportada pelo ILCD (Beta, Gamma ou Binomial)"
+
+def f_property(flowProperty, unitName, internal_id, m_v):
+    
+    flowProperty.set('dataSetInternalID', internal_id)
+    
+    #flowProperty[0]
+    referenceToFlowPropertyDataSet = af.subelement('referenceToFlowPropertyDataSet', flowProperty, NS3)
+    
+    with open('conversion_3.csv') as conv_csv_unit:
+        conv_r = csv.reader(conv_csv_unit, delimiter = ',')
+        for row in conv_r:
+            r = [row[0]] + row[4:]
+            if unitName in r:
+                ref_id_unit = row[1]
+                ref_id_name = row[2]
+                ref_id_unit_id = row[3]
+                break
+    af.referencia(referenceToFlowPropertyDataSet, 'flow property data set', ref_id_unit, XMLNS, ref_id_name)
+
+    #flowProperty[1] - valor estipulado por mim pois ele vai ser multiplicado pela quantidade de fluxo do processDataSet
+    meanValueF = af.subelement('meanValue', flowProperty, NS3)
+    meanValueF.text = m_v
+    
+    return ref_id_unit, ref_id_unit_id, m_v
 
 if __name__ == '__main__':
     
@@ -174,9 +195,9 @@ if __name__ == '__main__':
     classes = [c for c in activityDescription if c.tag == '{http://www.EcoInvent.org/EcoSpold02}classification']
     for cl_info in classes:
         if cl_info[0].text == 'ISIC rev.4 ecoinvent':
-            class_name = cl_info[0].text
+            #class_name = cl_info[0].text
             class_value = cl_info[1].text
-    af.do_classification(class_value, class_name, classification, XMLNS)
+    af.do_classification(class_value, classification, XMLNS)
     
     #dataSetInformation[4] - comentário (contém o tipo espcífico de atividade, dependência de outros datasets (Child), as tags e o texto do comentário geral do Ecospold2)
     generalComment = af.subelement('generalComment', dataSetInformation, XMLNS)
@@ -211,7 +232,7 @@ if __name__ == '__main__':
             generalComment.text = generalComment.text + '\n' + gc_elem.text
     
     #dataSetInformation[5] - aqui serão colocadas a publicação que gerou o dataset e ícones de dataset (dataSetIcon) se presente
-    referenceToExternalDocument = af.subelement('referenceToExternalDocument', dataSetInformation, NS2)
+    referenceToExternalDocumentation = af.subelement('referenceToExternalDocumentation', dataSetInformation, NS2)
     
     if administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['dataPublishedIn'] == "0":
         publication_status = "Dataset finalised; unpublished"
@@ -220,7 +241,7 @@ if __name__ == '__main__':
     elif administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['dataPublishedIn'] == "2":
         publication_status = "Data set finalised; entirely published"
     
-    af.referencia(referenceToExternalDocument, 'source data set', administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['publishedSourceId'], XMLNS, publication_status)
+    af.referencia(referenceToExternalDocumentation, 'source data set', administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['publishedSourceId'], XMLNS, publication_status)
     
     if activityDescription[0].get('dataSetIcon') is not None:
         referenceToExternalDocument = af.subelement('referenceToExternalDocument', dataSetInformation, NS2)
@@ -300,7 +321,7 @@ if __name__ == '__main__':
     technologyDescriptionAndIncludedProcesses.text = "The technology level of this process is: " + list_of_technologies[int(activityDescription.find('{http://www.EcoInvent.org/EcoSpold02}technology').attrib['technologyLevel'])] + "\nThe included activities go from: " + activityDescription[0].find('{http://www.EcoInvent.org/EcoSpold02}includedActivitiesStart').text + " to: " + activityDescription[0].find('{http://www.EcoInvent.org/EcoSpold02}includedActivitiesEnd').text
     
     #technology[1] e [2]
-    technologyApplicability = af.subelement('technologyApplicability', technology, NS2)
+    technologyApplicability = af.subelement('technologicalApplicability', technology, NS2)
     technologyApplicability.text = activityDescription.find('{http://www.EcoInvent.org/EcoSpold02}technology/{http://www.EcoInvent.org/EcoSpold02}comment/{http://www.EcoInvent.org/EcoSpold02}text').text
     
     #technology[2]
@@ -311,7 +332,7 @@ if __name__ == '__main__':
             af.referencia(referenceToTechnologyPictogramme, 'source data set', ID_tech, XMLNS, 'Comment URL')
         else:
             technologyApplicability.text = technologyApplicability.text + '\n' + ta_elem.text
-
+   
     #modellingAndValidation[0] - LCIMethodAndAllocation
     
     #Campos não incluidos no LCIMethodAndAllocation:
@@ -328,23 +349,23 @@ if __name__ == '__main__':
     #LCIMethodAndAllocation[1], [2], [3] e [4] - (neste caso [LCIMethodPrinciple] são 5 tipos de modelos de sistema no ILCD e 3 no Ecospold2, então a conversão é feita para os 3)
         #Como os LCIMethodApproach são uma informação enumerada e muito específica da propriedade utilizada na alocação, este será colocado como other pois não tenho como saber
     LCIMethodPrinciple = af.subelement('LCIMethodPrinciple', LCIMethodAndAllocation, NS2)
-    deviationsFromLCIMethodPrinciples = af.subelement('deviationsFromLCIMethodPrinciples', LCIMethodAndAllocation, NS2)
-    LCIMethodApproach = af.subelement('LCIMethodApproach', LCIMethodAndAllocation, NS2)
+    deviationsFromLCIMethodPrinciples = af.subelement('deviationsFromLCIMethodPrinciple', LCIMethodAndAllocation, NS2)
+    LCIMethodApproach = af.subelement('LCIMethodApproaches', LCIMethodAndAllocation, NS2)
     
     deviationsFromLCIMethodPrinciples.text = 'Ecospold original system model: ' + modellingAndValidationECO[0].find('{http://www.EcoInvent.org/EcoSpold02}systemModelName').text
     if activityDescription[0].find('{http://www.EcoInvent.org/EcoSpold02}allocationComment') is not None:
-        deviationsFromLCIMethodApproach = af.subelement('deviationsFromLCIMethodApproach', LCIMethodAndAllocation, NS2)
+        deviationsFromLCIMethodApproach = af.subelement('deviationsFromLCIMethodApproaches', LCIMethodAndAllocation, NS2)
         deviationsFromLCIMethodApproach.text = activityDescription[0].find('{http://www.EcoInvent.org/EcoSpold02}allocationComment').text
     
-    if modellingAndValidationECO[0].find('{http://www.EcoInvent.org/EcoSpold02}systemModelName').text == 'undefined':
+    if modellingAndValidationECO[0].find('{http://www.EcoInvent.org/EcoSpold02}systemModelName').text == 'Undefined':
         LCIMethodPrinciple.text = "Not applicable"
         LCIMethodApproach.text = "Not applicable"
-    elif modellingAndValidationECO[0].find('{http://www.EcoInvent.org/EcoSpold02}systemModelName').text == 'attributional, average current suppliers, revenue allocation':
+    elif modellingAndValidationECO[0].find('{http://www.EcoInvent.org/EcoSpold02}systemModelName').text == 'Attributional, average current suppliers, revenue allocation':
         LCIMethodPrinciple.text = "Attributional"
         LCIMethodApproach.text = "Other"
-    elif modellingAndValidationECO[0].find('{http://www.EcoInvent.org/EcoSpold02}systemModelName').text == 'consequential, small-scale, long-term decisions':
+    elif modellingAndValidationECO[0].find('{http://www.EcoInvent.org/EcoSpold02}systemModelName').text == 'Consequential, small-scale, long-term decisions':
         LCIMethodPrinciple.text = "Consequential"
-        LCIMethodApproach.text = "Other"    
+        LCIMethodApproach.text = "Other"
     
     #LCIMethodAndAllocation[5] - (os valores de energyValue, se existentes, são colocados neste campo)
     if activityDescription[0].attrib.get('energyValue') is not None:
@@ -373,20 +394,13 @@ if __name__ == '__main__':
     dataSelectionAndCombinationPrinciples.text = "None"
     
     #dataSourcesTreatmentAndRepresentativeness[2]
-    dataTreatmentAndExtrapolation = af.subelement('dataTreatmentAndExtrapolation', dataSourcesTreatmentAndRepresentativeness, NS2)
+    dataTreatmentAndExtrapolation = af.subelement('dataTreatmentAndExtrapolationsPrinciples', dataSourcesTreatmentAndRepresentativeness, NS2)
     dataTreatmentAndExtrapolation.text = modellingAndValidationECO[0].find('{http://www.EcoInvent.org/EcoSpold02}extrapolations').text
     
     #dataSourcesTreatmentAndRepresentativeness[3]
-    percentageSupplyOrProductionCovered = af.subelement('percentageSupplyOrProductionCovered', dataSourcesTreatmentAndRepresentativeness, NS2)
-    percentageSupplyOrProductionCovered.text = modellingAndValidationECO[0].attrib.get('percent')
-    
-    #dataSourcesTreatmentAndRepresentativeness[4]
-    samplingProcedure = af.subelement('samplingProcedure', dataSourcesTreatmentAndRepresentativeness, NS2)
-    samplingProcedure.text = modellingAndValidationECO[0].find('{http://www.EcoInvent.org/EcoSpold02}samplingProcedure').text
-    
-    #dataSourcesTreatmentAndRepresentativeness[5]
-    uncertaintyAdjustments = af.subelement('uncertaintyAdjustments', dataSourcesTreatmentAndRepresentativeness, NS2)
-    uncertaintyAdjustments.text = "Uncertainties calculated using a basic uncertainty (or informed) and a Pedigree Matrix additional uncertainty (log-normal) as it is in the standard procedure on Ecospold2 datasets (ecoinvent association)"
+    if modellingAndValidationECO[0].attrib.get('percent') is not None:
+        percentageSupplyOrProductionCovered = af.subelement('percentageSupplyOrProductionCovered', dataSourcesTreatmentAndRepresentativeness, NS2)
+        percentageSupplyOrProductionCovered.text = modellingAndValidationECO[0].attrib.get('percent')
     
     #modellingAndValidation[2] - Completeness
     
@@ -413,16 +427,16 @@ if __name__ == '__main__':
         if modellingAndValidationECO[rev].tag == "{http://www.EcoInvent.org/EcoSpold02}review":
             review = af.subelement('review', validation, NS2)
             
+            #review[1]
+            reviewDetails = af.subelement('reviewDetails', review, XMLNS)
+            reviewDetails.text = "Date of last review: " + modellingAndValidationECO[rev].attrib['reviewDate'] + '; Major version: ' + modellingAndValidationECO[rev].attrib['reviewedMajorRelease'] + '.' + modellingAndValidationECO[rev].attrib['reviewedMajorRevision'] + '; Minor version: ' + modellingAndValidationECO[rev].attrib['reviewedMinorRelease'] + '.' + modellingAndValidationECO[rev].attrib['reviewedMinorRevision']
+            
             #review[0]
             referenceToNameOfReviewerAndInstitution = af.subelement('referenceToNameOfReviewerAndInstitution', review, XMLNS)  
             af.referencia(referenceToNameOfReviewerAndInstitution, 'contact data set', modellingAndValidationECO[rev].attrib['reviewerId'], XMLNS, modellingAndValidationECO[rev].attrib['reviewerName'])
             
             contactDataSet = etree.Element(NS4 + 'contactDataSet', version = "1.1", nsmap=nsmap)
             fc.contacts(modellingAndValidationECO[rev].attrib['reviewerId'], contactDataSet, NS4, XMLNS, modellingAndValidationECO[rev].attrib['reviewerName'], modellingAndValidationECO[rev].attrib['reviewerEmail'])
-            
-            #review[1]
-            reviewDetails = af.subelement('reviewDetails', review, XMLNS)
-            reviewDetails.text = "Date of last review: " + modellingAndValidationECO[rev].attrib['reviewDate'] + '; Major version: ' + modellingAndValidationECO[rev].attrib['reviewedMajorRelease'] + '.' + modellingAndValidationECO[rev].attrib['reviewedMajorRevision'] + '; Minor version: ' + modellingAndValidationECO[rev].attrib['reviewedMinorRelease'] + '.' + modellingAndValidationECO[rev].attrib['reviewedMinorRevision']
             
             #review[2]
             otherDetails = af.subelement('otherReviewDetails', review, XMLNS)
@@ -438,7 +452,7 @@ if __name__ == '__main__':
         #referenceToComissioner: Não há informação em campos do Ecospold2 sobre financiadores do projeto
         #project: Não há no Ecospold2 o nome do projeto
     
-    comissionerAndGoals = af.subelement('comissionerAndGoals', administrativeInformation, XMLNS)
+    comissionerAndGoals = af.subelement('commissionerAndGoal', administrativeInformation, XMLNS)
     
     #comissionerAndGoals[0]
     intendedApplications = af.subelement('intendedApplications', comissionerAndGoals, XMLNS)
@@ -501,11 +515,11 @@ if __name__ == '__main__':
     dataSetVersion.text = "0" + administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}fileAttributes').attrib['majorRelease'] + ".0" + administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}fileAttributes').attrib['minorRevision'] + ".000"
     
     #publicationAndOwnership[2] - PROB: checar se é plausível colocar assim
-    permanentDataSetURI = af.subelement('permanentDataSetURI', publicationAndOwnership, NS2)
-    permanentDataSetURI = 'http://sicv.acv.ibict.br'
+    permanentDataSetURI = af.subelement('permanentDataSetURI', publicationAndOwnership, XMLNS)
+    permanentDataSetURI.text = 'http://sicv.acv.ibict.br'
     
     #publicationAndOwnership[3] - PROB: Talvez grupos sejam Commom
-    workflowAndPublicationStatus = af.subelement('workflowAndPublicationStatus', publicationAndOwnership, NS2)
+    workflowAndPublicationStatus = af.subelement('workflowAndPublicationStatus', publicationAndOwnership, XMLNS)
     if administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['dataPublishedIn'] == "0":
         workflowAndPublicationStatus.text = "Dataset finalised; unpublished"
     elif administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['dataPublishedIn'] == "1":
@@ -514,7 +528,7 @@ if __name__ == '__main__':
         workflowAndPublicationStatus.text = "Data set finalised; entirely published"
     
     #publicationAndOwnership[4]
-    referenceToUnchangedPublication = af.subelement('referenceToUnchangedPublication', publicationAndOwnership, XMLNS)
+    referenceToUnchangedPublication = af.subelement('referenceToUnchangedRepublication', publicationAndOwnership, XMLNS)
     af.referencia(referenceToUnchangedPublication, 'source data set', administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['publishedSourceId'], XMLNS, administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['publishedSourceId'])
 
     lista = []
@@ -542,7 +556,7 @@ if __name__ == '__main__':
     #publicationAndOwnership[7] e [8]
     licenseType = af.subelement('licenseType', publicationAndOwnership, XMLNS)
     accessRestrictions = af.subelement('accessRestrictions', publicationAndOwnership, XMLNS)
-    list_of_restrictions = ['public','license','results only','restricted']
+    list_of_restrictions = ['Free of charge for all users and uses','License fee','Other','Other']
     licenseType.text = list_of_restrictions[int(administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['accessRestrictedTo'])]
     accessRestrictions.text = "License type for this dataset: " + list_of_restrictions[int(administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['accessRestrictedTo'])]
     
@@ -552,6 +566,7 @@ if __name__ == '__main__':
     alloc_frac = []
     prod_volume = 0
     allocation = []
+    variable_list = []
     
     for ex in range(len(flowDataECO)):
         
@@ -580,22 +595,52 @@ if __name__ == '__main__':
             
             #dataSetInformation[0]
             UUIDF = af.subelement('UUID', dataSetInformationF, XMLNS)
-            
-            if flowDataECO[ex].tag == "{http://www.EcoInvent.org/EcoSpold02}intermediateExchange":
-                UUIDF.text = flowDataECO[ex].attrib.get('intermediateExchangeId')
-            elif flowDataECO[ex].tag == "{http://www.EcoInvent.org/EcoSpold02}elementaryExchange":
-                UUIDF.text = flowDataECO[ex].attrib.get('elementaryExchangeId')
-            
             #dataSetInformation[1]
             nameF = af.subelement('name', dataSetInformationF, NS3)
             baseNameF = af.subelement('baseName', nameF, NS3)
-            baseNameF.text = flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}name").text
             
-            #dataSetInformation[2]
-            if flowDataECO[ex].find('{http://www.EcoInvent.org/EcoSpold02}synonym') is not None:
-                synonymsF = af.subelement('synonyms', dataSetInformationF, NS3)
-                synonymsF.text = flowDataECO[ex].find('{http://www.EcoInvent.org/EcoSpold02}synonym').text
-            
+            if flowDataECO[ex].tag == "{http://www.EcoInvent.org/EcoSpold02}intermediateExchange":
+                UUIDF.text = flowDataECO[ex].attrib.get('intermediateExchangeId')
+                baseNameF.text = flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}name").text
+                if flowDataECO[ex].find('{http://www.EcoInvent.org/EcoSpold02}synonym') is not None:
+                    synonymsF = af.subelement('synonyms', dataSetInformationF, NS3)
+                    synonymsF.text = flowDataECO[ex].find('{http://www.EcoInvent.org/EcoSpold02}synonym').text
+                if flowDataECO[ex].attrib.get('casNumber') is not None:
+                    CASNumber = af.subelement('CASNumber', dataSetInformationF, NS3)
+                    CASNumber.text = flowDataECO[ex].attrib.get('casNumber')
+                            
+            elif flowDataECO[ex].tag == "{http://www.EcoInvent.org/EcoSpold02}elementaryExchange":
+                
+                #Usa-se aqui a tabela de conversão da Greendelta
+                with open('Id_elementary_exchanges.csv') as elem_csv_unit:
+                    elem_r = csv.reader(elem_csv_unit, delimiter = ',')
+                    for row in elem_r:
+                        if row[0] == flowDataECO[ex].attrib.get('elementaryExchangeId'):
+                            
+                            UUIDF.text = row[1]
+                            baseNameF.text = row[2]
+                            
+                            if row[3] != '':
+                                CASNumber = af.subelement('CASNumber', dataSetInformationF, NS3)
+                                CASNumber.text = row[3]
+                                
+                            if row[4] != '':
+                                synonymsF = af.subelement('synonyms', dataSetInformationF, NS3)
+                                synonymsF.text = row[4]
+                                
+                            break
+                        
+                    #Caso o fluxo elementar não esteja na tabela de conversão, os dados são criados    
+                    if UUIDF.text is None:
+                        UUIDF.text = flowDataECO[ex].attrib.get('elementaryExchangeId')
+                        baseNameF.text = flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}name").text
+                        if flowDataECO[ex].find('{http://www.EcoInvent.org/EcoSpold02}synonym') is not None:
+                            synonymsF = af.subelement('synonyms', dataSetInformationF, NS3)
+                            synonymsF.text = flowDataECO[ex].find('{http://www.EcoInvent.org/EcoSpold02}synonym').text
+                        if flowDataECO[ex].attrib.get('casNumber') is not None:
+                            CASNumber = af.subelement('CASNumber', dataSetInformationF, NS3)
+                            CASNumber.text = flowDataECO[ex].attrib.get('casNumber')
+                        
             #dataSetInformation[3] - (PROB: sem @catId pois ele não é obrigatório e não consegui encontrar uma referência dele)
             if flowDataECO[ex].tag == "{http://www.EcoInvent.org/EcoSpold02}elementaryExchange":
                 classificationInformationF = af.subelement('classificationInformation', dataSetInformationF, NS3)
@@ -620,10 +665,8 @@ if __name__ == '__main__':
                 category_3.set('level', '2')
                 category_3.text = subcompartment
             
-            #dataSetInformation[4]
-            if flowDataECO[ex].attrib.get('casNumber') is not None:
-                CASNumber = af.subelement('CASNumber', dataSetInformationF, NS3)
-                CASNumber.text = flowDataECO[ex].attrib.get('casNumber')
+            #dataSetInformation[4] - on UUID call
+            
             
             #dataSetInformation[5]
             if flowDataECO[ex].attrib.get('formula') is not None:
@@ -632,7 +675,10 @@ if __name__ == '__main__':
             
             #dataSetInformation[6]
             generalComment_F = af.subelement('generalComment', dataSetInformationF, XMLNS)
-            generalComment_F.text = "EcoSpold 2 intermediate exchange, ID = " + UUIDF.text
+            if flowDataECO[ex].tag == "{http://www.EcoInvent.org/EcoSpold02}intermediateExchange":
+                generalComment_F.text = "EcoSpold 2 exchange, ID = " + flowDataECO[ex].attrib.get('intermediateExchangeId')
+            if flowDataECO[ex].tag == "{http://www.EcoInvent.org/EcoSpold02}elementaryExchange":
+                generalComment_F.text = "EcoSpold 2 exchange, ID = " + flowDataECO[ex].attrib.get('elementaryExchangeId')
             
             if flowDataECO[ex].find('{http://www.EcoInvent.org/EcoSpold02}tag'):
                 generalComment_F.text = generalComment_F.text + ";\nTags: " + flowDataECO[ex].find('{http://www.EcoInvent.org/EcoSpold02}tag').text
@@ -690,29 +736,41 @@ if __name__ == '__main__':
             
             #publicationAndOwnership[1]
             permanentDataSetURI = af.subelement('permanentDataSetURI', publicationAndOwnershipF, XMLNS)
-            permanentDataSetURI.text = "http://openlca.org/ilcd/resource/flows/" + UUIDF.text
-            
-            #flowProperties[0] - FlowProperty
-            flowProperty = af.subelement('flowProperty', flowProperties, NS3)
-            flowProperty.set('dataSetInternalID', '0')
-            
-            #flowProperty[0]
-            referenceToFlowPropertyDataSet = af.subelement('referenceToFlowPropertyDataSet', flowProperty, NS3)
-            
-            with open('conversion.csv') as conv_csv_unit:
-                conv_r = csv.reader(conv_csv_unit, delimiter = ',')
-                for row in conv_r:
-                    if row[0] == flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}unitName").text:
-                        ref_id_unit = row[1]
-                        ref_id_name = row[2]
-                        ref_id_unit_id = row[3]
-                        break
-            
-            af.referencia(referenceToFlowPropertyDataSet, 'flow property data set', ref_id_unit, XMLNS, ref_id_name)
+            if flowDataECO[ex].tag == "{http://www.EcoInvent.org/EcoSpold02}intermediateExchange":
+                permanentDataSetURI.text = "http://openlca.org/ilcd/resource/flows/" + flowDataECO[ex].attrib.get('intermediateExchangeId')
+            if flowDataECO[ex].tag == "{http://www.EcoInvent.org/EcoSpold02}elementaryExchange":
+                permanentDataSetURI.text = "http://openlca.org/ilcd/resource/flows/" + flowDataECO[ex].attrib.get('elementaryExchangeId')
 
-            #flowProperty[1] - valor estipulado por mim pois ele vai ser multiplicado pela quantidade de fluxo do processDataSet
-            meanValueF = af.subelement('meanValue', flowProperty, NS3)
-            meanValueF.text = "1.0"
+
+            #flowProperties[0] - FlowProperty
+            ref_id_unit, ref_id_unit_id = [''], ['']
+            m_v_2 = None
+            
+            if flowDataECO[ex].tag == "{http://www.EcoInvent.org/EcoSpold02}intermediateExchange":
+                flowProperty = af.subelement('flowProperty', flowProperties, NS3)
+                ref_id_unit[0], ref_id_unit_id[0], m_v = f_property(flowProperty, flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}unitName").text, '0', "1.0")
+            
+            elif flowDataECO[ex].tag == "{http://www.EcoInvent.org/EcoSpold02}elementaryExchange":
+                with open("factor_c.csv") as factor_csv:
+                    factor = csv.reader(factor_csv, delimiter = ',')
+                    for row in factor:
+                        c = 0
+                        if row[0] == flowDataECO[ex].attrib.get('elementaryExchangeId'):
+                            c = 1
+                            flowProperty = af.subelement('flowProperty', flowProperties, NS3)
+                            ref_id_unit[0], ref_id_unit_id[0], m_v_2 = f_property(flowProperty, row[2], '0', row[1])
+                            flowProperty_2 = af.subelement('flowProperty', flowProperties, NS3)
+                            ref_2, ref_2_id, m_v = f_property(flowProperty_2, flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}unitName").text, '1', "1.0")
+                            ref_id_unit.append(ref_2)
+                            ref_id_unit_id.append(ref_2_id)
+                            break
+                        
+                    if c == 0:
+                        flowProperty = af.subelement('flowProperty', flowProperties, NS3)
+                        ref_id_unit[0], ref_id_unit_id[0], m_v = f_property(flowProperty, flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}unitName").text, '0', "1.0")
+                            
+            
+            
                         
             #apesar de ter campos de incerteza ou de comentários sobre o fluxo, estes não serão usados na conversão pois não tem dados equivalentes no arquivo Ecospold2
             
@@ -738,6 +796,7 @@ if __name__ == '__main__':
                 exchangeDirection.text = "Output" 
             
             #criação das variáveis para a mathematical relations
+            
             #1. Das propriedades
             var = 0
             for prop in flowDataECO[ex].iterfind('{http://www.EcoInvent.org/EcoSpold02}property'):
@@ -745,7 +804,11 @@ if __name__ == '__main__':
                 
                 if prop.attrib.get('variableName') is not None:
                     variableParameter_prop = af.subelement('variableParameter', mathematicalRelations, NS2)
-                    variableParameter_prop.set('name', prop.attrib.get('variableName'))
+                    if prop.attrib.get('variableName') in variable_list:
+                        variableParameter_prop.set('name', prop.attrib.get('variableName') + "_2")
+                    else:
+                        variableParameter_prop.set('name', prop.attrib.get('variableName'))
+                        variable_list.append(prop.attrib.get('variableName'))
                     
                     meanValue = af.subelement('meanValue', variableParameter_prop, NS2)
                     meanValue.text = prop.attrib.get('amount')
@@ -756,13 +819,19 @@ if __name__ == '__main__':
             
             #2. Dos fluxos
             if flowDataECO[ex].attrib.get('variableName') is not None:
+                
                 variableParameter_f = af.subelement('variableParameter', mathematicalRelations, NS2)
-                variableParameter_f.set('name', flowDataECO[ex].attrib['variableName'])
+                
+                if flowDataECO[ex].attrib['variableName'] in variable_list:
+                    variableParameter_f.set('name', flowDataECO[ex].attrib['variableName'] + "_2")
+                else:
+                    variableParameter_f.set('name', flowDataECO[ex].attrib['variableName'])
+                    variable_list.append(flowDataECO[ex].attrib['variableName'])
                 
                 meanValue = af.subelement('meanValue', variableParameter_f, NS2)
                 meanValue.text = flowDataECO[ex].attrib['amount']
                 
-                comment = af.subelement('comment', variableParameter_f, NS2)
+                #comment = af.subelement('comment', variableParameter_f, NS2)
                 
                 if flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}uncertainty") is not None:
                     incerteza(flowDataECO[ex], meanValue, variableParameter_f, NS2, None)
@@ -773,13 +842,18 @@ if __name__ == '__main__':
             #3. Das relações matemáticas dos volumes de produção    
             if flowDataECO[ex].attrib.get('productionVolumeMathematicalRelation') is not None:
                 variableParameter_pvmr = af.subelement('variableParameter', mathematicalRelations, NS2)
-                variableParameter_pvmr.set('name', 'mathematical relation of the production of ' + flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}name").text)
                 
-                meanValue = af.subelement('meanValue', variableParameter_pvmr, NS2)
-                meanValue.text = flowDataECO[ex].attrib['productionVolumeAmount']
+                if 'math_production ' + flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}name").text in variable_list:
+                    variableParameter_pvmr.set('name', 'math_production ' + flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}name").text + "_2")
+                else:
+                    variableParameter_pvmr.set('name', 'math_production ' + flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}name").text)
+                    variable_list.append('math_production ' + flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}name").text)
                 
                 formula = af.subelement('formula', variableParameter_pvmr, NS2)
                 formula.text = flowDataECO[ex].attrib['productionVolumeMathematicalRelation']
+                
+                meanValue = af.subelement('meanValue', variableParameter_pvmr, NS2)
+                meanValue.text = flowDataECO[ex].attrib['productionVolumeAmount']
                     
                 if flowDataECO[ex].attrib.get("{http://www.EcoInvent.org/EcoSpold02}productionVolumeUncertainty"):
                     incerteza(flowDataECO[ex], meanValue, variableParameter_pvmr, NS2, None)
@@ -809,7 +883,12 @@ if __name__ == '__main__':
                 if flowDataECO[ex].attrib.get('productionVolumeVariableName') is not None:
                 
                     variableParameter_pv = af.subelement('variableParameter', mathematicalRelations, NS2)
-                    variableParameter_pv.set('name', 'production of ' + flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}name").text)
+                    
+                    if flowDataECO[ex].attrib.get('productionVolumeVariableName') in variable_list:
+                        variableParameter_pv.set('name', flowDataECO[ex].attrib.get('productionVolumeVariableName') + "_2")
+                    else:
+                        variableParameter_pv.set('name', flowDataECO[ex].attrib.get('productionVolumeVariableName'))
+                        variable_list.append(flowDataECO[ex].attrib.get('productionVolumeVariableName'))
                     
                     meanValue = af.subelement('meanValue', variableParameter_pv, NS2)
                     meanValue.text = flowDataECO[ex].attrib['productionVolumeAmount']
@@ -822,23 +901,6 @@ if __name__ == '__main__':
             
             
             pedigree = flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}uncertainty/{http://www.EcoInvent.org/EcoSpold02}pedigreeMatrix")
-            generalComment_unc = af.subelement("generalComment", exchange, NS2)
-            
-            if pedigree is not None:
-                generalComment_unc.text = "Pedigree Matrix for this exchange: (" + pedigree.attrib["reliability"] + ',' + pedigree.attrib["completeness"] + ',' + pedigree.attrib["temporalCorrelation"] + ',' + pedigree.attrib["geographicalCorrelation"] + ',' + pedigree.attrib["furtherTechnologyCorrelation"] + '). The variance generated by the Pedigree matrix and basic uncertainties were: ' + flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}uncertainty")[0].attrib['varianceWithPedigreeUncertainty']
-                if flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}comment") is not None:
-                    generalComment_unc.text =  generalComment_unc.text + '\nGeneral Comment: ' + flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}comment").text
-            
-            #bibliografia do fluxo
-            if flowDataECO[ex].attrib.get("sourceId") is not None:
-                if flowDataECO[ex].attrib.get("sourceId") not in lista:
-                    lista.append(flowDataECO[ex].attrib.get("sourceId"))
-                    sourceDataSet = etree.Element(NS6 + 'sourceDataSet', version = "1.1", nsmap=nsmap)
-                    citation = flowDataECO[ex].attrib.get("sourceFirstAuthor") + " (" + flowDataECO[ex].attrib.get("sourceYear") + ")"
-                    fc.sources(lista[-1], sourceDataSet, NS6, XMLNS, citation)
-                
-                referenceToDataSource = af.subelement('referenceToDataSource', exchange, NS2)
-                af.referencia(referenceToDataSource, 'source data set', flowDataECO[ex].attrib.get('sourceId'), NS2, flowDataECO[ex].attrib.get('pageNumbers'))
             
             #Os valores reais do fluxo
             meanAmount_real = af.subelement("meanAmount", exchange, NS2)
@@ -848,17 +910,24 @@ if __name__ == '__main__':
                 meanAmount_real.text = '1.0'
             else:
                 meanAmount_real.text = flowDataECO[ex].attrib['amount']
-                
-            resultingAmount_real.text = flowDataECO[ex].attrib['amount']
             
+            if m_v_2 is not None:
+                resultingAmount_real.text = m_v_2
+            else:
+                resultingAmount_real.text = flowDataECO[ex].attrib['amount']
             #incerteza do fluxo
-            incerteza(flowDataECO[ex], meanAmount_real, exchange, NS2, generalComment_unc)
+            incerteza(flowDataECO[ex], meanAmount_real, exchange, NS2, '')
             
             if flowDataECO[ex].attrib.get('isCalculatedAmount') == "true":
                 meanAmount_real.text = "1.0"
                 
                 variableParameter = af.subelement('variableParameter', mathematicalRelations, NS2)
-                variableParameter.set('name', flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}name").text + " relation")
+                
+                if flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}name").text[:40] + " relation" in variable_list:
+                    variableParameter.set('name', flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}name").text[:40] + " relation" + "_2")
+                else:
+                    variableParameter.set('name', flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}name").text[:40] + " relation")
+                    variable_list.append(flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}name").text[:40] + " relation")
                 
                 formula = af.subelement('formula', variableParameter, NS2)
                 formula.text = flowDataECO[ex].attrib.get('mathematicalRelation')
@@ -866,8 +935,27 @@ if __name__ == '__main__':
                 meanValue = af.subelement('meanValue', variableParameter, NS2)
                 meanValue.text = flowDataECO[ex].attrib.get('amount')
             
-            #fazer pastas
+            #bibliografia do fluxo
+            if flowDataECO[ex].attrib.get("sourceId") is not None:
+                if flowDataECO[ex].attrib.get("sourceId") not in lista:
+                    lista.append(flowDataECO[ex].attrib.get("sourceId"))
+                    sourceDataSet = etree.Element(NS6 + 'sourceDataSet', version = "1.1", nsmap=nsmap)
+                    citation = flowDataECO[ex].attrib.get("sourceFirstAuthor") + " (" + flowDataECO[ex].attrib.get("sourceYear") + ")"
+                    fc.sources(lista[-1], sourceDataSet, NS6, XMLNS, citation)
+                
+                referencesToDataSource = af.subelement('referencesToDataSource', exchange, NS2)
+                referenceToDataSource = af.subelement('referenceToDataSource', referencesToDataSource, NS2)
+                af.referencia(referenceToDataSource, 'source data set', flowDataECO[ex].attrib.get('sourceId'), NS2, flowDataECO[ex].attrib.get('pageNumbers'))
             
+            generalComment_unc = af.subelement("generalComment", exchange, NS2)
+            generalComment_unc_2 = af.subelement("generalComment", exchange, NS2)
+            
+            if pedigree is not None:
+                generalComment_unc.text = "Pedigree:(" + pedigree.attrib["reliability"] + ',' + pedigree.attrib["completeness"] + ',' + pedigree.attrib["temporalCorrelation"] + ',' + pedigree.attrib["geographicalCorrelation"] + ',' + pedigree.attrib["furtherTechnologyCorrelation"] + '). Pedigree variance: ' + flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}uncertainty")[0].attrib['varianceWithPedigreeUncertainty']
+                if flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}comment") is not None:
+                    generalComment_unc_2.text = flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}comment").text
+            
+            #fazer pastas
             try:
                 os.mkdir("./ILCD-algorithm/flows")
             except OSError:
@@ -878,14 +966,16 @@ if __name__ == '__main__':
             except OSError:
                 pass
             
-            shutil.copy("./flow_properties/" + ref_id_unit + '.xml', "./ILCD-algorithm/flowproperties")
+            for unit in ref_id_unit:
+                shutil.copy("./ILCD - conversão/flow_properties/" + unit + '.xml', "./ILCD-algorithm/flowproperties")
             
             try:
                 os.mkdir("./ILCD-algorithm/unitgroups")
             except OSError:
                 pass
             
-            shutil.copy("./unit_groups/" + ref_id_unit_id + '.xml', "./ILCD-algorithm/unitgroups")
+            for unit_id in ref_id_unit_id:
+                shutil.copy("./ILCD - conversão/unit_groups/" + unit_id + '.xml', "./ILCD-algorithm/unitgroups")
             
             #salvar arquivo de fluxo (flowDataSet)
             file_flow = "./ILCD-algorithm/flows/" + UUIDF.text + ".xml"
@@ -906,6 +996,9 @@ if __name__ == '__main__':
             meanValue = af.subelement('meanValue', variableParameter, NS2)
             meanValue.text = flowDataECO[ex].attrib.get('amount')
             
+            if flowDataECO[ex].find('{http://www.EcoInvent.org/EcoSpold02}uncertainty') is not None:
+                incerteza(flowDataECO[ex], meanValue, variableParameter, NS2, None)
+            
             comment = af.subelement('comment', variableParameter, NS2)
             comment.set('{http://www.w3.org/XML/1998/namespace}lang','en')
             
@@ -916,10 +1009,15 @@ if __name__ == '__main__':
                     comment.text = comment.text + '\n' + flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}comment").text
                 else:
                     comment.text = flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}comment").text
-            
-            if flowDataECO[ex].find('{http://www.EcoInvent.org/EcoSpold02}uncertainty') is not None:
-                incerteza(flowDataECO[ex], meanValue, variableParameter, NS2, None)
     
+    
+    #dataSourcesTreatmentAndRepresentativeness[4]
+    samplingProcedure = af.subelement('samplingProcedure', dataSourcesTreatmentAndRepresentativeness, NS2)
+    samplingProcedure.text = modellingAndValidationECO[0].find('{http://www.EcoInvent.org/EcoSpold02}samplingProcedure').text
+    
+    #dataSourcesTreatmentAndRepresentativeness[5]
+    uncertaintyAdjustments = af.subelement('uncertaintyAdjustments', dataSourcesTreatmentAndRepresentativeness, NS2)
+    uncertaintyAdjustments.text = "Uncertainties calculated using a basic uncertainty (or informed) and a Pedigree Matrix additional uncertainty (log-normal) as it is in the standard procedure on Ecospold2 datasets (ecoinvent association)"
     
     #cálculo da fração de alocação 
     for it in range(prod_volume):
