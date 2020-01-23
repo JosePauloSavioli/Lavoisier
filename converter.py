@@ -3,13 +3,7 @@
 
 Conversão de dados de Ecospold2 para ILCD para o IBICT
 
-PROB = Problema
-
 """
-
-#BKT verificação com o relaxlxml dos arquivos xsd
-#BKT Verificar LCIA e possíveis agregações de produtos (adicional)
-#BKT verificar fórmulas e parâmetros
 
 #importação das bibliotecas
 
@@ -29,7 +23,8 @@ import os
 import csv
 #trabalho com transferência de arquivos
 import shutil
-
+#trabalho com vários arquivos
+#import glob
 #bibliotecas de arquivos
 
 #funções adicionais
@@ -74,7 +69,7 @@ def incerteza(flowDataECO, meanValue, parent, NS, gc):
             minimumAmount.text = str(float(meanValue.text)/float(relativeStandardDeviation95In.text))
             maximumAmount.text = str(float(meanValue.text)*float(relativeStandardDeviation95In.text))
         elif uncertaintyDistribution.text == "normal":
-            relativeStandardDeviation95In.text = str(round(2*(float(flowDataECO.find("{http://www.EcoInvent.org/EcoSpold02}uncertainty")[0].attrib['varianceWithPedigreeUncertainty'])**(1/2),3)))
+            relativeStandardDeviation95In.text = str(round(2*(float(flowDataECO.find("{http://www.EcoInvent.org/EcoSpold02}uncertainty")[0].attrib['varianceWithPedigreeUncertainty'])**(1/2)),3))
             minimumAmount.text = str(float(meanValue.text)-float(relativeStandardDeviation95In.text))
             maximumAmount.text = str(float(meanValue.text)+float(relativeStandardDeviation95In.text))
         elif uncertaintyDistribution.text == "triangular" or uncertaintyDistribution.text == "uniform":
@@ -102,6 +97,7 @@ def f_property(flowProperty, unitName, internal_id, m_v):
                 ref_id_name = row[2]
                 ref_id_unit_id = row[3]
                 break
+            
     af.referencia(referenceToFlowPropertyDataSet, 'flow property data set', ref_id_unit, XMLNS, ref_id_name)
 
     #flowProperty[1] - valor estipulado por mim pois ele vai ser multiplicado pela quantidade de fluxo do processDataSet
@@ -113,7 +109,7 @@ def f_property(flowProperty, unitName, internal_id, m_v):
 if __name__ == '__main__':
     
     #inicialização do zip
-    ILCD_zip = zipfile.ZipFile('./ILCD.zip', 'w')
+    ILCD_zip = zipfile.ZipFile('./Resultado_Conversao/ILCD.zip', 'w')
     
     #inicialização da pasta fonte do ILCD.zip
     try:
@@ -146,7 +142,9 @@ if __name__ == '__main__':
     #fau.inicialization(NS5, NS7, XMLNS, nsmap)
     
     #criando árvore do arquivo Ecospold2
-    Ecospold2_tree = etree.parse('./eucalyptus seedling production, in heated greenhouse, BR, 2010 - 2020.spold', parser)
+    file = "Put the file address here"
+    
+    Ecospold2_tree = etree.parse(file, parser)
     
     #elemento raiz do arquivo Ecospold2
     ecoSpold = Ecospold2_tree.getroot()
@@ -225,23 +223,26 @@ if __name__ == '__main__':
     
     generalComment.text = "Type of process: " + list_for_special_activity[int(activityDescription[0].attrib['specialActivityType'])] + "; Relation Ecospold2: " + is_child + " from " + uuid_parent + "\nTags: " + tag_t
     
-    for gc_elem in activityDescription[0].find('{http://www.EcoInvent.org/EcoSpold02}generalComment'):
-        if gc_elem.tag == '{http://www.EcoInvent.org/EcoSpold02}imageUrl':
-            generalComment.text = generalComment.text + '\nImageURL: ' + gc_elem.text
-        else:
-            generalComment.text = generalComment.text + '\n' + gc_elem.text
+    if activityDescription[0].find('{http://www.EcoInvent.org/EcoSpold02}generalComment') is not None:
+        for gc_elem in activityDescription[0].find('{http://www.EcoInvent.org/EcoSpold02}generalComment'):
+            if gc_elem.tag == '{http://www.EcoInvent.org/EcoSpold02}imageUrl':
+                generalComment.text = generalComment.text + '\nImageURL: ' + gc_elem.text
+            else:
+                if gc_elem.text is not None:
+                    generalComment.text = generalComment.text + '\n' + gc_elem.text
     
     #dataSetInformation[5] - aqui serão colocadas a publicação que gerou o dataset e ícones de dataset (dataSetIcon) se presente
-    referenceToExternalDocumentation = af.subelement('referenceToExternalDocumentation', dataSetInformation, NS2)
     
-    if administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['dataPublishedIn'] == "0":
+    if administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib.get('dataPublishedIn') == "0":
         publication_status = "Dataset finalised; unpublished"
-    elif administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['dataPublishedIn'] == "1":
+    elif administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib.get('dataPublishedIn') == "1":
         publication_status = "Data set finalised; subsystems published"
-    elif administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['dataPublishedIn'] == "2":
+    elif administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib.get('dataPublishedIn') == "2":
         publication_status = "Data set finalised; entirely published"
     
-    af.referencia(referenceToExternalDocumentation, 'source data set', administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['publishedSourceId'], XMLNS, publication_status)
+    if administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib.get('publishedSourceId') is not None:
+        referenceToExternalDocumentation = af.subelement('referenceToExternalDocumentation', dataSetInformation, NS2)
+        af.referencia(referenceToExternalDocumentation, 'source data set', administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib.get('publishedSourceId'), XMLNS, publication_status)
     
     if activityDescription[0].get('dataSetIcon') is not None:
         referenceToExternalDocument = af.subelement('referenceToExternalDocument', dataSetInformation, NS2)
@@ -287,7 +288,7 @@ if __name__ == '__main__':
     else:
         is_valid = "Data is not valid for the entire period, check this comment for more information"
     
-    if activityDescription.find('{http://www.EcoInvent.org/EcoSpold02}timePeriod/{http://www.EcoInvent.org/EcoSpold02}comment/{http://www.EcoInvent.org/EcoSpold02}text').text is not None:
+    if activityDescription.find('{http://www.EcoInvent.org/EcoSpold02}timePeriod/{http://www.EcoInvent.org/EcoSpold02}comment/{http://www.EcoInvent.org/EcoSpold02}text') is not None:
         timeRepresentativenessDescription.text = is_valid + '\n' + activityDescription.find('{http://www.EcoInvent.org/EcoSpold02}timePeriod/{http://www.EcoInvent.org/EcoSpold02}comment/{http://www.EcoInvent.org/EcoSpold02}text').text
     
     #processInformation[3] - Geography
@@ -302,10 +303,12 @@ if __name__ == '__main__':
     locationOfOperationSupplyOrProduction = af.subelement('locationOfOperationSupplyOrProduction', geography, NS2)
     locationOfOperationSupplyOrProduction.set('location',activityDescription.find('{http://www.EcoInvent.org/EcoSpold02}geography/{http://www.EcoInvent.org/EcoSpold02}shortname').text)
     
-    descriptionOfRestrictions = af.subelement('descriptionOfRestrictions', locationOfOperationSupplyOrProduction, NS2)
-    descriptionOfRestrictions.set('{http://www.w3.org/XML/1998/namespace}lang','en')
-    descriptionOfRestrictions.text = activityDescription.find('{http://www.EcoInvent.org/EcoSpold02}geography/{http://www.EcoInvent.org/EcoSpold02}comment/{http://www.EcoInvent.org/EcoSpold02}text').text
     
+    if activityDescription.find('{http://www.EcoInvent.org/EcoSpold02}geography/{http://www.EcoInvent.org/EcoSpold02}comment/{http://www.EcoInvent.org/EcoSpold02}text') is not None:
+        descriptionOfRestrictions = af.subelement('descriptionOfRestrictions', locationOfOperationSupplyOrProduction, NS2)
+        descriptionOfRestrictions.set('{http://www.w3.org/XML/1998/namespace}lang','en')
+        descriptionOfRestrictions.text = activityDescription.find('{http://www.EcoInvent.org/EcoSpold02}geography/{http://www.EcoInvent.org/EcoSpold02}comment/{http://www.EcoInvent.org/EcoSpold02}text').text
+        
     #processInformation[4] - Technology
     
     #Campos não incluidos no technology: (mathematicalRelations estão na parte de fluxos pois se encontram junto destes no Ecospold2)
@@ -318,21 +321,30 @@ if __name__ == '__main__':
     list_of_technologies = ['Undefined','New','Modern','Current','Old','Outdated']
     technologyDescriptionAndIncludedProcesses = af.subelement('technologyDescriptionAndIncludedProcesses', technology, NS2)
     technologyDescriptionAndIncludedProcesses.set('{http://www.w3.org/XML/1998/namespace}lang','en')
-    technologyDescriptionAndIncludedProcesses.text = "The technology level of this process is: " + list_of_technologies[int(activityDescription.find('{http://www.EcoInvent.org/EcoSpold02}technology').attrib['technologyLevel'])] + "\nThe included activities go from: " + activityDescription[0].find('{http://www.EcoInvent.org/EcoSpold02}includedActivitiesStart').text + " to: " + activityDescription[0].find('{http://www.EcoInvent.org/EcoSpold02}includedActivitiesEnd').text
+    if activityDescription[0].find('{http://www.EcoInvent.org/EcoSpold02}includedActivitiesEnd') is not None:
+        technologyDescriptionAndIncludedProcesses.text = "The technology level of this process is: " + list_of_technologies[int(activityDescription.find('{http://www.EcoInvent.org/EcoSpold02}technology').attrib['technologyLevel'])] + "\nThe included activities go from: " + activityDescription[0].find('{http://www.EcoInvent.org/EcoSpold02}includedActivitiesStart').text + " to: " + activityDescription[0].find('{http://www.EcoInvent.org/EcoSpold02}includedActivitiesEnd').text
+    else:
+        technologyDescriptionAndIncludedProcesses.text = "The technology level of this process is: " + list_of_technologies[int(activityDescription.find('{http://www.EcoInvent.org/EcoSpold02}technology').attrib['technologyLevel'])]
     
     #technology[1] e [2]
-    technologyApplicability = af.subelement('technologicalApplicability', technology, NS2)
-    technologyApplicability.text = activityDescription.find('{http://www.EcoInvent.org/EcoSpold02}technology/{http://www.EcoInvent.org/EcoSpold02}comment/{http://www.EcoInvent.org/EcoSpold02}text').text
-    
+    if activityDescription.find('{http://www.EcoInvent.org/EcoSpold02}technology/{http://www.EcoInvent.org/EcoSpold02}comment/{http://www.EcoInvent.org/EcoSpold02}text') is not None:
+        technologyApplicability = af.subelement('technologicalApplicability', technology, NS2)
+        technologyApplicability.text = activityDescription.find('{http://www.EcoInvent.org/EcoSpold02}technology/{http://www.EcoInvent.org/EcoSpold02}comment/{http://www.EcoInvent.org/EcoSpold02}text').text
+        
     #technology[2]
-    for ta_elem in activityDescription.find('{http://www.EcoInvent.org/EcoSpold02}technology/{http://www.EcoInvent.org/EcoSpold02}comment'):
-        if ta_elem.tag == '{http://www.EcoInvent.org/EcoSpold02}imageUrl':
-            referenceToTechnologyPictogramme = af.subelement('referenceToTechnologyPictogramme', technology, XMLNS)
-            ID_tech = uuid.uuid4()
-            af.referencia(referenceToTechnologyPictogramme, 'source data set', ID_tech, XMLNS, 'Comment URL')
-        else:
-            technologyApplicability.text = technologyApplicability.text + '\n' + ta_elem.text
-   
+    if activityDescription.find('{http://www.EcoInvent.org/EcoSpold02}technology/{http://www.EcoInvent.org/EcoSpold02}comment') is not None:
+        for ta_elem in activityDescription.find('{http://www.EcoInvent.org/EcoSpold02}technology/{http://www.EcoInvent.org/EcoSpold02}comment'):
+            if ta_elem.tag == '{http://www.EcoInvent.org/EcoSpold02}imageUrl':
+                referenceToTechnologyPictogramme = af.subelement('referenceToTechnologyPictogramme', technology, XMLNS)
+                ID_tech = uuid.uuid4()
+                af.referencia(referenceToTechnologyPictogramme, 'source data set', ID_tech, XMLNS, 'Comment URL')
+            else:
+                if technology.find('{http://lca.jrc.it/ILCD/Process}technologyApplicability') is not None:
+                    technologyApplicability.text = technologyApplicability.text + '\n' + ta_elem.text
+                else:
+                    technologyApplicability = af.subelement('technologicalApplicability', technology, NS2)
+                    technologyApplicability.text = ta_elem.text
+                    
     #modellingAndValidation[0] - LCIMethodAndAllocation
     
     #Campos não incluidos no LCIMethodAndAllocation:
@@ -379,7 +391,7 @@ if __name__ == '__main__':
         #deviationsFromSelectionAndCombinationPrinciples: Não há campo no Ecospold2
         #deviationsFromTreatmentAndExtrapolation: Não há campo no Ecospold2
         #referenceToDataHandlingPrinciples: Não há uma referência quanto a como a LCI foi tratada na forma de bibliografia no Ecospold2
-        #referenceToDataSource: PROB: Colocar a documentação de apoio ou o artigo publicado neste campo quando terminar para indicar como foi feita a metodologia de conversão
+        #referenceToDataSource: Colocar a documentação de apoio ou o artigo publicado neste campo quando terminar para indicar como foi feita a metodologia de conversão
         #dataCollectionPeriod: Não há um campo com o período de coleta dos dados no Ecospold2
         #useAdviceForDataSet: Não há campo no Ecospold2
         
@@ -394,8 +406,9 @@ if __name__ == '__main__':
     dataSelectionAndCombinationPrinciples.text = "None"
     
     #dataSourcesTreatmentAndRepresentativeness[2]
-    dataTreatmentAndExtrapolation = af.subelement('dataTreatmentAndExtrapolationsPrinciples', dataSourcesTreatmentAndRepresentativeness, NS2)
-    dataTreatmentAndExtrapolation.text = modellingAndValidationECO[0].find('{http://www.EcoInvent.org/EcoSpold02}extrapolations').text
+    if modellingAndValidationECO[0].find('{http://www.EcoInvent.org/EcoSpold02}extrapolations') is not None:
+        dataTreatmentAndExtrapolation = af.subelement('dataTreatmentAndExtrapolationsPrinciples', dataSourcesTreatmentAndRepresentativeness, NS2)
+        dataTreatmentAndExtrapolation.text = modellingAndValidationECO[0].find('{http://www.EcoInvent.org/EcoSpold02}extrapolations').text
     
     #dataSourcesTreatmentAndRepresentativeness[3]
     if modellingAndValidationECO[0].attrib.get('percent') is not None:
@@ -514,29 +527,33 @@ if __name__ == '__main__':
     dataSetVersion = af.subelement('dataSetVersion', publicationAndOwnership, XMLNS)
     dataSetVersion.text = "0" + administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}fileAttributes').attrib['majorRelease'] + ".0" + administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}fileAttributes').attrib['minorRevision'] + ".000"
     
-    #publicationAndOwnership[2] - PROB: checar se é plausível colocar assim
+    #publicationAndOwnership[2] - indicação do sicv como database permanente
     permanentDataSetURI = af.subelement('permanentDataSetURI', publicationAndOwnership, XMLNS)
     permanentDataSetURI.text = 'http://sicv.acv.ibict.br'
     
-    #publicationAndOwnership[3] - PROB: Talvez grupos sejam Commom
-    workflowAndPublicationStatus = af.subelement('workflowAndPublicationStatus', publicationAndOwnership, XMLNS)
-    if administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['dataPublishedIn'] == "0":
-        workflowAndPublicationStatus.text = "Dataset finalised; unpublished"
-    elif administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['dataPublishedIn'] == "1":
-        workflowAndPublicationStatus.text = "Data set finalised; subsystems published"
-    elif administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['dataPublishedIn'] == "2":
-        workflowAndPublicationStatus.text = "Data set finalised; entirely published"
+    #publicationAndOwnership[3]
     
+    if administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib.get('dataPublishedIn') is not None:
+        workflowAndPublicationStatus = af.subelement('workflowAndPublicationStatus', publicationAndOwnership, XMLNS)
+        
+        if administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['dataPublishedIn'] == "0":
+            workflowAndPublicationStatus.text = "Dataset finalised; unpublished"
+        elif administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['dataPublishedIn'] == "1":
+            workflowAndPublicationStatus.text = "Data set finalised; subsystems published"
+        elif administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['dataPublishedIn'] == "2":
+            workflowAndPublicationStatus.text = "Data set finalised; entirely published"
+        
     #publicationAndOwnership[4]
-    referenceToUnchangedPublication = af.subelement('referenceToUnchangedRepublication', publicationAndOwnership, XMLNS)
-    af.referencia(referenceToUnchangedPublication, 'source data set', administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['publishedSourceId'], XMLNS, administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['publishedSourceId'])
+    if administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib.get('publishedSourceId') is not None:
+        referenceToUnchangedPublication = af.subelement('referenceToUnchangedRepublication', publicationAndOwnership, XMLNS)
+        af.referencia(referenceToUnchangedPublication, 'source data set', administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['publishedSourceId'], XMLNS, administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['publishedSourceId'])
 
-    lista = []
-    if administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['publishedSourceId'] not in lista:
-        lista.append(administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['publishedSourceId'])
-        citation_publication = administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['publishedSourceFirstAuthor'] + " (" + administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['publishedSourceYear'] + ")"
-        fc.sources(administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['publishedSourceId'], etree.Element(NS6 + "sourceDataSet", version = "1.1", nsmap=nsmap), NS6, XMLNS, citation_publication)
-    
+        lista = []
+        if administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['publishedSourceId'] not in lista:
+            lista.append(administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['publishedSourceId'])
+            citation_publication = administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['publishedSourceFirstAuthor'] + " (" + administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['publishedSourceYear'] + ")"
+            fc.sources(administrativeInformationECO.find('{http://www.EcoInvent.org/EcoSpold02}dataGeneratorAndPublication').attrib['publishedSourceId'], etree.Element(NS6 + "sourceDataSet", version = "1.1", nsmap=nsmap), NS6, XMLNS, citation_publication)
+        
     #publicationAndOwnership[5]
     copyright_ = af.subelement('copyright', publicationAndOwnership, XMLNS)
     
@@ -641,7 +658,7 @@ if __name__ == '__main__':
                             CASNumber = af.subelement('CASNumber', dataSetInformationF, NS3)
                             CASNumber.text = flowDataECO[ex].attrib.get('casNumber')
                         
-            #dataSetInformation[3] - (PROB: sem @catId pois ele não é obrigatório e não consegui encontrar uma referência dele)
+            #dataSetInformation[3] - (CatId pode ser colocado mas não é obrigtório)
             if flowDataECO[ex].tag == "{http://www.EcoInvent.org/EcoSpold02}elementaryExchange":
                 classificationInformationF = af.subelement('classificationInformation', dataSetInformationF, NS3)
                 
@@ -951,7 +968,8 @@ if __name__ == '__main__':
             generalComment_unc_2 = af.subelement("generalComment", exchange, NS2)
             
             if pedigree is not None:
-                generalComment_unc.text = "Pedigree:(" + pedigree.attrib["reliability"] + ',' + pedigree.attrib["completeness"] + ',' + pedigree.attrib["temporalCorrelation"] + ',' + pedigree.attrib["geographicalCorrelation"] + ',' + pedigree.attrib["furtherTechnologyCorrelation"] + '). Pedigree variance: ' + flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}uncertainty")[0].attrib['varianceWithPedigreeUncertainty']
+                if flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}uncertainty")[0].attrib.get('varianceWithPedigreeUncertainty') is not None:
+                    generalComment_unc.text = "Pedigree:(" + pedigree.attrib["reliability"] + ',' + pedigree.attrib["completeness"] + ',' + pedigree.attrib["temporalCorrelation"] + ',' + pedigree.attrib["geographicalCorrelation"] + ',' + pedigree.attrib["furtherTechnologyCorrelation"] + '). Pedigree variance: ' + flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}uncertainty")[0].attrib['varianceWithPedigreeUncertainty']
                 if flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}comment") is not None:
                     generalComment_unc_2.text = flowDataECO[ex].find("{http://www.EcoInvent.org/EcoSpold02}comment").text
             
@@ -1012,8 +1030,9 @@ if __name__ == '__main__':
     
     
     #dataSourcesTreatmentAndRepresentativeness[4]
-    samplingProcedure = af.subelement('samplingProcedure', dataSourcesTreatmentAndRepresentativeness, NS2)
-    samplingProcedure.text = modellingAndValidationECO[0].find('{http://www.EcoInvent.org/EcoSpold02}samplingProcedure').text
+    if modellingAndValidationECO[0].find('{http://www.EcoInvent.org/EcoSpold02}samplingProcedure') is not None:
+        samplingProcedure = af.subelement('samplingProcedure', dataSourcesTreatmentAndRepresentativeness, NS2)
+        samplingProcedure.text = modellingAndValidationECO[0].find('{http://www.EcoInvent.org/EcoSpold02}samplingProcedure').text
     
     #dataSourcesTreatmentAndRepresentativeness[5]
     uncertaintyAdjustments = af.subelement('uncertaintyAdjustments', dataSourcesTreatmentAndRepresentativeness, NS2)
@@ -1040,3 +1059,5 @@ if __name__ == '__main__':
     #fechar arquivo .zip criado
     ILCD_zip.close()
     
+    #deletar a pasta
+    shutil.rmtree("./ILCD-algorithm")
