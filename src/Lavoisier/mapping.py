@@ -1,0 +1,505 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon May 24 08:37:05 2021
+
+Dictionary with mapping from Ecospold2 to ILCD and additional dictionary
+    files. The mapping is explained comprehensively on the documentation
+    file [TODO].
+    
+The main map (map_p) has his hierarchy represented below:
+    
+    {Element order in hierarchy [1 -> main,
+                                 2 -> secondary, 
+                                 3 -> terciary,
+                                 4 -> quaternary,
+                                 IntermFlows -> specific for intermediate exchanges,
+                                     3 -> terciary element on main processDataSet,
+                                     map_f -> map for flowDataSet (intermediate flow),
+                                         1 -> main,
+                                         2 -> secondary, 
+                                         3 -> terciary,
+                                         4 -> quaternary,
+                                 ElemFlows -> specific for elementary exchanges,
+                                     3 -> terciary element on main processDataSet,
+                                     map_f -> map for flowDataSet (elementary flow),
+                                         1 -> main,
+                                         2 -> secondary, 
+                                         3 -> terciary,
+                                         4 -> quaternary,
+                                 Parameters -> specific call for parameters
+                                 ]:
+        {name_of_Ecospold2_element: 
+            {args:      [mandatory] tuple of arguments to start a new ILCD element
+                        (ILCD_correspondent_field_name,
+                         ILCD_correspondent_DataSet,
+                         additional_attribute_dict)
+             specific:  dictionary with information about a triggered function
+                        {func: [mandatory] name of triggered function
+                         args: dict of arguments for the triggered function
+                         pass: integer for different trees passed to triggered function,
+                               [placed due to shallow copy errors]
+                                 1: ilcd and ecospold2 tree,
+                                 2: unmodified ilcd and ecospold2 tree,
+                                 3: ilcd, unmodified ilcd and ecospold2 tree
+                        }
+             text:      List of th texts to be included on the element's text subelement
+                        Can be:
+                            ['some default text']
+                            [([int]:
+                                    0: field is mandatory,
+                                    1: field is not mandatory and demands additional checks,
+                              [list]:
+                                    field of Ecospold2 that has the text,
+                              [None or string]:
+                                    None: no mode, only checks if text exists,
+                                    findall: find the element instance and return all text instances of the element,
+                                    findname: find all instances of the element and return the text instance of each,
+                                    t1 or t2: return the mapping tables associated with the element conversion
+                            )]
+             attrib:    used when information is in an attribute of an Ecospold2 element
+                        [attribute_name, isOptional, element_that_has_the_attribute]
+             bound_verification:    list of Ecospold2 optional field names that has to be in the spold tree for that specific conversion 
+             t1 or t2:  mapping tables associated with the element conversion
+             comment:   Debug comment
+             
+             ***Reference specif fields:
+                 ref_uuid: Ecospold2 field that has the UUID of the reference,
+                 ref_type: type of the reference. It can be:
+                     'source data set' : references a sourceDataSet by UUID
+                     'contact data set' : references a contactDataSet by UUID
+                 add_file: if present, adds an additional file for the reference. It can be:
+                     'source' : creates a new sourceDataSet
+                     'contact' : creates a new contactDataSet
+            }
+        }
+    }
+
+@author: jotape42p
+"""
+
+# Uuid generator for reference
+from uuid import uuid4
+# Timestamp
+from time import localtime, strftime
+
+# Specific namespaces
+c = "{http://lca.jrc.it/ILCD/Common}"
+w3 = "{http://www.w3.org/XML/1998/namespace}"
+w3_l = "{http://www.w3.org/XML/1998/namespace}lang"
+e = "{http://www.EcoInvent.org/EcoSpold02}"
+
+# Returns a new UUID
+ref_id1 = str(uuid4())
+
+#####################***SPECIFIC ELEMENT MAPPINGS***###########################
+
+special_activity = {'0':'ordinary transforming activity',
+                    '1':'market activity',
+                    '2':'IO activity',
+                    '3':'residual activity',
+                    '4':'production mix',
+                    '5':'import activity',
+                    '6':'supply mix',
+                    '7':'export activity',
+                    '8':'re-Export activity',
+                    '9':'correction activity',
+                    '10':'market group'}
+
+energy = {'0':'undefined',
+          '1':'net calorific value',
+          '2':'gross calorific value'}
+
+child_type = {'0':'none',
+              '1':'geography child from ', 
+              '2':'technological child from ', 
+              '3':'macroeconomic child from '}
+
+status_publication = {'0':"Dataset finalised; unpublished",
+                      '1':"Data set finalised; subsystems published",
+                      '2':"Data set finalised; entirely published"}
+
+time_period = {'true':'Data is valid for the entire period.\n',
+               'false': 'Data is not valid for the entire period.\n'}
+
+type_process = {'0':'',
+                '1':'Unit process, black box',
+                '2':'LCI result'}
+
+tech = {'0':'Undefined',
+        '1':'New',
+        '2':'Modern',
+        '3':'Current',
+        '4':'Old',
+        '5':'Outdated'}
+
+system_model = {'Undefined':'Not applicable',
+                'Attributional, average current suppliers, revenue allocation':'Attributional',
+                'Consequential, small-scale, long-term decisions':'Consequential'}
+
+system_model_2 = {'Undefined':'Not applicable',
+                  'Attributional, average current suppliers, revenue allocation':'Other',
+                  'Consequential, small-scale, long-term decisions':'Other'}
+
+restrictions = {'0':'Free of charge for all users and uses',
+                '1':'License fee',
+                '2':'Other',
+                '3':'Other'}
+
+access = {'0': 'Public',
+          '1': 'Licensees',
+          '2': 'Results only',
+          '3': 'Restricted to '}
+
+##############################***MAIN MAPPING***###############################
+
+map_p =    {'1': {'processInformation': {'args': ('processInformation','processDataSet',None)},
+                'modellingAndValidation': {'args': ('modellingAndValidation','processDataSet',None)},
+                'administrativeInformation': {'args': ('administrativeInformation','processDataSet',None)},
+                'exchanges': {'args': ('exchanges','processDataSet',None)},
+                },
+            '2': {'dataSetInformation': {'args': ('dataSetInformation','processInformation',None)},
+                'quantitativeReference': {'args': ('quantitativeReference','processInformation',{'type':'Reference flow(s)'})},
+                'time': {'args': ('time','processInformation',None)},
+                'geography': {'args': ('geography','processInformation',None)},
+                'technology': {'args': ('technology','processInformation',None)},
+                'mathematicalRelations': {'args': ('mathematicalRelations','processInformation',None)},
+                'LCIMethodAndAllocation': {'args': ('LCIMethodAndAllocation','modellingAndValidation',None)},
+                'dataSourcesTreatmentAndRepresentativeness': {'args': ('dataSourcesTreatmentAndRepresentativeness','modellingAndValidation',None)},
+                'completeness': {'args': ('completeness','modellingAndValidation',None)},
+                'validation': {'args': ('validation','modellingAndValidation',None),
+                               'specific': {'func':'review', 'args': 'modellingAndValidation/validation', 'pass':2},
+                               'comment': 'review fields included on function'},
+                'commissionerAndGoal': {'args': (c+'commissionerAndGoal','administrativeInformation',None)},
+                'dataGenerator': {'args': ('dataGenerator','administrativeInformation',None)},
+                'dataEntryBy': {'args': ('dataEntryBy','administrativeInformation',None)},
+                'publicationAndOwnership': {'args': ('publicationAndOwnership','administrativeInformation',None)},
+                },
+            '3': {'UUID': {'args': (c+'UUID','processInformation/dataSetInformation',None),
+                           'text': [(0,['activity[@id]'],None)]},
+                'name': {'args': ('name','processInformation/dataSetInformation',None)},
+                'synonyms': {'args': (c+'synonyms','processInformation/dataSetInformation',None),
+                             'bound_verification': ['activity','synonym'],
+                             'text': [(1,['activity','synonym'],'findname')]},
+                'classificationInformation': {'args': ('classificationInformation','processInformation/dataSetInformation',None)},
+                'gc1': {'args': (c+'generalComment','processInformation/dataSetInformation',{w3_l:'en'}),
+                        'text': ['Type of process: ',
+                                  (0, ['activity[@specialActivityType]'], 't1'),
+                                  '\nParent relation Ecospold2: ',
+                                  (1, ['activity[@inheritanceDepth]'],'t2'),
+                                  (1, ['activity[@parentActivityId]'],None),
+                                  '\nTags: ',
+                                  (1, ['activity', 'tag'],None),
+                                  '\nMacroeconomic Scenario: ',
+                                  (1, ['macroEconomicScenario', 'name'],None),
+                                  (1, ['activity', 'generalComment'],'findall')],
+                        't1': special_activity, 't2': child_type,
+                        'specific': {'func':'bool_', 'pass':2}},
+                'referenceToExternalDocumentation': {'args': ('referenceToExternalDocumentation','processInformation/dataSetInformation',None),
+                                                     'bound_verification': ['dataGeneratorAndPublication[@publishedSourceId]'],
+                                                     'text': [(0, ['dataGeneratorAndPublication[@dataPublishedIn]'],'t1')],
+                                                     't1': status_publication,
+                                                     'ref_uuid': ['dataGeneratorAndPublication[@publishedSourceId]'],
+                                                     'ref_type': 'source data set'},
+                'referenceToReferenceFlow': {'args': ('referenceToReferenceFlow','processInformation/quantitativeReference',None),
+                                             'text': ['0']},
+                'referenceYear': {'args': (c+'referenceYear','processInformation/time',None),
+                                  'specific': {'func':'time_year', 'args':'start'}},
+                'dataSetValidUntil': {'args': (c+'dataSetValidUntil','processInformation/time',None),
+                                      'specific': {'func':'time_year', 'args':'end'}},
+                'timeRepresentativenessDescription': {'args': (c+'timeRepresentativenessDescription','processInformation/time',{w3_l:'en'}),
+                                                      'text': [(1, ['timePeriod[@isDataValidForEntirePeriod]'], 't1'),
+                                                              (1, ['timePeriod','comment','text'],None)],
+                                                      't1': time_period},
+                'locationOfOperationSupplyOrProduction': {'args': ('locationOfOperationSupplyOrProduction','processInformation/geography',None),
+                                                          'attrib': [('location', 0, ['geography', 'shortname'])]},
+                'technologyDescriptionAndIncludedProcesses': {'args': ('technologyDescriptionAndIncludedProcesses','processInformation/technology',{w3_l:'en'}),
+                                                              'text': ["The technology level of this process is: ",
+                                                                       (0, ['technology[@technologyLevel]'],'t1'),
+                                                                       '/n',
+                                                                       (1, ['technology', 'technologyApplicability'],None),
+                                                                       '/n',
+                                                                       (1, ['technology', 'comment'],'findall'),
+                                                                       "\nIncluded activities start: ",
+                                                                       (1, ['includedActivitiesStart'],None),
+                                                                       ' Included activities end: ',
+                                                                       (1, ['includedActivitiesEnd'],None)],
+                                                              't1': tech},
+                'technologicalApplicability': {'args': ('technologicalApplicability','processInformation/technology',None),
+                                               'text': [(1, ['technology', 'technologyApplicability'],None),
+                                                        (1, ['technology', 'comment'],'findall')],
+                                               'specific': {'func':'bool_', 'pass':2}},
+                'typeOfDataSet': {'args': ('typeOfDataSet', 'modellingAndValidation/LCIMethodAndAllocation', None),
+                                  'text': [(0, ['activity[@type]'], 't1')],
+                                  't1': type_process},
+                'LCIMethodPrinciple': {'args': ('LCIMethodPrinciple', 'modellingAndValidation/LCIMethodAndAllocation', None),
+                                       'text': [(0,['representativeness','systemModelName'],'t1')],
+                                       't1': system_model},
+                'LCIMethodApproaches': {'args': ('LCIMethodApproaches', 'modellingAndValidation/LCIMethodAndAllocation', None),
+                                      'text': [(0,['representativeness', 'systemModelName'],'t1')],
+                                       't1': system_model_2},
+                'deviationsFromLCIMethodPrinciples': {'args': ('deviationsFromLCIMethodPrinciples', 'modellingAndValidation/LCIMethodAndAllocation', None),
+                                                      'text': ['System model: ',
+                                                               (0, ['representativeness', 'systemModelName'], None)]},
+                'deviationsFromLCIMethodApproaches': {'args': ('deviationsFromLCIMethodApproaches', 'modellingAndValidation/LCIMethodAndAllocation', None),
+                                                      'bound_verification': ['activity', 'allocationComment'],
+                                                      'text': [(0, ['activity', 'allocationComment', 'text'], None)]},
+                'modellingConstants': {'args': ('modellingConstants', 'modellingAndValidation/LCIMethodAndAllocation', None),
+                                       'bound_verification': ['activity[@energyValue]'],
+                                       'text': ['Energy Value: ',
+                                                (0, ['activity[@energyValue]'], 't1')],
+                                       't1': energy},
+                'dataCutOffAndCompletenessPrinciples': {'args': ('dataCutOffAndCompletenessPrinciples', 'modellingAndValidation/dataSourcesTreatmentAndRepresentativeness', None),
+                                                        'text': ['None']},
+                'dataSelectionAndCombinationPrinciples': {'args': ('dataSelectionAndCombinationPrinciples', 'modellingAndValidation/dataSourcesTreatmentAndRepresentativeness', None),
+                                                          'text': ['None']},
+                'dataTreatmentAndExtrapolation': {'args': ('dataTreatmentAndExtrapolation', 'modellingAndValidation/dataSourcesTreatmentAndRepresentativeness', None),
+                                                  'bound_verification': ['representativeness', 'extrapolations'],
+                                                  'text': [(0, ['representativeness', 'extrapolations'], None)]},
+                'percentageSupplyOrProductionCovered': {'args': ('percentageSupplyOrProductionCovered', 'modellingAndValidation/dataSourcesTreatmentAndRepresentativeness', None),
+                                                        'bound_verification': ['representativeness[@percent]'],
+                                                        'text': [(0, ['representativeness[@percent]'], None)]},
+                'completenessProductModel': {'args': ('completenessProductModel','modellingAndValidation/completeness',None),
+                                             'text': ["All relevant flows quantified"]},
+                'intendedApplications': {'args': (c+'intendedApplications', 'administrativeInformation/'+c+'commissionerAndGoal',{w3_l:'en'}),
+                                         'text': ["Can be used for any types of LCA studies"]},
+                'referenceToPersonOrEntityGeneratingTheDataSet': {'args': (c+'referenceToPersonOrEntityGeneratingTheDataSet', 'administrativeInformation/dataGenerator',None),
+                                                                  'text': [(1, ['dataGeneratorAndPublication[@personName]'],None),
+                                                                           ', email: ',
+                                                                           (1, ['dataGeneratorAndPublication[@personEmail]'],None)],
+                                                                  'ref_uuid': ['dataGeneratorAndPublication[@personId]'],
+                                                                  'ref_type': 'contact data set',
+                                                                  'add_file': 'contact'},
+                'referenceToConvertedOriginalDataSetFrom': {'args': (c+'referenceToConvertedOriginalDataSetFrom','administrativeInformation/dataEntryBy',None),
+                                                            'text': ['ecoinvent Database'],
+                                                            'ref_uuid': str(uuid4()),
+                                                            'ref_type': 'source data set',
+                                                            'add_file': 'source'},                                                  
+                'timeStamp': {'args': (c+'timeStamp', 'administrativeInformation/dataEntryBy',None),
+                              'text': [strftime("%Y-%m-%dT%H:%M:%S", localtime())]},
+                'referenceToDataSetFormat': {'args': (c+'referenceToDataSetFormat', 'administrativeInformation/dataEntryBy',None),
+                                             'text': ['ILCD Format'],
+                                             'ref_uuid': 'a97a0155-0234-4b87-b4ce-a45da52f2a40',
+                                             'ref_type': 'source data set',
+                                             'add_file': 'source'},
+                'referenceToPersonOrEntityEnteringTheData': {'args': (c+'referenceToPersonOrEntityEnteringTheData', 'administrativeInformation/dataEntryBy',None),
+                                                             'text': [(1, ['dataEntryBy[@personName]'],None),
+                                                                       ', email: ',
+                                                                       (1, ['dataEntryBy[@personEmail]'],None)],
+                                                             'ref_uuid': ['dataEntryBy[@personId]'],
+                                                             'ref_type': 'contact data set',
+                                                             'add_file': 'contact'},
+                'dateOfLastRevision': {'args': (c+'dateOfLastRevision', 'administrativeInformation/publicationAndOwnership',None),
+                                       'text': [(0,['fileAttributes[@lastEditTimestamp]'],None)]},
+                'dataSetVersion': {'args': (c+'dataSetVersion', 'administrativeInformation/publicationAndOwnership',None),
+                                   'text': ['0',
+                                            (0,['fileAttributes[@majorRelease]'],None),
+                                            '.0',
+                                            (0,['fileAttributes[@minorRevision]'],None),
+                                            '.000']},
+                'permanentDataSetURI': {'args': (c+'permanentDataSetURI', 'administrativeInformation/publicationAndOwnership',None),
+                                        'text': ['http://sicv.acv.ibict.br']},
+                'workflowAndPublicationStatus': {'args': (c+'workflowAndPublicationStatus', 'administrativeInformation/publicationAndOwnership',None),
+                                                 'text': [(0, ['dataGeneratorAndPublication[@dataPublishedIn]'],'t1')],
+                                                 't1': status_publication},
+                'referenceToUnchangedRepublication': {'args': (c+'referenceToUnchangedRepublication', 'administrativeInformation/publicationAndOwnership',None),
+                                                      'bound_verification': ['dataGeneratorAndPublication[@publishedSourceId]'],
+                                                      'text': [(0,['dataGeneratorAndPublication[@publishedSourceFirstAuthor]'],None),
+                                                               ' (',
+                                                               (0,['dataGeneratorAndPublication[@publishedSourceYear]'],None),
+                                                               ')'],
+                                                      'ref_uuid': ['dataGeneratorAndPublication[@publishedSourceId]'],
+                                                      'ref_type': 'source data set',
+                                                      'add_file': 'source'},
+                'copyright': {'args': (c+'copyright', 'administrativeInformation/publicationAndOwnership',None),
+                              'text': [(0,['dataGeneratorAndPublication[@isCopyrightProtected]'],None)]},
+                'referenceToEntitiesWithExclusiveAccess': {'args': (c+'referenceToEntitiesWithExclusiveAccess', 'administrativeInformation/publicationAndOwnership',None),
+                                                           'bound_verification': ['dataGeneratorAndPublication[@companyId]'],
+                                                           'text': [(0,['dataGeneratorAndPublication[@companyCode]'],None)],
+                                                           'ref_uuid': ['dataGeneratorAndPublication[@companyId]'],
+                                                           'ref_type': 'contact data set',
+                                                           'add_file': 'contact'},
+                'licenseType': {'args': (c+'licenseType', 'administrativeInformation/publicationAndOwnership',None),
+                                'text': [(0,['dataGeneratorAndPublication[@accessRestrictedTo]'],'t1')],
+                                't1': restrictions},
+                'accessRestrictions': {'args': (c+'accessRestrictions', 'administrativeInformation/publicationAndOwnership',None),
+                                       'text': ["License type for this dataset: ",
+                                                (0,['dataGeneratorAndPublication[@accessRestrictedTo]'],'t1'),
+                                                (1,['dataGeneratorAndPublication[@companyCode]'],None)],
+                                       't1': access},
+                'samplingProcedure': {'args': ('samplingProcedure','modellingAndValidation/dataSourcesTreatmentAndRepresentativeness',None),
+                                      'bound_verification': ['samplingProcedure'],
+                                      'text': [(0,['samplingProcedure'],None)]},
+                'uncertaintyAdjustments': {'args': ('uncertaintyAdjustments','modellingAndValidation/dataSourcesTreatmentAndRepresentativeness',None),
+                                           'text': ["Uncertainties calculated using a basic uncertainty (or informed) and a Pedigree Matrix additional uncertainty (log-normal) as it is in the standard procedure on Ecospold2 datasets (ecoinvent association)"]},
+                },
+            '4': {'baseName': {'args': ('baseName','processInformation/dataSetInformation/name',{w3_l:'en'}),
+                               'text': [(0, ['activity','activityName'],None)]},
+                  'classification': {'args': (c+'classification','processInformation/dataSetInformation/classificationInformation',None),
+                                       'specific': {'func':'class_'}},
+                  'descriptionOfRestrictions': {'args': ('descriptionOfRestrictions','processInformation/geography/locationOfOperationSupplyOrProduction',{w3_l:'en'}),
+                                                'bound_verification': ['geography', 'comment', 'text'],
+                                                'text': [(1, ['geography', 'comment', 'text'],None)]},
+                },
+            'IntermFlows': {'3': {'meanAmount': {'args': ('meanAmount',None),
+                                                 'text': [(0, ['intermediateExchange[@amount]'], None)]},
+                                  'resultingAmount': {'args': ('resultingAmount',None),
+                                                      'text': [(0, ['intermediateExchange[@amount]'], None)]},
+                                  'referenceToDataSource': {'args': (c+'referenceToDataSource',None),
+                                                            'bound_verification': ['intermediateExchange[@sourceId]'],
+                                                            'text': [(1,['intermediateExchange[@sourceFirstAuthor]'],None),
+                                                                     ' (',
+                                                                     (1,['intermediateExchange[@sourceYear]'],None),
+                                                                     ')'],
+                                                            'ref_uuid': ['intermediateExchange[@sourceId]'],
+                                                            'ref_type': 'source data set',
+                                                            'add_file': 'source'},
+                                  'referenceToDataSource_productionVolume': {'args': (c+'referenceToDataSource',None),
+                                                            'bound_verification': ['intermediateExchange[@productionVolumeSourceId]'],
+                                                            'text': ['production volume source'],
+                                                            'ref_uuid': ['intermediateExchange[@productionVolumeSourceId]'],
+                                                            'ref_type': 'source data set',
+                                                            'add_file': 'source'},
+                                  'generalComment': {'args': ('generalComment',None),
+                                                     'bound_verification': ['intermediateExchange','comment'],
+                                                     'text': [(0,['intermediateExchange','comment'],None)]},
+                                  'generalComment_pedigree': {'args': ('generalComment',None),
+                                                     'bound_verification': ['intermediateExchange','uncertainty','pedigreeMatrix'],
+                                                     'specific': {'func':'pedigree'}},
+                                                                        
+                                },
+                            'map_f': {'1': {'flowInformation': {'args': ('flowInformation','flowDataSet',None)},
+                                           'modellingAndValidation': {'args': ('modellingAndValidation','flowDataSet',None)},
+                                           'administrativeInformation': {'args': ('administrativeInformation','flowDataSet',None)},
+                                           'flowProperties': {'args': ('flowProperties','flowDataSet',None)},
+                                           },
+                                     '2': {'dataSetInformation': {'args': ('dataSetInformation','flowInformation',None)},
+                                           'quantitativeReference': {'args': ('quantitativeReference','flowInformation',None)}, 
+                                           'LCIMethod': {'args': ('LCIMethod','modellingAndValidation',None)},
+                                           'dataEntryBy': {'args': ('dataEntryBy','administrativeInformation',None)},
+                                           'publicationAndOwnership': {'args': ('publicationAndOwnership','administrativeInformation',None)},
+                                           'flowProperty': {'args': ('flowProperty','flowProperties',None),
+                                                            'specific': {'func':'f_property', 'args':['0','1.0'], 'pass':1}},
+                                           },
+                                     '3': {'UUID': {'args': (c+'UUID','flowInformation/dataSetInformation',None),
+                                                    'text': [(1,['intermediateExchange[@intermediateExchangeId]'],None)]},
+                                           'name': {'args': ('name','flowInformation/dataSetInformation',None)},
+                                           'synonyms': {'args': ('synonyms','flowInformation/dataSetInformation',None),
+                                                        'bound_verification': ['intermediateExchange','synonym'],
+                                                        'text': [(0,['intermediateExchange','synonym'],None)]},
+                                           'CASNumber': {'args': ('CASNumber','flowInformation/dataSetInformation',None),
+                                                         'bound_verification': ['intermediateExchange[@casNumber]'],
+                                                         'text': [(0,['intermediateExchange[@casNumber]'],None)]},
+                                           'sumFormula': {'args': ('sumFormula','flowInformation/dataSetInformation',None),
+                                                          'bound_verification': ['intermediateExchange[@formula]'],
+                                                          'text': [(0,['intermediateExchange[@formula]'],None)],},
+                                           'gc1': {'args': (c+'generalComment', 'flowInformation/dataSetInformation', None),
+                                                   'text': ['Ecospold 2 exchange, ID = ',
+                                                            (0,['intermediateExchange[@intermediateExchangeId]'],None),
+                                                            '\n',
+                                                            (1,['intermediateExchange','comment'],None),
+                                                            '\nTags: ',
+                                                            (1,['tag'],None)]},
+                                           'referenceToReferenceFlowProperty': {'args': ('referenceToReferenceFlowProperty','flowInformation/quantitativeReference',None),
+                                                                                'text': ['0']},
+                                           'typeOfDataSet': {'args': ('typeOfDataSet','modellingAndValidation/LCIMethod',None),
+                                                             'specific': {'func': 'type_product'}},
+                                           'timeStamp': {'args': (c+'timeStamp','administrativeInformation/dataEntryBy',None),
+                                                         'text': [strftime("%Y-%m-%dT%H:%M:%S", localtime())]},
+                                           'referenceToDataSetFormat': {'args': (c+'referenceToDataSetFormat','administrativeInformation/dataEntryBy',None),
+                                                                        'text': ['ILCD Format'],
+                                                                        'ref_uuid': 'a97a0155-0234-4b87-b4ce-a45da52f2a40',
+                                                                        'ref_type': 'source data set',
+                                                                        'add_file': 'source'},
+                                           'dataSetVersion': {'args': (c+'dataSetVersion','administrativeInformation/publicationAndOwnership',None),
+                                                              'text': ['00.00.000']},
+                                           'permanentDataSetURI':  {'args': (c+'permanentDataSetURI','administrativeInformation/publicationAndOwnership',None),
+                                                                    'text': ['http://openlca.org/ilcd/resource/flows/',
+                                                                             (0,['intermediateExchange[@intermediateExchangeId]'],None)]},
+                                           },
+                                     '4': {'baseName': {'args': ('baseName','flowInformation/dataSetInformation/name',{w3_l:'en'}),
+                                                        'text': [(0, ['intermediateExchange','name'],None)],
+                                                        'specific': {'func':'flow_ref', 'pass':2}},
+                                           }
+                                    }
+                        },
+            'ElemFlows': {'3': {'meanAmount': {'args': ('meanAmount',None),
+                                                 'text': [(0, ['elementaryExchange[@amount]'], None)]},
+                                  'resultingAmount': {'args': ('resultingAmount',None),
+                                                      'text': [(0, ['elementaryExchange[@amount]'], None)]},
+                                  'referenceToDataSource': {'args': (c+'referenceToDataSource',None),
+                                                            'bound_verification': ['elementaryExchange[@sourceId]'],
+                                                            'text': [(1,['elementaryExchange[@sourceFirstAuthor]'],None),
+                                                                     ' (',
+                                                                     (1,['elementaryExchange[@sourceYear]'],None),
+                                                                     ')'],
+                                                            'ref_uuid': ['elementaryExchange[@sourceId]'],
+                                                            'ref_type': 'source data set',
+                                                            'add_file': 'source'},
+                                  'referenceToDataSource_productionVolume': {'args': (c+'referenceToDataSource',None),
+                                                            'bound_verification': ['elementaryExchange[@productionVolumeSourceId]'],
+                                                            'text': ['production volume source'],
+                                                            'ref_uuid': ['elementaryExchange[@productionVolumeSourceId]'],
+                                                            'ref_type': 'source data set',
+                                                            'add_file': 'source'},
+                                  'generalComment': {'args': ('generalComment',None),
+                                                     'bound_verification': ['elementaryExchange','comment'],
+                                                     'text': [(1,['elementaryExchange','comment'],None)]},
+                                  'generalComment_pedigree': {'args': ('generalComment',None),
+                                                     'bound_verification': ['elementaryExchange','uncertainty','pedigreeMatrix'],
+                                                     'specific': {'func':'pedigree'}},
+                                                                        
+                                },
+                          'map_f': {'1': {'flowInformation': {'args': ('flowInformation','flowDataSet',None)},
+                                           'modellingAndValidation': {'args': ('modellingAndValidation','flowDataSet',None)},
+                                           'administrativeInformation': {'args': ('administrativeInformation','flowDataSet',None)},
+                                           'flowProperties': {'args': ('flowProperties','flowDataSet',None)},
+                                           },
+                                     '2': {'dataSetInformation': {'args': ('dataSetInformation','flowInformation',None)},
+                                           'quantitativeReference': {'args': ('quantitativeReference','flowInformation',None)}, 
+                                           'LCIMethod': {'args': ('LCIMethod','modellingAndValidation',None)},
+                                           'dataEntryBy': {'args': ('dataEntryBy','administrativeInformation',None)},
+                                           'publicationAndOwnership': {'args': ('publicationAndOwnership','administrativeInformation',None)},
+                                           'flowProperty': {'args': ('flowProperty','flowProperties',None),
+                                                            'specific': {'func':'elem_f_property', 'pass':1}},
+                                           },
+                                     '3': {'UUID': {'args': (c+'UUID','flowInformation/dataSetInformation',None),
+                                                    'specific': {'func':'elementary_flow_info', 'pass':3},
+                                                    'comment': 'Triggers the creation of name, baseName, synonyms and CASNumber specificaly for elementary exchanges'},
+                                           'classificationInformation': {'args': ('classificationInformation','flowInformation/dataSetInformation',None)},
+                                           'sumFormula': {'args': ('sumFormula','flowInformation/dataSetInformation',None),
+                                                          'bound_verification': ['elementaryExchange[@formula]'],
+                                                          'text': [(0,['elementaryExchange[@formula]'],None)],},
+                                           'gc1': {'args': (c+'generalComment', 'flowInformation/dataSetInformation', None),
+                                                   'text': ['Ecospold 2 exchange, ID = ',
+                                                            (0,['elementaryExchange[@elementaryExchangeId]'],None),
+                                                            '\n',
+                                                            (1,['elementaryExchange','comment'],None),
+                                                            '\nTags: ',
+                                                            (1,['tag'],None)]},
+                                           'referenceToReferenceFlowProperty': {'args': ('referenceToReferenceFlowProperty','flowInformation/quantitativeReference',None),
+                                                                                'text': ['0']},
+                                           'typeOfDataSet': {'args': ('typeOfDataSet','modellingAndValidation/LCIMethod',None),
+                                                             'text': ['Elementary flow']},
+                                           'timeStamp': {'args': (c+'timeStamp','administrativeInformation/dataEntryBy',None),
+                                                         'text': [strftime("%Y-%m-%dT%H:%M:%S", localtime())]},
+                                           'referenceToDataSetFormat': {'args': (c+'referenceToDataSetFormat','administrativeInformation/dataEntryBy',None),
+                                                                        'text': ['ILCD Format'],
+                                                                        'ref_uuid': 'a97a0155-0234-4b87-b4ce-a45da52f2a40',
+                                                                        'ref_type': 'source data set',
+                                                                        'add_file': 'source'},
+                                           'dataSetVersion': {'args': (c+'dataSetVersion','administrativeInformation/publicationAndOwnership',None),
+                                                              'text': ['00.00.000']},
+                                           'permanentDataSetURI':  {'args': (c+'permanentDataSetURI','administrativeInformation/publicationAndOwnership',None),
+                                                                    'text': ['http://openlca.org/ilcd/resource/flows/',
+                                                                             (0,['elementaryExchange[@elementaryExchangeId]'],None)]},
+                                           },
+                                     '4': {'elementaryFlowCategorization': {'args': (c+'elementaryFlowCategorization', 'flowInformation/dataSetInformation/classificationInformation',None),
+                                                                            'specific': {'func':'compartment', 'pass':1}},
+                                           }
+                                    }
+                        },
+            'Parameters': {
+                        }
+            }
+

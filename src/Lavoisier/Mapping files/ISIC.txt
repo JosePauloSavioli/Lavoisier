@@ -1,0 +1,784 @@
+A.Agriculture, forestry and fishing::::::
+01:::Crop and animal production, hunting and related service activities:::A.Agriculture, forestry and fishing
+011:::Growing of non-perennial crops:::A.Agriculture, forestry and fishing
+0111:::Growing of cereals (except rice), leguminous crops and oil seeds:::A.Agriculture, forestry and fishing
+0112:::Growing of rice:::A.Agriculture, forestry and fishing
+0113:::Growing of vegetables and melons, roots and tubers:::A.Agriculture, forestry and fishing
+0114:::Growing of sugar cane:::A.Agriculture, forestry and fishing
+0115:::Growing of tobacco:::A.Agriculture, forestry and fishing
+0116:::Growing of fibre crops:::A.Agriculture, forestry and fishing
+0119:::Growing of other non-perennial crops:::A.Agriculture, forestry and fishing
+012:::Growing of perennial crops:::A.Agriculture, forestry and fishing
+0121:::Growing of grapes:::A.Agriculture, forestry and fishing
+0122:::Growing of tropical and subtropical fruits:::A.Agriculture, forestry and fishing
+0123:::Growing of citrus fruits:::A.Agriculture, forestry and fishing
+0124:::Growing of pome fruits and stone fruits:::A.Agriculture, forestry and fishing
+0125:::Growing of other tree and bush fruits and nuts:::A.Agriculture, forestry and fishing
+0126:::Growing of oleaginous fruits:::A.Agriculture, forestry and fishing
+0127:::Growing of beverage crops:::A.Agriculture, forestry and fishing
+0128:::Growing of spices, aromatic, drug and pharmaceutical crops:::A.Agriculture, forestry and fishing
+0129:::Growing of other perennial crops:::A.Agriculture, forestry and fishing
+013:::Plant propagation:::A.Agriculture, forestry and fishing
+0130:::Plant propagation:::A.Agriculture, forestry and fishing
+014:::Animal production:::A.Agriculture, forestry and fishing
+0141:::Raising of cattle and buffaloes:::A.Agriculture, forestry and fishing
+0142:::Raising of horses and other equines:::A.Agriculture, forestry and fishing
+0143:::Raising of camels and camelids:::A.Agriculture, forestry and fishing
+0144:::Raising of sheep and goats:::A.Agriculture, forestry and fishing
+0145:::Raising of swine/pigs:::A.Agriculture, forestry and fishing
+0146:::Raising of poultry:::A.Agriculture, forestry and fishing
+0149:::Raising of other animals:::A.Agriculture, forestry and fishing
+015:::Mixed farming:::A.Agriculture, forestry and fishing
+0150:::Mixed farming:::A.Agriculture, forestry and fishing
+016:::Support activities to agriculture and post-harvest crop activities:::A.Agriculture, forestry and fishing
+0161:::Support activities for crop production:::A.Agriculture, forestry and fishing
+0162:::Support activities for animal production:::A.Agriculture, forestry and fishing
+0163:::Post-harvest crop activities:::A.Agriculture, forestry and fishing
+0164:::Seed processing for propagation:::A.Agriculture, forestry and fishing
+017:::Hunting, trapping and related service activities:::A.Agriculture, forestry and fishing
+0170:::Hunting, trapping and related service activities:::A.Agriculture, forestry and fishing
+19a:::Liquid and gaseous fuels from biomass:::A.Agriculture, forestry and fishing
+02:::Forestry and logging:::A.Agriculture, forestry and fishing
+021:::Silviculture and other forestry activities:::A.Agriculture, forestry and fishing
+0210:::Silviculture and other forestry activities:::A.Agriculture, forestry and fishing
+022:::Logging:::A.Agriculture, forestry and fishing
+0220:::Logging:::A.Agriculture, forestry and fishing
+023:::Gathering of non-wood forest products:::A.Agriculture, forestry and fishing
+0230:::Gathering of non-wood forest products:::A.Agriculture, forestry and fishing
+024:::Support services to forestry:::A.Agriculture, forestry and fishing
+0240:::Support services to forestry:::A.Agriculture, forestry and fishing
+03:::Fishing and aquaculture:::A.Agriculture, forestry and fishing
+031:::Fishing:::A.Agriculture, forestry and fishing
+0311:::Marine fishing:::A.Agriculture, forestry and fishing
+0312:::Freshwater fishing:::A.Agriculture, forestry and fishing
+032:::Aquaculture:::A.Agriculture, forestry and fishing
+0321:::Marine aquaculture:::A.Agriculture, forestry and fishing
+0322:::Freshwater aquaculture:::A.Agriculture, forestry and fishing
+B.Mining and quarrying::::::
+05:::Mining of coal and lignite:::B.Mining and quarrying
+051:::Mining of hard coal:::B.Mining and quarrying
+0510:::Mining of hard coal:::B.Mining and quarrying
+052:::Mining of lignite:::B.Mining and quarrying
+0520:::Mining of lignite:::B.Mining and quarrying
+06:::Extraction of crude petroleum and natural gas:::B.Mining and quarrying
+061:::Extraction of crude petroleum:::B.Mining and quarrying
+0610:::Extraction of crude petroleum:::B.Mining and quarrying
+062:::Extraction of natural gas:::B.Mining and quarrying
+0620:::Extraction of natural gas:::B.Mining and quarrying
+07:::Mining of metal ores:::B.Mining and quarrying
+071:::Mining of iron ores:::B.Mining and quarrying
+0710:::Mining of iron ores:::B.Mining and quarrying
+072:::Mining of non-ferrous metal ores:::B.Mining and quarrying
+0721:::Mining of uranium and thorium ores:::B.Mining and quarrying
+0729:::Mining of other non-ferrous metal ores:::B.Mining and quarrying
+08:::Other mining and quarrying:::B.Mining and quarrying
+081:::Quarrying of stone, sand and clay:::B.Mining and quarrying
+0810:::Quarrying of stone, sand and clay:::B.Mining and quarrying
+089:::Mining and quarrying n.e.c.:::B.Mining and quarrying
+0891:::Mining of chemical and fertilizer minerals:::B.Mining and quarrying
+0892:::Extraction of peat:::B.Mining and quarrying
+0893:::Extraction of salt:::B.Mining and quarrying
+0899:::Other mining and quarrying n.e.c.:::B.Mining and quarrying
+09:::Mining support service activities:::B.Mining and quarrying
+091:::Support activities for petroleum and natural gas extraction:::B.Mining and quarrying
+0910:::Support activities for petroleum and natural gas extraction:::B.Mining and quarrying
+099:::Support activities for other mining and quarrying:::B.Mining and quarrying
+0990:::Support activities for other mining and quarrying:::B.Mining and quarrying
+C.Manufacturing::::::
+10:::Manufacture of food products:::C.Manufacturing
+101:::Processing and preserving of meat:::C.Manufacturing
+1010:::Processing and preserving of meat:::C.Manufacturing
+102:::Processing and preserving of fish, crustaceans and molluscs:::C.Manufacturing
+1020:::Processing and preserving of fish, crustaceans and molluscs:::C.Manufacturing
+103:::Processing and preserving of fruit and vegetables:::C.Manufacturing
+1030:::Processing and preserving of fruit and vegetables:::C.Manufacturing
+104:::Manufacture of vegetable and animal oils and fats:::C.Manufacturing
+1040:::Manufacture of vegetable and animal oils and fats:::C.Manufacturing
+105:::Manufacture of dairy products:::C.Manufacturing
+1050:::Manufacture of dairy products:::C.Manufacturing
+106:::Manufacture of grain mill products, starches and starch products:::C.Manufacturing
+1061:::Manufacture of grain mill products:::C.Manufacturing
+1062:::Manufacture of starches and starch products:::C.Manufacturing
+107:::Manufacture of other food products:::C.Manufacturing
+1071:::Manufacture of bakery products:::C.Manufacturing
+1072:::Manufacture of sugar:::C.Manufacturing
+1073:::Manufacture of cocoa, chocolate and sugar confectionery:::C.Manufacturing
+1074:::Manufacture of macaroni, noodles, couscous and similar farinaceous products:::C.Manufacturing
+1075:::Manufacture of prepared meals and dishes:::C.Manufacturing
+1079:::Manufacture of other food products n.e.c.:::C.Manufacturing
+108:::Manufacture of prepared animal feeds:::C.Manufacturing
+1080:::Manufacture of prepared animal feeds:::C.Manufacturing
+11:::Manufacture of beverages:::C.Manufacturing
+110:::Manufacture of beverages:::C.Manufacturing
+1101:::Distilling, rectifying and blending of spirits:::C.Manufacturing
+1102:::Manufacture of wines:::C.Manufacturing
+1103:::Manufacture of malt liquors and malt:::C.Manufacturing
+1104:::Manufacture of soft drinks; production of mineral waters and other bottled waters:::C.Manufacturing
+12:::Manufacture of tobacco products:::C.Manufacturing
+120:::Manufacture of tobacco products:::C.Manufacturing
+1200:::Manufacture of tobacco products:::C.Manufacturing
+13:::Manufacture of textiles:::C.Manufacturing
+131:::Spinning, weaving and finishing of textiles:::C.Manufacturing
+1311:::Preparation and spinning of textile fibres:::C.Manufacturing
+1312:::Weaving of textiles:::C.Manufacturing
+1313:::Finishing of textiles:::C.Manufacturing
+139:::Manufacture of other textiles:::C.Manufacturing
+1391:::Manufacture of knitted and crocheted fabrics:::C.Manufacturing
+1392:::Manufacture of made-up textile articles, except apparel:::C.Manufacturing
+1393:::Manufacture of carpets and rugs:::C.Manufacturing
+1394:::Manufacture of cordage, rope, twine and netting:::C.Manufacturing
+1399:::Manufacture of other textiles n.e.c.:::C.Manufacturing
+14:::Manufacture of wearing apparel:::C.Manufacturing
+141:::Manufacture of wearing apparel, except fur apparel:::C.Manufacturing
+1410:::Manufacture of wearing apparel, except fur apparel:::C.Manufacturing
+142:::Manufacture of articles of fur:::C.Manufacturing
+1420:::Manufacture of articles of fur:::C.Manufacturing
+143:::Manufacture of knitted and crocheted apparel:::C.Manufacturing
+1430:::Manufacture of knitted and crocheted apparel:::C.Manufacturing
+15:::Manufacture of leather and related products:::C.Manufacturing
+151:::Tanning and dressing of leather; manufacture of luggage, handbags, saddlery and harness; dressing and dyeing of fur:::C.Manufacturing
+1511:::Tanning and dressing of leather; dressing and dyeing of fur:::C.Manufacturing
+1512:::Manufacture of luggage, handbags and the like, saddlery and harness:::C.Manufacturing
+152:::Manufacture of footwear:::C.Manufacturing
+1520:::Manufacture of footwear:::C.Manufacturing
+16:::Manufacture of wood and of products of wood and cork, except furniture; manufacture of articles of straw and plaiting materials:::C.Manufacturing
+161:::Sawmilling and planing of wood:::C.Manufacturing
+1610:::Sawmilling and planing of wood:::C.Manufacturing
+162:::Manufacture of products of wood, cork, straw and plaiting materials:::C.Manufacturing
+1621:::Manufacture of veneer sheets and wood-based panels:::C.Manufacturing
+1622:::Manufacture of builders' carpentry and joinery:::C.Manufacturing
+1623:::Manufacture of wooden containers:::C.Manufacturing
+1629:::Manufacture of other products of wood; manufacture of articles of cork, straw and plaiting materials:::C.Manufacturing
+17:::Manufacture of paper and paper products:::C.Manufacturing
+170:::Manufacture of paper and paper products:::C.Manufacturing
+1701:::Manufacture of pulp, paper and paperboard:::C.Manufacturing
+1702:::Manufacture of corrugated paper and paperboard and of containers of paper and paperboard:::C.Manufacturing
+1709:::Manufacture of other articles of paper and paperboard:::C.Manufacturing
+18:::Printing and reproduction of recorded media:::C.Manufacturing
+181:::Printing and service activities related to printing:::C.Manufacturing
+1811:::Printing:::C.Manufacturing
+1812:::Service activities related to printing:::C.Manufacturing
+182:::Reproduction of recorded media:::C.Manufacturing
+1820:::Reproduction of recorded media:::C.Manufacturing
+19:::Manufacture of coke and refined petroleum products:::C.Manufacturing
+191:::Manufacture of coke oven products:::C.Manufacturing
+1910:::Manufacture of coke oven products:::C.Manufacturing
+192:::Manufacture of refined petroleum products:::C.Manufacturing
+1920:::Manufacture of refined petroleum products:::C.Manufacturing
+20:::Manufacture of chemicals and chemical products:::C.Manufacturing
+201:::Manufacture of basic chemicals, fertilizers and nitrogen compounds, plastics and synthetic rubber in primary forms:::C.Manufacturing
+2011:::Manufacture of basic chemicals:::C.Manufacturing
+2011a:::Manufacture of nuclear fuels:::C.Manufacturing
+2012:::Manufacture of fertilizers and nitrogen compounds:::C.Manufacturing
+2013:::Manufacture of plastics and synthetic rubber in primary forms:::C.Manufacturing
+202:::Manufacture of other chemical products:::C.Manufacturing
+2021:::Manufacture of pesticides and other agrochemical products:::C.Manufacturing
+2022:::Manufacture of paints, varnishes and similar coatings, printing ink and mastics:::C.Manufacturing
+2023:::Manufacture of soap and detergents, cleaning and polishing preparations, perfumes and toilet preparations:::C.Manufacturing
+2029:::Manufacture of other chemical products n.e.c.:::C.Manufacturing
+203:::Manufacture of man-made fibres:::C.Manufacturing
+2030:::Manufacture of man-made fibres:::C.Manufacturing
+21:::Manufacture of basic pharmaceutical products and pharmaceutical preparations:::C.Manufacturing
+210:::Manufacture of pharmaceuticals, medicinal chemical and botanical products:::C.Manufacturing
+2100:::Manufacture of pharmaceuticals, medicinal chemical and botanical products:::C.Manufacturing
+22:::Manufacture of rubber and plastics products:::C.Manufacturing
+221:::Manufacture of rubber products:::C.Manufacturing
+2211:::Manufacture of rubber tyres and tubes; retreading and rebuilding of rubber tyres:::C.Manufacturing
+2219:::Manufacture of other rubber products:::C.Manufacturing
+222:::Manufacture of plastics products:::C.Manufacturing
+2220:::Manufacture of plastics products:::C.Manufacturing
+23:::Manufacture of other non-metallic mineral products:::C.Manufacturing
+231:::Manufacture of glass and glass products:::C.Manufacturing
+2310:::Manufacture of glass and glass products:::C.Manufacturing
+239:::Manufacture of non-metallic mineral products n.e.c.:::C.Manufacturing
+2391:::Manufacture of refractory products:::C.Manufacturing
+2392:::Manufacture of clay building materials:::C.Manufacturing
+2393:::Manufacture of other porcelain and ceramic products:::C.Manufacturing
+2394:::Manufacture of cement, lime and plaster:::C.Manufacturing
+2395:::Manufacture of articles of concrete, cement and plaster:::C.Manufacturing
+2396:::Cutting, shaping and finishing of stone:::C.Manufacturing
+2399:::Manufacture of other non-metallic mineral products n.e.c.:::C.Manufacturing
+24:::Manufacture of basic metals:::C.Manufacturing
+241:::Manufacture of basic iron and steel:::C.Manufacturing
+2410:::Manufacture of basic iron and steel:::C.Manufacturing
+242:::Manufacture of basic precious and other non-ferrous metals:::C.Manufacturing
+2420:::Manufacture of basic precious and other non-ferrous metals:::C.Manufacturing
+2420a:::Smelting and refining:::C.Manufacturing
+243:::Casting of metals:::C.Manufacturing
+2431:::Casting of iron and steel:::C.Manufacturing
+2432:::Casting of non-ferrous metals:::C.Manufacturing
+25:::Manufacture of fabricated metal products, except machinery and equipment:::C.Manufacturing
+251:::Manufacture of structural metal products, tanks, reservoirs and steam generators:::C.Manufacturing
+2511:::Manufacture of structural metal products:::C.Manufacturing
+2512:::Manufacture of tanks, reservoirs and containers of metal:::C.Manufacturing
+2513:::Manufacture of steam generators, except central heating hot water boilers:::C.Manufacturing
+252:::Manufacture of weapons and ammunition:::C.Manufacturing
+2520:::Manufacture of weapons and ammunition:::C.Manufacturing
+259:::Manufacture of other fabricated metal products; metalworking service activities:::C.Manufacturing
+2591:::Forging, pressing, stamping and roll-forming of metal; powder metallurgy:::C.Manufacturing
+2592:::Treatment and coating of metals; machining:::C.Manufacturing
+2593:::Manufacture of cutlery, hand tools and general hardware:::C.Manufacturing
+2599:::Manufacture of other fabricated metal products n.e.c.:::C.Manufacturing
+26:::Manufacture of computer, electronic and optical products:::C.Manufacturing
+261:::Manufacture of electronic components and boards:::C.Manufacturing
+2610:::Manufacture of electronic components and boards:::C.Manufacturing
+262:::Manufacture of computers and peripheral equipment:::C.Manufacturing
+2620:::Manufacture of computers and peripheral equipment:::C.Manufacturing
+263:::Manufacture of communication equipment:::C.Manufacturing
+2630:::Manufacture of communication equipment:::C.Manufacturing
+264:::Manufacture of consumer electronics:::C.Manufacturing
+2640:::Manufacture of consumer electronics:::C.Manufacturing
+265:::Manufacture of measuring, testing, navigating and control equipment; watches and clocks:::C.Manufacturing
+2651:::Manufacture of measuring, testing, navigating and control equipment:::C.Manufacturing
+2652:::Manufacture of watches and clocks:::C.Manufacturing
+266:::Manufacture of irradiation, electromedical and electrotherapeutic equipment:::C.Manufacturing
+2660:::Manufacture of irradiation, electromedical and electrotherapeutic equipment:::C.Manufacturing
+267:::Manufacture of optical instruments and photographic equipment:::C.Manufacturing
+2670:::Manufacture of optical instruments and photographic equipment:::C.Manufacturing
+268:::Manufacture of magnetic and optical media:::C.Manufacturing
+2680:::Manufacture of magnetic and optical media:::C.Manufacturing
+27:::Manufacture of electrical equipment:::C.Manufacturing
+271:::Manufacture of electric motors, generators, transformers and electricity distribution and control apparatus:::C.Manufacturing
+2710:::Manufacture of electric motors, generators, transformers and electricity distribution and control apparatus:::C.Manufacturing
+2710a:::Manufacture of electric motors, generators, for liquid fuels:::C.Manufacturing
+272:::Manufacture of batteries and accumulators:::C.Manufacturing
+2720:::Manufacture of batteries and accumulators:::C.Manufacturing
+273:::Manufacture of wiring and wiring devices:::C.Manufacturing
+2731:::Manufacture of fibre optic cables:::C.Manufacturing
+2732:::Manufacture of other electronic and electric wires and cables:::C.Manufacturing
+2733:::Manufacture of wiring devices:::C.Manufacturing
+274:::Manufacture of electric lighting equipment:::C.Manufacturing
+2740:::Manufacture of electric lighting equipment:::C.Manufacturing
+275:::Manufacture of domestic appliances:::C.Manufacturing
+2750:::Manufacture of domestic appliances:::C.Manufacturing
+279:::Manufacture of other electrical equipment:::C.Manufacturing
+2790:::Manufacture of other electrical equipment:::C.Manufacturing
+28:::Manufacture of machinery and equipment n.e.c.:::C.Manufacturing
+281:::Manufacture of general-purpose machinery:::C.Manufacturing
+2811:::Manufacture of engines and turbines, except aircraft, vehicle and cycle engines:::C.Manufacturing
+2811a:::Manufacture of engines and turbines for liquid fuels, except:::C.Manufacturing
+2812:::Manufacture of fluid power equipment:::C.Manufacturing
+2813:::Manufacture of other pumps, compressors, taps and valves:::C.Manufacturing
+2814:::Manufacture of bearings, gears, gearing and driving elements:::C.Manufacturing
+2815:::Manufacture of ovens, furnaces and furnace burners:::C.Manufacturing
+2815a:::Manufacture of furnaces and boilers for liquid fuels:::C.Manufacturing
+2815b:::Manufacture of permanent mount non-electric household heating:::C.Manufacturing
+2816:::Manufacture of lifting and handling equipment:::C.Manufacturing
+2817:::Manufacture of office machinery and equipment (except computers and peripheral equipment):::C.Manufacturing
+2818:::Manufacture of power-driven hand tools:::C.Manufacturing
+2819:::Manufacture of other general-purpose machinery:::C.Manufacturing
+282:::Manufacture of special-purpose machinery:::C.Manufacturing
+2821:::Manufacture of agricultural and forestry machinery:::C.Manufacturing
+2822:::Manufacture of metal-forming machinery and machine tools:::C.Manufacturing
+2823:::Manufacture of machinery for metallurgy:::C.Manufacturing
+2824:::Manufacture of machinery for mining, quarrying and construction:::C.Manufacturing
+2825:::Manufacture of machinery for food, beverage and tobacco processing:::C.Manufacturing
+2826:::Manufacture of machinery for textile, apparel and leather production:::C.Manufacturing
+2829:::Manufacture of other special-purpose machinery:::C.Manufacturing
+29:::Manufacture of motor vehicles, trailers and semi-trailers:::C.Manufacturing
+291:::Manufacture of motor vehicles:::C.Manufacturing
+2910:::Manufacture of motor vehicles:::C.Manufacturing
+292:::Manufacture of bodies (coachwork) for motor vehicles; manufacture of trailers and semi-trailers:::C.Manufacturing
+2920:::Manufacture of bodies (coachwork) for motor vehicles; manufacture of trailers and semi-trailers:::C.Manufacturing
+293:::Manufacture of parts and accessories for motor vehicles:::C.Manufacturing
+2930:::Manufacture of parts and accessories for motor vehicles:::C.Manufacturing
+30:::Manufacture of other transport equipment:::C.Manufacturing
+301:::Building of ships and boats:::C.Manufacturing
+3011:::Building of ships and floating structures:::C.Manufacturing
+3011a:::Construction of drilling platforms:::C.Manufacturing
+3012:::Building of pleasure and sporting boats:::C.Manufacturing
+302:::Manufacture of railway locomotives and rolling stock:::C.Manufacturing
+3020:::Manufacture of railway locomotives and rolling stock:::C.Manufacturing
+303:::Manufacture of air and spacecraft and related machinery:::C.Manufacturing
+3030:::Manufacture of air and spacecraft and related machinery:::C.Manufacturing
+304:::Manufacture of military fighting vehicles:::C.Manufacturing
+3040:::Manufacture of military fighting vehicles:::C.Manufacturing
+309:::Manufacture of transport equipment n.e.c.:::C.Manufacturing
+3091:::Manufacture of motorcycles:::C.Manufacturing
+3092:::Manufacture of bicycles and invalid carriages:::C.Manufacturing
+3099:::Manufacture of other transport equipment n.e.c.:::C.Manufacturing
+31:::Manufacture of furniture:::C.Manufacturing
+310:::Manufacture of furniture:::C.Manufacturing
+3100:::Manufacture of furniture:::C.Manufacturing
+32:::Other manufacturing:::C.Manufacturing
+321:::Manufacture of jewellery, bijouterie and related articles:::C.Manufacturing
+3211:::Manufacture of jewellery and related articles:::C.Manufacturing
+3212:::Manufacture of imitation jewellery and related articles:::C.Manufacturing
+322:::Manufacture of musical instruments:::C.Manufacturing
+3220:::Manufacture of musical instruments:::C.Manufacturing
+323:::Manufacture of sports goods:::C.Manufacturing
+3230:::Manufacture of sports goods:::C.Manufacturing
+324:::Manufacture of games and toys:::C.Manufacturing
+3240:::Manufacture of games and toys:::C.Manufacturing
+325:::Manufacture of medical and dental instruments and supplies:::C.Manufacturing
+3250:::Manufacture of medical and dental instruments and supplies:::C.Manufacturing
+329:::Other manufacturing n.e.c.:::C.Manufacturing
+3290:::Other manufacturing n.e.c.:::C.Manufacturing
+33:::Repair and installation of machinery and equipment:::C.Manufacturing
+331:::Repair of fabricated metal products, machinery and equipment:::C.Manufacturing
+3311:::Repair of fabricated metal products:::C.Manufacturing
+3312:::Repair of machinery:::C.Manufacturing
+3313:::Repair of electronic and optical equipment:::C.Manufacturing
+3314:::Repair of electrical equipment:::C.Manufacturing
+3315:::Repair of transport equipment, except motor vehicles:::C.Manufacturing
+3319:::Repair of other equipment:::C.Manufacturing
+332:::Installation of industrial machinery and equipment:::C.Manufacturing
+3320:::Installation of industrial machinery and equipment:::C.Manufacturing
+D.Electricity, gas, steam and air conditioning supply::::::
+35:::Electricity, gas, steam and air conditioning supply:::D.Electricity, gas, steam and air conditioning supply
+351:::Electric power generation, transmission and distribution:::D.Electricity, gas, steam and air conditioning supply
+3510:::Electric power generation, transmission and distribution:::D.Electricity, gas, steam and air conditioning supply
+3510a:::Electric power generation based on liquid fuels:::D.Electricity, gas, steam and air conditioning supply
+3510b:::Electric power generation, photovoltaic:::D.Electricity, gas, steam and air conditioning supply
+3510c:::Electric power generation, wind:::D.Electricity, gas, steam and air conditioning supply
+352:::Manufacture of gas; distribution of gaseous fuels through mains:::D.Electricity, gas, steam and air conditioning supply
+3520:::Manufacture of gas; distribution of gaseous fuels through mains:::D.Electricity, gas, steam and air conditioning supply
+353:::Steam and air conditioning supply:::D.Electricity, gas, steam and air conditioning supply
+3530:::Steam and air conditioning supply:::D.Electricity, gas, steam and air conditioning supply
+3530a:::Steam and air conditioning supply based on liquid fuels:::D.Electricity, gas, steam and air conditioning supply
+3530b:::Solar collectors operation:::D.Electricity, gas, steam and air conditioning supply
+E.Water supply; sewerage, waste management and remediation activities::::::
+36:::Water collection, treatment and supply:::E.Water supply; sewerage, waste management and remediation activities
+360:::Water collection, treatment and supply:::E.Water supply; sewerage, waste management and remediation activities
+3600:::Water collection, treatment and supply:::E.Water supply; sewerage, waste management and remediation activities
+37:::Sewerage:::E.Water supply; sewerage, waste management and remediation activities
+370:::Sewerage:::E.Water supply; sewerage, waste management and remediation activities
+3700:::Sewerage:::E.Water supply; sewerage, waste management and remediation activities
+38:::Waste collection, treatment and disposal activities; materials recovery:::E.Water supply; sewerage, waste management and remediation activities
+381:::Waste collection:::E.Water supply; sewerage, waste management and remediation activities
+3811:::Collection of non-hazardous waste:::E.Water supply; sewerage, waste management and remediation activities
+3812:::Collection of hazardous waste:::E.Water supply; sewerage, waste management and remediation activities
+382:::Waste treatment and disposal:::E.Water supply; sewerage, waste management and remediation activities
+3821:::Treatment and disposal of non-hazardous waste:::E.Water supply; sewerage, waste management and remediation activities
+3822:::Treatment and disposal of hazardous waste:::E.Water supply; sewerage, waste management and remediation activities
+383:::Materials recovery:::E.Water supply; sewerage, waste management and remediation activities
+3830:::Materials recovery:::E.Water supply; sewerage, waste management and remediation activities
+39:::Remediation activities and other waste management services:::E.Water supply; sewerage, waste management and remediation activities
+390:::Remediation activities and other waste management services:::E.Water supply; sewerage, waste management and remediation activities
+3900:::Remediation activities and other waste management services:::E.Water supply; sewerage, waste management and remediation activities
+F.Construction::::::
+41:::Construction of buildings:::F.Construction
+410:::Construction of buildings:::F.Construction
+4100:::Construction of buildings:::F.Construction
+4100a:::Construction of factory buildings for the metal industry:::F.Construction
+42:::Civil engineering:::F.Construction
+421:::Construction of roads and railways:::F.Construction
+4210:::Construction of roads and railways:::F.Construction
+422:::Construction of utility projects:::F.Construction
+4220:::Construction of utility projects:::F.Construction
+4220a:::Construction of utility projects for electricity production:::F.Construction
+4220b:::Construction of utility projects for electricity production:::F.Construction
+429:::Construction of other civil engineering projects:::F.Construction
+4290:::Construction of other civil engineering projects:::F.Construction
+4290a:::Construction of infrastructure for petroleum refining and di:::F.Construction
+43:::Specialized construction activities:::F.Construction
+431:::Demolition and site preparation:::F.Construction
+4311:::Demolition:::F.Construction
+4312:::Site preparation:::F.Construction
+432:::Electrical, plumbing and other construction installation activities:::F.Construction
+4321:::Electrical installation:::F.Construction
+4322:::Plumbing, heat and air-conditioning installation:::F.Construction
+4322a:::Installation of solar collector systems:::F.Construction
+4329:::Other construction installation:::F.Construction
+433:::Building completion and finishing:::F.Construction
+4330:::Building completion and finishing:::F.Construction
+439:::Other specialized construction activities:::F.Construction
+4390:::Other specialized construction activities:::F.Construction
+G.Wholesale and retail trade; repair of motor vehicles and motorcycles::::::
+45:::Wholesale and retail trade and repair of motor vehicles and motorcycles:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+451:::Sale of motor vehicles:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4510:::Sale of motor vehicles:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+452:::Maintenance and repair of motor vehicles:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4520:::Maintenance and repair of motor vehicles:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+453:::Sale of motor vehicle parts and accessories:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4530:::Sale of motor vehicle parts and accessories:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+454:::Sale, maintenance and repair of motorcycles and related parts and accessories:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4540:::Sale, maintenance and repair of motorcycles and related parts and accessories:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+46:::Wholesale trade, except of motor vehicles and motorcycles:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+461:::Wholesale on a fee or contract basis:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4610:::Wholesale on a fee or contract basis:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+462:::Wholesale of agricultural raw materials and live animals:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4620:::Wholesale of agricultural raw materials and live animals:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+463:::Wholesale of food, beverages and tobacco:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4630:::Wholesale of food, beverages and tobacco:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+464:::Wholesale of household goods:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4641:::Wholesale of textiles, clothing and footwear:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4649:::Wholesale of other household goods:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+465:::Wholesale of machinery, equipment and supplies:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4651:::Wholesale of computers, computer peripheral equipment and software:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4652:::Wholesale of electronic and telecommunications equipment and parts:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4653:::Wholesale of agricultural machinery, equipment and supplies:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4659:::Wholesale of other machinery and equipment:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+466:::Other specialized wholesale:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4661:::Wholesale of solid, liquid and gaseous fuels and related products:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4662:::Wholesale of metals and metal ores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4663:::Wholesale of construction materials, hardware, plumbing and heating equipment and supplies:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4669:::Wholesale of waste and scrap and other products n.e.c.:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+469:::Non-specialized wholesale trade:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4690:::Non-specialized wholesale trade:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+47:::Retail trade, except of motor vehicles and motorcycles:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+471:::Retail sale in non-specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4711:::Retail sale in non-specialized stores with food, beverages or tobacco predominating:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4719:::Other retail sale in non-specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+472:::Retail sale of food, beverages and tobacco in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4721:::Retail sale of food in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4722:::Retail sale of beverages in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4723:::Retail sale of tobacco products in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+473:::Retail sale of automotive fuel in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4730:::Retail sale of automotive fuel in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+474:::Retail sale of information and communications equipment in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4741:::Retail sale of computers, peripheral units, software and telecommunications equipment in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4742:::Retail sale of audio and video equipment in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+475:::Retail sale of other household equipment in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4751:::Retail sale of textiles in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4752:::Retail sale of hardware, paints and glass in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4753:::Retail sale of carpets, rugs, wall and floor coverings in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4759:::Retail sale of electrical household appliances, furniture, lighting equipment and other household articles in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+476:::Retail sale of cultural and recreation goods in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4761:::Retail sale of books, newspapers and stationary in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4762:::Retail sale of music and video recordings in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4763:::Retail sale of sporting equipment in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4764:::Retail sale of games and toys in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+477:::Retail sale of other goods in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4771:::Retail sale of clothing, footwear and leather articles in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4772:::Retail sale of pharmaceutical and medical goods, cosmetic and toilet articles in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4773:::Other retail sale of new goods in specialized stores:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4774:::Retail sale of second-hand goods:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+478:::Retail sale via stalls and markets:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4781:::Retail sale via stalls and markets of food, beverages and tobacco products:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4782:::Retail sale via stalls and markets of textiles, clothing and footwear:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4789:::Retail sale via stalls and markets of other goods:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+479:::Retail trade not in stores, stalls or markets:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4791:::Retail sale via mail order houses or via Internet:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+4799:::Other retail sale not in stores, stalls or markets:::G.Wholesale and retail trade; repair of motor vehicles and motorcycles
+H.Transportation and storage::::::
+49:::Land transport and transport via pipelines:::H.Transportation and storage
+491:::Transport via railways:::H.Transportation and storage
+4911:::Passenger rail transport, interurban:::H.Transportation and storage
+4912:::Freight rail transport:::H.Transportation and storage
+492:::Other land transport:::H.Transportation and storage
+4921:::Urban and suburban passenger land transport:::H.Transportation and storage
+4922:::Other passenger land transport:::H.Transportation and storage
+4923:::Freight transport by road:::H.Transportation and storage
+493:::Transport via pipeline:::H.Transportation and storage
+4930:::Transport via pipeline:::H.Transportation and storage
+50:::Water transport:::H.Transportation and storage
+501:::Sea and coastal water transport:::H.Transportation and storage
+5011:::Sea and coastal passenger water transport:::H.Transportation and storage
+5012:::Sea and coastal freight water transport:::H.Transportation and storage
+502:::Inland water transport:::H.Transportation and storage
+5021:::Inland passenger water transport:::H.Transportation and storage
+5022:::Inland freight water transport:::H.Transportation and storage
+51:::Air transport:::H.Transportation and storage
+511:::Passenger air transport:::H.Transportation and storage
+5110:::Passenger air transport:::H.Transportation and storage
+512:::Freight air transport:::H.Transportation and storage
+5120:::Freight air transport:::H.Transportation and storage
+52:::Warehousing and support activities for transportation:::H.Transportation and storage
+521:::Warehousing and storage:::H.Transportation and storage
+5210:::Warehousing and storage:::H.Transportation and storage
+522:::Support activities for transportation:::H.Transportation and storage
+5221:::Service activities incidental to land transportation:::H.Transportation and storage
+5222:::Service activities incidental to water transportation:::H.Transportation and storage
+5223:::Service activities incidental to air transportation:::H.Transportation and storage
+5224:::Cargo handling:::H.Transportation and storage
+5229:::Other transportation support activities:::H.Transportation and storage
+53:::Postal and courier activities:::H.Transportation and storage
+531:::Postal activities:::H.Transportation and storage
+5310:::Postal activities:::H.Transportation and storage
+532:::Courier activities:::H.Transportation and storage
+5320:::Courier activities:::H.Transportation and storage
+I.Accommodation and food service activities::::::
+55:::Accommodation:::I.Accommodation and food service activities
+551:::Short term accommodation activities:::I.Accommodation and food service activities
+5510:::Short term accommodation activities:::I.Accommodation and food service activities
+552:::Camping grounds, recreational vehicle parks and trailer parks:::I.Accommodation and food service activities
+5520:::Camping grounds, recreational vehicle parks and trailer parks:::I.Accommodation and food service activities
+559:::Other accommodation:::I.Accommodation and food service activities
+5590:::Other accommodation:::I.Accommodation and food service activities
+56:::Food and beverage service activities:::I.Accommodation and food service activities
+561:::Restaurants and mobile food service activities:::I.Accommodation and food service activities
+5610:::Restaurants and mobile food service activities:::I.Accommodation and food service activities
+562:::Event catering and other food service activities:::I.Accommodation and food service activities
+5621:::Event catering:::I.Accommodation and food service activities
+5629:::Other food service activities:::I.Accommodation and food service activities
+563:::Beverage serving activities:::I.Accommodation and food service activities
+5630:::Beverage serving activities:::I.Accommodation and food service activities
+J.Information and communication::::::
+58:::Publishing activities:::J.Information and communication
+581:::Publishing of books, periodicals and other publishing activities:::J.Information and communication
+5811:::Book publishing:::J.Information and communication
+5812:::Publishing of directories and mailing lists:::J.Information and communication
+5813:::Publishing of newspapers, journals and periodicals:::J.Information and communication
+5819:::Other publishing activities:::J.Information and communication
+582:::Software publishing:::J.Information and communication
+5820:::Software publishing:::J.Information and communication
+59:::Motion picture, video and television programme production, sound recording and music publishing activities:::J.Information and communication
+591:::Motion picture, video and television programme activities:::J.Information and communication
+5911:::Motion picture, video and television programme production activities:::J.Information and communication
+5912:::Motion picture, video and television programme post-production activities:::J.Information and communication
+5913:::Motion picture, video and television programme distribution activities:::J.Information and communication
+5914:::Motion picture projection activities:::J.Information and communication
+592:::Sound recording and music publishing activities:::J.Information and communication
+5920:::Sound recording and music publishing activities:::J.Information and communication
+60:::Programming and broadcasting activities:::J.Information and communication
+601:::Radio broadcasting:::J.Information and communication
+6010:::Radio broadcasting:::J.Information and communication
+602:::Television programming and broadcasting activities:::J.Information and communication
+6020:::Television programming and broadcasting activities:::J.Information and communication
+61:::Telecommunications:::J.Information and communication
+611:::Wired telecommunications activities:::J.Information and communication
+6110:::Wired telecommunications activities:::J.Information and communication
+612:::Wireless telecommunications activities:::J.Information and communication
+6120:::Wireless telecommunications activities:::J.Information and communication
+613:::Satellite telecommunications activities:::J.Information and communication
+6130:::Satellite telecommunications activities:::J.Information and communication
+619:::Other telecommunications activities:::J.Information and communication
+6190:::Other telecommunications activities:::J.Information and communication
+62:::Computer programming, consultancy and related activities:::J.Information and communication
+620:::Computer programming, consultancy and related activities:::J.Information and communication
+6201:::Computer programming activities:::J.Information and communication
+6202:::Computer consultancy and computer facilities management activities:::J.Information and communication
+6209:::Other information technology and computer service activities:::J.Information and communication
+63:::Information service activities:::J.Information and communication
+631:::Data processing, hosting and related activities; web portals:::J.Information and communication
+6311:::Data processing, hosting and related activities:::J.Information and communication
+6312:::Web portals:::J.Information and communication
+639:::Other information service activities:::J.Information and communication
+6391:::News agency activities:::J.Information and communication
+6399:::Other information service activities n.e.c.:::J.Information and communication
+K.Financial and insurance activities::::::
+64:::Financial service activities, except insurance and pension funding:::K.Financial and insurance activities
+641:::Monetary intermediation:::K.Financial and insurance activities
+6411:::Central banking:::K.Financial and insurance activities
+6419:::Other monetary intermediation:::K.Financial and insurance activities
+642:::Activities of holding companies:::K.Financial and insurance activities
+6420:::Activities of holding companies:::K.Financial and insurance activities
+643:::Trusts, funds and similar financial entities:::K.Financial and insurance activities
+6430:::Trusts, funds and similar financial entities:::K.Financial and insurance activities
+649:::Other financial service activities, except insurance and pension funding activities:::K.Financial and insurance activities
+6491:::Financial leasing:::K.Financial and insurance activities
+6492:::Other credit granting:::K.Financial and insurance activities
+6499:::Other financial service activities, except insurance and pension funding activities, n.e.c.:::K.Financial and insurance activities
+65:::Insurance, reinsurance and pension funding, except compulsory social security:::K.Financial and insurance activities
+651:::Insurance:::K.Financial and insurance activities
+6511:::Life insurance:::K.Financial and insurance activities
+6512:::Non-life insurance:::K.Financial and insurance activities
+652:::Reinsurance:::K.Financial and insurance activities
+6520:::Reinsurance:::K.Financial and insurance activities
+653:::Pension funding:::K.Financial and insurance activities
+6530:::Pension funding:::K.Financial and insurance activities
+66:::Activities auxiliary to financial service and insurance activities:::K.Financial and insurance activities
+661:::Activities auxiliary to financial service activities, except insurance and pension funding:::K.Financial and insurance activities
+6611:::Administration of financial markets:::K.Financial and insurance activities
+6612:::Security and commodity contracts brokerage:::K.Financial and insurance activities
+6619:::Other activities auxiliary to financial service activities:::K.Financial and insurance activities
+662:::Activities auxiliary to insurance and pension funding:::K.Financial and insurance activities
+6621:::Risk and damage evaluation:::K.Financial and insurance activities
+6622:::Activities of insurance agents and brokers:::K.Financial and insurance activities
+6629:::Other activities auxiliary to insurance and pension funding:::K.Financial and insurance activities
+663:::Fund management activities:::K.Financial and insurance activities
+6630:::Fund management activities:::K.Financial and insurance activities
+L.Real estate activities::::::
+68:::Real estate activities:::L.Real estate activities
+681:::Real estate activities with own or leased property:::L.Real estate activities
+6810:::Real estate activities with own or leased property:::L.Real estate activities
+682:::Real estate activities on a fee or contract basis:::L.Real estate activities
+6820:::Real estate activities on a fee or contract basis:::L.Real estate activities
+M.Professional, scientific and technical activities::::::
+69:::Legal and accounting activities:::M.Professional, scientific and technical activities
+691:::Legal activities:::M.Professional, scientific and technical activities
+6910:::Legal activities:::M.Professional, scientific and technical activities
+692:::Accounting, bookkeeping and auditing activities; tax consultancy:::M.Professional, scientific and technical activities
+6920:::Accounting, bookkeeping and auditing activities; tax consultancy:::M.Professional, scientific and technical activities
+70:::Activities of head offices; management consultancy activities:::M.Professional, scientific and technical activities
+701:::Activities of head offices:::M.Professional, scientific and technical activities
+7010:::Activities of head offices:::M.Professional, scientific and technical activities
+702:::Management consultancy activities:::M.Professional, scientific and technical activities
+7020:::Management consultancy activities:::M.Professional, scientific and technical activities
+71:::Architectural and engineering activities; technical testing and analysis:::M.Professional, scientific and technical activities
+711:::Architectural and engineering activities and related technical consultancy:::M.Professional, scientific and technical activities
+7110:::Architectural and engineering activities and related technical consultancy:::M.Professional, scientific and technical activities
+712:::Technical testing and analysis:::M.Professional, scientific and technical activities
+7120:::Technical testing and analysis:::M.Professional, scientific and technical activities
+72:::Scientific research and development:::M.Professional, scientific and technical activities
+721:::Research and experimental development on natural sciences and engineering:::M.Professional, scientific and technical activities
+7210:::Research and experimental development on natural sciences and engineering:::M.Professional, scientific and technical activities
+722:::Research and experimental development on social sciences and humanities:::M.Professional, scientific and technical activities
+7220:::Research and experimental development on social sciences and humanities:::M.Professional, scientific and technical activities
+73:::Advertising and market research:::M.Professional, scientific and technical activities
+731:::Advertising:::M.Professional, scientific and technical activities
+7310:::Advertising:::M.Professional, scientific and technical activities
+732:::Market research and public opinion polling:::M.Professional, scientific and technical activities
+7320:::Market research and public opinion polling:::M.Professional, scientific and technical activities
+74:::Other professional, scientific and technical activities:::M.Professional, scientific and technical activities
+741:::Specialized design activities:::M.Professional, scientific and technical activities
+7410:::Specialized design activities:::M.Professional, scientific and technical activities
+742:::Photographic activities:::M.Professional, scientific and technical activities
+7420:::Photographic activities:::M.Professional, scientific and technical activities
+749:::Other professional, scientific and technical activities n.e.c.:::M.Professional, scientific and technical activities
+7490:::Other professional, scientific and technical activities n.e.c.:::M.Professional, scientific and technical activities
+75:::Veterinary activities:::M.Professional, scientific and technical activities
+750:::Veterinary activities:::M.Professional, scientific and technical activities
+7500:::Veterinary activities:::M.Professional, scientific and technical activities
+N.Administrative and support service activities::::::
+77:::Rental and leasing activities:::N.Administrative and support service activities
+771:::Renting and leasing of motor vehicles:::N.Administrative and support service activities
+7710:::Renting and leasing of motor vehicles:::N.Administrative and support service activities
+772:::Renting and leasing of personal and household goods:::N.Administrative and support service activities
+7721:::Renting and leasing of recreational and sports goods:::N.Administrative and support service activities
+7722:::Renting of video tapes and disks:::N.Administrative and support service activities
+7729:::Renting and leasing of other personal and household goods:::N.Administrative and support service activities
+773:::Renting and leasing of other machinery, equipment and tangible goods:::N.Administrative and support service activities
+7730:::Renting and leasing of other machinery, equipment and tangible goods:::N.Administrative and support service activities
+774:::Leasing of intellectual property and similar products, except copyrighted works:::N.Administrative and support service activities
+7740:::Leasing of intellectual property and similar products, except copyrighted works:::N.Administrative and support service activities
+78:::Employment activities:::N.Administrative and support service activities
+781:::Activities of employment placement agencies:::N.Administrative and support service activities
+7810:::Activities of employment placement agencies:::N.Administrative and support service activities
+782:::Temporary employment agency activities:::N.Administrative and support service activities
+7820:::Temporary employment agency activities:::N.Administrative and support service activities
+783:::Other human resources provision:::N.Administrative and support service activities
+7830:::Other human resources provision:::N.Administrative and support service activities
+79:::Travel agency, tour operator, reservation service and related activities:::N.Administrative and support service activities
+791:::Travel agency and tour operator activities:::N.Administrative and support service activities
+7911:::Travel agency activities:::N.Administrative and support service activities
+7912:::Tour operator activities:::N.Administrative and support service activities
+799:::Other reservation service and related activities:::N.Administrative and support service activities
+7990:::Other reservation service and related activities:::N.Administrative and support service activities
+80:::Security and investigation activities:::N.Administrative and support service activities
+801:::Private security activities:::N.Administrative and support service activities
+8010:::Private security activities:::N.Administrative and support service activities
+802:::Security systems service activities:::N.Administrative and support service activities
+8020:::Security systems service activities:::N.Administrative and support service activities
+803:::Investigation activities:::N.Administrative and support service activities
+8030:::Investigation activities:::N.Administrative and support service activities
+81:::Services to buildings and landscape activities:::N.Administrative and support service activities
+811:::Combined facilities support activities:::N.Administrative and support service activities
+8110:::Combined facilities support activities:::N.Administrative and support service activities
+812:::Cleaning activities:::N.Administrative and support service activities
+8121:::General cleaning of buildings:::N.Administrative and support service activities
+8129:::Other building and industrial cleaning activities:::N.Administrative and support service activities
+813:::Landscape care and maintenance service activities:::N.Administrative and support service activities
+8130:::Landscape care and maintenance service activities:::N.Administrative and support service activities
+82:::Office administrative, office support and other business support activities:::N.Administrative and support service activities
+821:::Office administrative and support activities:::N.Administrative and support service activities
+8211:::Combined office administrative service activities:::N.Administrative and support service activities
+8219:::Photocopying, document preparation and other specialized office support activities:::N.Administrative and support service activities
+822:::Activities of call centres:::N.Administrative and support service activities
+8220:::Activities of call centres:::N.Administrative and support service activities
+823:::Organization of conventions and trade shows:::N.Administrative and support service activities
+8230:::Organization of conventions and trade shows:::N.Administrative and support service activities
+829:::Business support service activities n.e.c.:::N.Administrative and support service activities
+8291:::Activities of collection agencies and credit bureaus:::N.Administrative and support service activities
+8292:::Packaging activities:::N.Administrative and support service activities
+8299:::Other business support service activities n.e.c.:::N.Administrative and support service activities
+O.Public administration and defence; compulsory social security::::::
+84:::Public administration and defence; compulsory social security:::O.Public administration and defence; compulsory social security
+841:::Administration of the State and the economic and social policy of the community:::O.Public administration and defence; compulsory social security
+8411:::General public administration activities:::O.Public administration and defence; compulsory social security
+8412:::Regulation of the activities of providing health care, education, cultural services and other social services, excluding social security:::O.Public administration and defence; compulsory social security
+8413:::Regulation of and contribution to more efficient operation of businesses:::O.Public administration and defence; compulsory social security
+842:::Provision of services to the community as a whole:::O.Public administration and defence; compulsory social security
+8421:::Foreign affairs:::O.Public administration and defence; compulsory social security
+8422:::Defence activities:::O.Public administration and defence; compulsory social security
+8423:::Public order and safety activities:::O.Public administration and defence; compulsory social security
+843:::Compulsory social security activities:::O.Public administration and defence; compulsory social security
+8430:::Compulsory social security activities:::O.Public administration and defence; compulsory social security
+P.Education::::::
+85:::Education:::P.Education
+851:::Pre-primary and primary education:::P.Education
+8510:::Pre-primary and primary education:::P.Education
+852:::Secondary education:::P.Education
+8521:::General secondary education:::P.Education
+8522:::Technical and vocational secondary education:::P.Education
+853:::Higher education:::P.Education
+8530:::Higher education:::P.Education
+854:::Other education:::P.Education
+8541:::Sports and recreation education:::P.Education
+8542:::Cultural education:::P.Education
+8549:::Other education n.e.c.:::P.Education
+855:::Educational support activities:::P.Education
+8550:::Educational support activities:::P.Education
+Q.Human health and social work activities::::::
+86:::Human health activities:::Q.Human health and social work activities
+861:::Hospital activities:::Q.Human health and social work activities
+8610:::Hospital activities:::Q.Human health and social work activities
+862:::Medical and dental practice activities:::Q.Human health and social work activities
+8620:::Medical and dental practice activities:::Q.Human health and social work activities
+869:::Other human health activities:::Q.Human health and social work activities
+8690:::Other human health activities:::Q.Human health and social work activities
+87:::Residential care activities:::Q.Human health and social work activities
+871:::Residential nursing care facilities:::Q.Human health and social work activities
+8710:::Residential nursing care facilities:::Q.Human health and social work activities
+872:::Residential care activities for mental retardation, mental health and substance abuse:::Q.Human health and social work activities
+8720:::Residential care activities for mental retardation, mental health and substance abuse:::Q.Human health and social work activities
+873:::Residential care activities for the elderly and disabled:::Q.Human health and social work activities
+8730:::Residential care activities for the elderly and disabled:::Q.Human health and social work activities
+879:::Other residential care activities:::Q.Human health and social work activities
+8790:::Other residential care activities:::Q.Human health and social work activities
+88:::Social work activities without accommodation:::Q.Human health and social work activities
+881:::Social work activities without accommodation for the elderly and disabled:::Q.Human health and social work activities
+8810:::Social work activities without accommodation for the elderly and disabled:::Q.Human health and social work activities
+889:::Other social work activities without accommodation:::Q.Human health and social work activities
+8890:::Other social work activities without accommodation:::Q.Human health and social work activities
+R.Arts, entertainment and recreation::::::
+90:::Creative, arts and entertainment activities:::R.Arts, entertainment and recreation
+900:::Creative, arts and entertainment activities:::R.Arts, entertainment and recreation
+9000:::Creative, arts and entertainment activities:::R.Arts, entertainment and recreation
+91:::Libraries, archives, museums and other cultural activities:::R.Arts, entertainment and recreation
+910:::Libraries, archives, museums and other cultural activities:::R.Arts, entertainment and recreation
+9101:::Library and archives activities:::R.Arts, entertainment and recreation
+9102:::Museums activities and operation of historical sites and buildings:::R.Arts, entertainment and recreation
+9103:::Botanical and zoological gardens and nature reserves activities:::R.Arts, entertainment and recreation
+92:::Gambling and betting activities:::R.Arts, entertainment and recreation
+920:::Gambling and betting activities:::R.Arts, entertainment and recreation
+9200:::Gambling and betting activities:::R.Arts, entertainment and recreation
+93:::Sports activities and amusement and recreation activities:::R.Arts, entertainment and recreation
+931:::Sports activities:::R.Arts, entertainment and recreation
+9311:::Operation of sports facilities:::R.Arts, entertainment and recreation
+9312:::Activities of sports clubs:::R.Arts, entertainment and recreation
+9319:::Other sports activities:::R.Arts, entertainment and recreation
+932:::Other amusement and recreation activities:::R.Arts, entertainment and recreation
+9321:::Activities of amusement parks and theme parks:::R.Arts, entertainment and recreation
+9329:::Other amusement and recreation activities n.e.c.:::R.Arts, entertainment and recreation
+S.Other service activities::::::
+94:::Activities of membership organizations:::S.Other service activities
+941:::Activities of business, employers and professional membership organizations:::S.Other service activities
+9411:::Activities of business and employers membership organizations:::S.Other service activities
+9412:::Activities of professional membership organizations:::S.Other service activities
+942:::Activities of trade unions:::S.Other service activities
+9420:::Activities of trade unions:::S.Other service activities
+949:::Activities of other membership organizations:::S.Other service activities
+9491:::Activities of religious organizations:::S.Other service activities
+9492:::Activities of political organizations:::S.Other service activities
+9499:::Activities of other membership organizations n.e.c.:::S.Other service activities
+95:::Repair of computers and personal and household goods:::S.Other service activities
+951:::Repair of computers and communication equipment:::S.Other service activities
+9511:::Repair of computers and peripheral equipment:::S.Other service activities
+9512:::Repair of communication equipment:::S.Other service activities
+952:::Repair of personal and household goods:::S.Other service activities
+9521:::Repair of consumer electronics:::S.Other service activities
+9522:::Repair of household appliances and home and garden equipment:::S.Other service activities
+9523:::Repair of footwear and leather goods:::S.Other service activities
+9524:::Repair of furniture and home furnishings:::S.Other service activities
+9529:::Repair of other personal and household goods:::S.Other service activities
+96:::Other personal service activities:::S.Other service activities
+960:::Other personal service activities:::S.Other service activities
+9601:::Washing and (dry-) cleaning of textile and fur products:::S.Other service activities
+9602:::Hairdressing and other beauty treatment:::S.Other service activities
+9603:::Funeral and related activities:::S.Other service activities
+9609:::Other personal service activities n.e.c.:::S.Other service activities
+T.Activities of households as employers; undifferentiated goods- and services-producing activities of households for own use::::::
+97:::Activities of households as employers of domestic personnel:::T.Activities of households as employers; undifferentiated goods- and services-producing activities of households for own use
+970:::Activities of households as employers of domestic personnel:::T.Activities of households as employers; undifferentiated goods- and services-producing activities of households for own use
+9700:::Activities of households as employers of domestic personnel:::T.Activities of households as employers; undifferentiated goods- and services-producing activities of households for own use
+98:::Undifferentiated goods- and services-producing activities of private households for own use:::T.Activities of households as employers; undifferentiated goods- and services-producing activities of households for own use
+981:::Undifferentiated goods-producing activities of private households for own use:::T.Activities of households as employers; undifferentiated goods- and services-producing activities of households for own use
+9810:::Undifferentiated goods-producing activities of private households for own use:::T.Activities of households as employers; undifferentiated goods- and services-producing activities of households for own use
+982:::Undifferentiated service-producing activities of private households for own use:::T.Activities of households as employers; undifferentiated goods- and services-producing activities of households for own use
+9820:::Undifferentiated service-producing activities of private households for own use:::T.Activities of households as employers; undifferentiated goods- and services-producing activities of households for own use
+U.Activities of extraterritorial organizations and bodies::::::
+99:::Activities of extraterritorial organizations and bodies:::U.Activities of extraterritorial organizations and bodies
+990:::Activities of extraterritorial organizations and bodies:::U.Activities of extraterritorial organizations and bodies
+9900:::Activities of extraterritorial organizations and bodies:::U.Activities of extraterritorial organizations and bodies

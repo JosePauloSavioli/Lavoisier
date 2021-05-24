@@ -1,0 +1,70 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
+<ns7:unitGroupDataSet xmlns="http://lca.jrc.it/ILCD/Common" xmlns:ns2="http://lca.jrc.it/ILCD/Process" xmlns:ns3="http://lca.jrc.it/ILCD/Flow" xmlns:ns4="http://lca.jrc.it/ILCD/Contact" xmlns:ns5="http://lca.jrc.it/ILCD/FlowProperty" xmlns:ns6="http://lca.jrc.it/ILCD/Source" xmlns:ns7="http://lca.jrc.it/ILCD/UnitGroup" xmlns:ns8="http://iai.kit.edu/ILCD/ProductModel" xmlns:ns9="http://lca.jrc.it/ILCD/Wrapper" xmlns:olca="http://openlca.org/ilcd-extensions" version="1.1">
+  <ns7:unitGroupInformation>
+    <ns7:dataSetInformation>
+      <UUID>93a60a57-a3c8-20da-a746-0800200c9a66</UUID>
+      <name xml:lang="en">Units of area*time</name>
+      <ns7:classificationInformation>
+        <classification>
+          <classFP level="0" classId="00d44049-4768-313c-b2a5-c2d545f8e0ec">Technical unit groups</classFP>
+        </classification>
+      </ns7:classificationInformation>
+    </ns7:dataSetInformation>
+    <ns7:quantitativeReference>
+      <ns7:referenceToReferenceUnit>0</ns7:referenceToReferenceUnit>
+    </ns7:quantitativeReference>
+  </ns7:unitGroupInformation>
+  <ns7:adiministrativeInformation>
+    <ns7:dataEntryBy>
+      <referenceToDataSetFormat type="source data set" refObjectId="a97a0155-0234-4b87-b4ce-a45da52f2a40" version="01.01.000" uri="../sources/a97a0155-0234-4b87-b4ce-a45da52f2a40_01.01.000.xml">
+        <shortDescription>ILCD Format</shortDescription>
+      </referenceToDataSetFormat>
+    </ns7:dataEntryBy>
+    <ns7:publicationAndOwnership>
+      <dataSetVersionFP>00.00.000</dataSetVersionFP>
+      <permanentDataSetURI>http://openlca.org/ilcd/resource/unitgroups/93a60a57-a3c8-20da-a746-0800200c9a66</permanentDataSetURI>
+    </ns7:publicationAndOwnership>
+  </ns7:adiministrativeInformation>
+  <ns7:units>
+    <ns7:unit dataSetInternalID="1">
+      <ns7:name>m2*d</ns7:name>
+      <ns7:meanValue>0.00274</ns7:meanValue>
+      <ns7:generalComment xml:lang="en"/>
+    </ns7:unit>
+    <ns7:unit dataSetInternalID="2">
+      <ns7:name>cm2a</ns7:name>
+      <ns7:meanValue>0.0001</ns7:meanValue>
+      <ns7:generalComment xml:lang="en"/>
+    </ns7:unit>
+    <ns7:unit dataSetInternalID="3">
+      <ns7:name>mi2*a</ns7:name>
+      <ns7:meanValue>2589988.1</ns7:meanValue>
+      <ns7:generalComment xml:lang="en"/>
+    </ns7:unit>
+    <ns7:unit dataSetInternalID="4">
+      <ns7:name>ha*a</ns7:name>
+      <ns7:meanValue>10000.0</ns7:meanValue>
+      <ns7:generalComment xml:lang="en"/>
+    </ns7:unit>
+    <ns7:unit dataSetInternalID="5">
+      <ns7:name>mm2a</ns7:name>
+      <ns7:meanValue>1e-06</ns7:meanValue>
+      <ns7:generalComment xml:lang="en"/>
+    </ns7:unit>
+    <ns7:unit dataSetInternalID="0">
+      <ns7:name>m2*a</ns7:name>
+      <ns7:meanValue>1.0</ns7:meanValue>
+      <ns7:generalComment xml:lang="en"/>
+    </ns7:unit>
+    <ns7:unit dataSetInternalID="7">
+      <ns7:name>km2*a</ns7:name>
+      <ns7:meanValue>1000000.0</ns7:meanValue>
+      <ns7:generalComment xml:lang="en"/>
+    </ns7:unit>
+    <ns7:unit dataSetInternalID="8">
+      <ns7:name>ft2*a</ns7:name>
+      <ns7:meanValue>0.09</ns7:meanValue>
+      <ns7:generalComment xml:lang="en"/>
+    </ns7:unit>
+  </ns7:units>
+</ns7:unitGroupDataSet>

@@ -1,0 +1,18 @@
+Metadata-Version: 2.1
+Name: Lavoisier
+Version: 0.0.1
+Summary: This package converts Life Cycle Assessment format Ecospold2 (ecoinvent format) to ILCD (jrc format). Files can be converted by file or entire directory.
+Home-page: https://github.com/JosePauloSavioli/IBICT-converter
+Author: José Paulo Pereira das Dores Savioli
+Author-email: jpsavioli@hotmail.com
+License: UNKNOWN
+Project-URL: Bug Tracker, https://github.com/JosePauloSavioli/IBICT-converter/issues
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+
+UNKNOWN
+
