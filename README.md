@@ -10,12 +10,15 @@ The project is still testing using testpypi and updating frequently, but feedbac
 Important information about Ecospold2 and ILCD formats before conversion:
 
 1. It is better to use 'Unknown' files instead of allocated ones:
+
 ⋅⋅⋅ILCD don't handle well linkage information due to the fact that there is no structure for a linking between processes and exchanges embeded in its xml files. Because of that, any conversion would loss linkage information present in the files of ecoinvent linked databases (a.k.a. the input information about the process that produces it is lost). Some way around it is to place additional namespace variables in the ILCD to make it store linking information, as done by a linked file on OpenLCA when it is exported as ILCD, but this is not addressed in this library. 
 
 2. Market datasets and Market Groups datasets:
+
 ⋅⋅⋅Both this datasets are specific of linked ecoinvent databases and are not feasible in ILCD. Lavoisier still can manage to convert such files but there is loss of all linkage information such as original ecoinvent provider, which renders the result not so usefull for real life practicioners. Market datasets are made by the linking process of ecoinvent and are fully complete only within the database it was created.
 
 3. Usefulness of ILCD files
+
 ⋅⋅⋅There are several reasons why one practicioner or repository could use ILCD. The main factor is that it is an OpenSource format and not bounded to any company for its development, but there are more reasons, such as that it produces standalone inventories (inventories with all information required inside it, thus not depending on other files or a database structure to be complete) that are great for data repositories, since they are a collection of different datasets and doesn't have any linking between them. ILCD files are more useful for finding specific processes then creating a hole background database with it, especially with regional datasets that can be connected via software to an existing background database or as a replacement of some of its datasets. 
 
 ## Installation
