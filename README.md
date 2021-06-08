@@ -24,8 +24,8 @@ Important information about Ecospold2 and ILCD formats before conversion:
 ## Installation
 
 Lavoisier will require the following packages:
-+`lxml`
-+`cfunits`
++ `lxml`
++ `cfunits`
  
 Since there are problems for a pip installation with the requirements, it is recommended to intall through this process using pip.
 
