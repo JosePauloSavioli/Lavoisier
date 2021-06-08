@@ -13,22 +13,22 @@ Main convertion application, uses the mapping of "mapping.py" to loop through
 from lxml import etree as ET
 from re import search
 
-from conversion_caller import save_dir
-
 # Basic additional functions
-from collection import str_, create_folder, root_, sub, texts, do_uncertainty, do_reference
+from Lavoisier.collection import str_, create_folder, root_, sub, texts, do_uncertainty, do_reference
 # Complex additional functions
-from collection import flow_set_and_internal_ID, flow_allocation_info, set_parameters_and_variables, unit_conv
+from Lavoisier.collection import flow_set_and_internal_ID, flow_allocation_info, set_parameters_and_variables, unit_conv
 # Triggered functions (See mapping.py file - they're called by eval on line 296)
-from collection import review, bool_, time_year, class_, pedigree, f_property, type_product, flow_ref, elem_f_property, elementary_flow_info, compartment
+from Lavoisier.collection import review, bool_, time_year, class_, pedigree, f_property, type_product, flow_ref, elem_f_property, elementary_flow_info, compartment
 # Functions to create additional files
-from additional_files import create_contact, create_source
+from Lavoisier.additional_files import create_contact, create_source
 
 def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
     '''
     This is the main function, it is responsible for the declaration of ILCD 
     fields and assignment of Ecospold2 information to ILCD fields
     ''' 
+    
+    from Lavoisier.conversion_caller import save_dir
     
     # Main loop through all elements of the mapping dictionary
     for key,level in map_.items():
@@ -302,6 +302,8 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                         func(e_tree, el, original_tree, info.get('specific').get('args'))
                     elif info.get('specific').get('pass') == 3:
                         func(e_tree, el, i_tree, original_tree, info.get('specific').get('args'))
+                    elif info.get('specific').get('pass') == 4:
+                        func(o_t, e_tree, el, original_tree, info.get('specific').get('args'))
                     else:
                         func(e_tree, el, info.get('specific').get('args'))
 

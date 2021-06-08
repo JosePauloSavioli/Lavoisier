@@ -14,10 +14,68 @@ from math import exp
 from shutil import copy
 from uuid import uuid4
 from time import strptime
+from cfunits import Units
+from functools import wraps
 
-from additional_files import create_contact, create_source
+import Lavoisier.additional_files as additional_files
 
-from conversion_caller import save_dir
+###############################################################################
+#############################***DEFINITIONS***#################################
+###############################################################################
+
+d = {'tera': 1e12,
+     'giga': 1e9,
+     'mega': 1e6,
+     'kilo': 1e3,
+     'deci': 1e-1,
+     'centi': 1e-2,
+     'milli': 1e-3,
+     'micro': 1e-6,
+     'nano': 1e-9}
+     
+     
+###############################################################################
+#############################***DECORATORS***##################################
+###############################################################################
+
+def memory(func, count = [0]):
+    '''Wrapper with memory of ids created for duplicates check
+    
+    This function should be revised in future builds tackling market datasets
+    '''
+    
+    @wraps(func)
+    def c(ort, tt, ee, *args):
+        
+        # Verifies if it is not an Elementary Flow call without doubled names possible
+        if isinstance(ort, int):
+            func(ort, tt, ee, *args)
+            
+        # Intermediate flow captured
+        else:
+            
+            # Verifies if it is a new activity, clearing the memory
+            act_id = ort.find(str_(['activity'])).get('id')
+            if act_id not in trigger:
+                trigger.add(act_id)
+                count[0] = 0
+                memory.clear()
+            
+            # Verifies if the intermediateExchangeId is doubled, if it is, add a counter to the name
+            v = tt.find('{http://www.EcoInvent.org/EcoSpold02}intermediateExchange').get('intermediateExchangeId')
+            if v not in memory:
+                memory.add(v)
+                func(ort, tt, ee, *args)
+            else:
+                count[0] += 1
+                func(ort, tt, ee, args[0],
+                     tt.find('{http://www.EcoInvent.org/EcoSpold02}intermediateExchange').get('intermediateExchangeId'),
+                     tt.find('//{http://www.EcoInvent.org/EcoSpold02}name').text + '_' + str(count[0]))
+            
+    memory = set()
+    trigger = set()
+    
+    return c
 
 
 ###############################################################################
@@ -27,9 +85,11 @@ from conversion_caller import save_dir
 def zipdir(path, ziph):
     '''Makes a directory into zip file'''
     
-    for root, dirs, files in os.walk(path):
+    len_path = len(path)
+    for root, _, files in os.walk(path):
         for file in files:
-            ziph.write(os.path.join(root, file))
+            filepath = os.path.join(root, file)
+            ziph.write(filepath, filepath[len_path:])
             
 
 ###############################################################################
@@ -194,7 +254,9 @@ def do_classification(text, classification):
     lvl = ['']*4
     
     # Find the correspondence of classification in ISIC.txt file
-    with open("./Mapping files/ISIC.txt",'r') as f:
+    path_ = os.path.abspath(os.path.dirname(__file__))
+    pathMP = os.path.join(path_, "Mapping_files/ISIC.txt")
+    with open(pathMP,'r') as f:
         div_text = text.split(':')
         for line in f:
             if div_text[0][:-t] == line.split(':::')[0]:
@@ -208,7 +270,68 @@ def do_classification(text, classification):
     # Set class' text
     clas0.text,clas1.text,clas2.text,clas3.text = lvl[3],lvl[2],lvl[1],lvl[0]
     
+
+###############################################################################
+
+def unit_conversion(v, u1, u2):
+    '''This function converts a unit based on UDUNITS unit convertion library [cfunits for python]'''
     
+    def check_1(u):
+        '''This function checks if any string correction can yield an unit value'''
+        
+        nonlocal v, u1, u2
+        
+        # If unit is a valid unit, return it
+        if Units(u).isvalid:
+            return Units(u)
+        
+        # If unit is seperated by a space, try verifications 
+        if re.search(' ', u):
+            
+            # If unit has a prefix, take out (some specific units on UDUNITS exist only without prefix)
+            for i in d.keys():
+                if i in u.split(' ')[0]:
+                    # Correction of original value since unit will be without prefix
+                    if u == u1:
+                        v = float(v)*d[i]
+                    elif u == u2:
+                        v = float(v)/d[i]
+                    u = re.sub(i, '', u)
+            
+            # If the first word of the unit is a valid unit (EX: calorie thermochemical)
+            if Units(u.split(' ')[0]).isvalid:
+                # Check if changing order of the first and last words results in a valid unit
+                if Units(u.split(' ')[-1]+'_'+u.split(' ')[0]).isvalid:
+                    return Units(u.split(' ')[-1]+'_'+u.split(' ')[0])    
+                # Check if there is an indication of ISO IT unit
+                elif "IT" in u:
+                    if Units(u.split(' ')[0]).isvalid():
+                        return Units(u.split(' ')[0])
+                    
+            # If there is only a problem with space, a non-valid character on UDUNITS
+            if Units('_'.join(u.split(' '))).isvalid:
+                return Units('_'.join(u.split(' ')))
+            
+        # If it is a problem with multiplication (EX: kWh to kW.h)
+        if re.search('wh$', u.lower()):
+            if Units(u[-1]+".h").isvalid:
+                return Units(u[:-1]+".h")
+            
+        # Else
+        else:
+            print(f"Warning: Unit {u1} or {u2} could not be converted")
+            return f"UnitConversion({v},{u1},{u2})"
+        
+            
+    a = check_1(u1)
+    b = check_1(u2)
+    
+    if "UnitConversion" in str(a) or "UnitConversion" in str(b):
+        return a if "UnitConversion" in a else b
+    else:
+        return str(Units.conform(float(v), a, b))
+
+
 ###############################################################################
 #########################***COMPLEX FUNCTIONS***###############################
 ###############################################################################
@@ -308,6 +431,8 @@ def flow_allocation_info(al, exc):
 def f_property(tree, el, *args, **kwargs):
     '''Creates datasets for a flow property and its units'''
     
+    from Lavoisier.conversion_caller import save_dir
+
     # Creates folders if necessary
     create_folder(save_dir+'/flowproperties')
     create_folder(save_dir+'/unitgroups')
@@ -325,9 +450,12 @@ def f_property(tree, el, *args, **kwargs):
         
         # Copies the flowPropertyDataSet and unitDataSet from the repository to the zip folder
         mv.text = kwargs.get('amount')
-        copy('./ILCD flowProperties and units/flow_properties/'+kwargs.get('uuid')+'.xml', save_dir+'/flowproperties')
+        path_ = os.path.abspath(os.path.dirname(__file__))
+        pathILCD = os.path.join(path_, "ILCD_flowProperties_and_units/flow_properties/"+kwargs.get('uuid')+".xml")
+        copy(pathILCD, save_dir+'/flowproperties')
         if kwargs.get('unit_id'):
-            copy('./ILCD flowProperties and units/unit_groups/'+kwargs.get('unit_id')+'.xml', save_dir+'/unitgroups')
+            pathILCD = os.path.join(path_, "ILCD_flowProperties_and_units/unit_groups/"+kwargs.get('unit_id')+".xml")
+            copy(pathILCD, save_dir+'/unitgroups')
             
     # Else it's a default property
     else:
@@ -353,8 +481,11 @@ def f_property(tree, el, *args, **kwargs):
         mv.text = args[1][-1]
         
         # Copies the flowPropertyDataSet and unitDataSet from the repository to the zip folder
-        copy('./ILCD flowProperties and units/flow_properties/'+r[0]+'.xml', save_dir+'/flowproperties')
-        copy('./ILCD flowProperties and units/unit_groups/'+r[3]+'.xml', save_dir+'/unitgroups')
+        path_ = os.path.abspath(os.path.dirname(__file__))
+        pathILCD = os.path.join(path_, "ILCD_flowProperties_and_units/flow_properties/"+r[0]+".xml")
+        copy(pathILCD, save_dir+'/flowproperties')
+        pathILCD = os.path.join(path_, "ILCD_flowProperties_and_units/unit_groups/"+r[3]+".xml")
+        copy(pathILCD, save_dir+'/unitgroups')
 
 
 ###############################################################################
@@ -364,16 +495,24 @@ def unit_conv(name, single = False):
     
     # Single unit conversion
     if single:
-        with open('./Mapping files/conv_unit.csv', 'r') as conv_unit:
+        
+        return unit_conversion(*name)
+        
+        '''
+        path_ = os.path.abspath(os.path.dirname(__file__))
+        pathMP = os.path.join(path_, "Mapping_files/conv_unit.csv")
+        with open(pathMP, 'r') as conv_unit:
             conv_r = csv.reader(conv_unit, delimiter = ',')
             for row in conv_r:
                 if name[1] == row[1] and name[2] == row[2]:
                     return str(float(name[0])*float(row[0]))
             else:
-                return None
+                return None'''
     # Flow property unit conversion
     else:
-        with open('./Mapping files/property_to_unit.csv', 'r') as conv_unit:
+        path_ = os.path.abspath(os.path.dirname(__file__))
+        pathMP = os.path.join(path_, "Mapping_files/property_to_unit.csv")
+        with open(pathMP, 'r') as conv_unit:
             conv_r = csv.reader(conv_unit, delimiter = ',')
             for row in conv_r:
                 if name in [row[0]]+row[4:]:
@@ -439,7 +578,7 @@ def var(mult, o_t, comm, o_tree, flow, exc, text, amount, is_math = 0, is_ref = 
             for elem in re.findall("UnitConversion\(([\w -.',]+?)\)", is_math):
                 elem_ = elem.replace("'", '').split(', ')
                 elem_[0] = elem_[0].replace(',','.')
-                is_math = sub('UnitConversion\('+elem+'\)',unit_conv(elem_, True),is_math)
+                is_math = re.sub('UnitConversion\('+elem+'\)',unit_conv(elem_, True),is_math)
         # Reference to other flow ID or production volume ID correction
         if re.search('Ref\(', is_math):
             for elem in re.findall("Ref\('(.*?)'\)", is_math):
@@ -451,13 +590,13 @@ def var(mult, o_t, comm, o_tree, flow, exc, text, amount, is_math = 0, is_ref = 
                                 value = e.get('productionVolumeAmount')
                         else:
                             value = e.get('amount')
-                        is_math = sub("Ref\('"+elem+"'\)", value, is_math)
+                        is_math = re.sub("Ref\('"+elem+"'\)", value, is_math)
         # Percentage correction
         if re.search('%', is_math):
-            is_math = sub('%','/100',is_math)
+            is_math = re.sub('%','/100',is_math)
         # Float with ',' as decimal separator correction
         if re.search('[0-9]+,[0-9]+', is_math):
-            is_math = sub(',', '.', is_math)
+            is_math = re.sub(',', '.', is_math)
             
         # Set equation text inside 'formula' subelement
         form_v = ET.SubElement(var,'formula')
@@ -496,6 +635,14 @@ def set_parameters_and_variables(o_t, f_tree, o_tree, flow, exc, par_bool=1):
     
     # Zero value has to be in the original id_ set
     id_ = set(['0'])
+    
+    # Get activityLink if exists
+    if flow.get('activityLinkId'):
+        if exc.find('generalComment') is not None:
+            exc.find('generalComment').text += '\n' + "Original provider ID: " + flow.get('activityLinkId')
+        else:
+            gcom = ET.SubElement(exc, 'generalComment')
+            gcom.text = "Original provider ID: " + flow.get('activityLinkId')  
     
     # Get conversion factors for units
     if flow.find('{http://www.EcoInvent.org/EcoSpold02}unitName') is not None:
@@ -635,7 +782,7 @@ def review(tree, el, *args):
         do_reference(ref_rev, 'contact data set', rev.get('reviewerId'), rev.get('reviewerName'))
         
         # Create contactDataSet for reviewer
-        create_contact(ET.ElementTree(ET.Element("contactDataSet", version = '1.1', nsmap = {None: "http://lca.jrc.it/ILCD/Contact",
+        additional_files.create_contact(ET.ElementTree(ET.Element("contactDataSet", version = '1.1', nsmap = {None: "http://lca.jrc.it/ILCD/Contact",
                                                                                        'c': "http://lca.jrc.it/ILCD/Common"})),
                         rev.get('reviewerId'), args[0], rev.get('reviewerName'), rev.get('reviewerEmail'))
         
@@ -660,7 +807,7 @@ def bool_(tree, el, *args):
             do_reference(ref, 'source data set', ref_uuid, 'dataSetIcon')
             
             # Create sourceDataSet for the image url
-            create_source(ET.ElementTree(ET.Element("sourceDataSet", version = '1.1', nsmap = {None: "http://lca.jrc.it/ILCD/Source",
+            additional_files.create_source(ET.ElementTree(ET.Element("sourceDataSet", version = '1.1', nsmap = {None: "http://lca.jrc.it/ILCD/Source",
                                                                                      'c': "http://lca.jrc.it/ILCD/Common"})),
                             ref_uuid, args[0], 'dataSetIcon (ImageURL)', re.search(r'ImageURL: ([A-z0-9.:/\-]*)', el.text).group(1))
         
@@ -676,7 +823,7 @@ def bool_(tree, el, *args):
             do_reference(ref, 'source data set', ref_uuid, 'Technology comment URL')
             
             # Create sourceDataSet for the image url
-            create_source(ET.ElementTree(ET.Element("sourceDataSet", version = '1.1', nsmap = {None: "http://lca.jrc.it/ILCD/Source",
+            additional_files.create_source(ET.ElementTree(ET.Element("sourceDataSet", version = '1.1', nsmap = {None: "http://lca.jrc.it/ILCD/Source",
                                                                                      'c': "http://lca.jrc.it/ILCD/Common"})),
                             ref_uuid, args[0], 'Technology comment (ImageURL)', re.search(r'ImageURL: ([A-z0-9.:/\-]*)', el.text).group(1))
 
@@ -738,7 +885,8 @@ def type_product(tree, el, *args):
 
 ###############################################################################
         
-def flow_ref(tree, el, *args):
+@memory
+def flow_ref(ortree, tree, el, *args):
     '''Creates the reference to a flowDataSet'''
     
     el = args[0].find('exchanges')[-1]
@@ -761,7 +909,9 @@ def elementary_flow_info(tree, el, *args):
     el.text = None
     
     # Opens mapping with elementary flows ids from Ecospold2 to ILCD
-    with open('./Mapping files/Id_elementary_exchanges.csv') as elem_csv_unit:
+    path_ = os.path.abspath(os.path.dirname(__file__))
+    pathMP = os.path.join(path_, "Mapping_files/Id_elementary_exchanges.csv")
+    with open(pathMP) as elem_csv_unit:
         elem_r = csv.reader(elem_csv_unit, delimiter = ',')
         
         # Finds ID correspondence on file
@@ -795,7 +945,7 @@ def elementary_flow_info(tree, el, *args):
                 CASNumber.text = texts(tree,str_(['casNumber']))
         
         # Create flowDataSet of elementary flow
-        flow_ref(0,0,args[1],el.text, baseName.text)
+        flow_ref(0,0,0,args[1],el.text, baseName.text)
         
 
 ###############################################################################
@@ -804,7 +954,9 @@ def elem_f_property(tree, el, *args):
     '''Gets specific convertion information to create flowPropertyDataSet of elementary flows'''
     
     # Checks if elementary flow has an specific convertion of values
-    with open('./Mapping files/factor_c.csv', 'r') as conv_fac:
+    path_ = os.path.abspath(os.path.dirname(__file__))
+    pathMP = os.path.join(path_, "Mapping_files/factor_c.csv")
+    with open(pathMP, 'r') as conv_fac:
         conv_r = csv.reader(conv_fac, delimiter = ',')
         
         # Checks if id is on the list of specific convertion factors and send call to create flowPropertyDataSet
@@ -832,7 +984,9 @@ def compartment(tree, el, *args):
         cat[i] = sub(args[0], '{http://lca.jrc.it/ILCD/Common}category', 'flowInformation/dataSetInformation/classificationInformation/{http://lca.jrc.it/ILCD/Common}elementaryFlowCategorization', {'level':str(i)})
     
     # Find correspondence of compartment
-    with open('./Mapping files/compartment_w.csv', 'r') as comp_csv:
+    path_ = os.path.abspath(os.path.dirname(__file__))
+    pathMP = os.path.join(path_, "Mapping_files/compartment_w.csv")
+    with open(pathMP, 'r') as comp_csv:
         comp_reader = csv.reader(comp_csv, delimiter = ';')
         for row in comp_reader:
             if row[0] == tree.find('//{http://www.EcoInvent.org/EcoSpold02}compartment').get('subcompartmentId'):

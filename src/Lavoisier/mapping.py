@@ -134,10 +134,12 @@ tech = {'0':'Undefined',
         '5':'Outdated'}
 
 system_model = {'Undefined':'Not applicable',
+                'Allocation, cut-off by classification':'Attributional',
                 'Attributional, average current suppliers, revenue allocation':'Attributional',
                 'Consequential, small-scale, long-term decisions':'Consequential'}
 
 system_model_2 = {'Undefined':'Not applicable',
+                  'Allocation, cut-off by classification':'Other',
                   'Attributional, average current suppliers, revenue allocation':'Other',
                   'Consequential, small-scale, long-term decisions':'Other'}
 
@@ -419,7 +421,7 @@ map_p =    {'1': {'processInformation': {'args': ('processInformation','processD
                                            },
                                      '4': {'baseName': {'args': ('baseName','flowInformation/dataSetInformation/name',{w3_l:'en'}),
                                                         'text': [(0, ['intermediateExchange','name'],None)],
-                                                        'specific': {'func':'flow_ref', 'pass':2}},
+                                                        'specific': {'func':'flow_ref', 'pass':4}},
                                            }
                                     }
                         },

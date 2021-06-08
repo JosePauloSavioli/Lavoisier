@@ -8,26 +8,25 @@ Open the spold files, save the ILCD files and calling of allocation mapping
 @author: jotape42p
 """
 
-import os, glob
+import os, glob, re
 from lxml import etree as ET
 from zipfile import ZipFile
 from shutil import rmtree
 from copy import deepcopy
 
-# Collection functions
-from collection import get_namespace, str_, create_folder, allocation, zipdir
-# Converter
-from conversion import convert_spold
-# Mapping dict
-from mapping import map_p
-
 # Global variable
 save_dir = ''
 
+# Collection functions
+from Lavoisier.collection import get_namespace, str_, create_folder, allocation, zipdir
+# Converter
+from Lavoisier.conversion import convert_spold
+# Mapping dict
+from Lavoisier.mapping import map_p
 
 ###############################################################################
 
-def file_convertion_caller(e_tree, ilcd_tree, dir_path_to_save, return_xml = False):
+def file_convertion_caller(e_tree, ilcd_tree, dir_path_to_save, hash_ = '', return_xml = False):
     '''Calls the conversion function on conversion.py file, can return an xml file'''
     
     # Set path variable for other functions
@@ -35,11 +34,13 @@ def file_convertion_caller(e_tree, ilcd_tree, dir_path_to_save, return_xml = Fal
     save_dir = dir_path_to_save+"/ILCD-algorithm"
     
     # Initialization of ILCD .zip file
-    ILCD_zip = ZipFile(dir_path_to_save + 
-                       e_tree.find(str_(['activity', 'activityName'])).text +
-                       ', ' + 
-                       e_tree.find(str_(['geography', 'shortname'])).text + 
-                       '.zip', 'w')
+    text = e_tree.find(str_(['activity', 'activityName'])).text +\
+                       ', ' +\
+                       e_tree.find(str_(['geography', 'shortname'])).text +\
+                       hash_ + '.zip'
+    if re.search('/', text):
+        text = re.sub('/', 'per', text)
+    ILCD_zip = ZipFile(dir_path_to_save + '/' +  text, 'w')
     
     # Creates dummy folder for the ILCD zip file
     if os.path.isdir(save_dir):
@@ -75,7 +76,7 @@ def file_convertion_caller(e_tree, ilcd_tree, dir_path_to_save, return_xml = Fal
     
 ###############################################################################
 
-def convert_file_to_ILCD(path_to_file, dir_path_to_save, return_xml = False):
+def convert_file_to_ILCD(path_to_file, dir_path_to_save, hash_ = '', return_xml = False):
     '''
     This function calls the mapping to convert a spold file (Ecospold2) to an ILCD zip file
     
@@ -95,7 +96,7 @@ def convert_file_to_ILCD(path_to_file, dir_path_to_save, return_xml = False):
         raise Exception("return_xml is not a boolean")
     if not os.path.isfile(path_to_file):
         raise Exception(f"{path_to_file} is not a valid file path")
-    if path_to_file.split('.')[-1] != ".spold":
+    if path_to_file.split('.')[-1].lower() != "spold":
         raise Exception("file is not an .spold file")
     if not os.path.isdir(dir_path_to_save):
         raise Exception(f"{dir_path_to_save} is not a valid directory path")
@@ -110,13 +111,13 @@ def convert_file_to_ILCD(path_to_file, dir_path_to_save, return_xml = False):
     
     # Call for single dataset conversion
     if return_xml:
-        ilcd_tree = file_convertion_caller(e_tree, ilcd_tree, dir_path_to_save, return_xml)
+        ilcd_tree = file_convertion_caller(e_tree, ilcd_tree, dir_path_to_save, hash_, return_xml)
         return ilcd_tree
     else:
-        file_convertion_caller(e_tree, ilcd_tree, dir_path_to_save, return_xml)
+        file_convertion_caller(e_tree, ilcd_tree, dir_path_to_save, hash_, return_xml)
     
 
-def convert_dir_to_ILCD(path_to_dir, dir_path_to_save):
+def convert_dir_to_ILCD(path_to_dir, dir_path_to_save, hash_ = ''):
     '''
     This function calls the mapping to convert a spold file (Ecospold2) to an ILCD zip file
     
@@ -132,13 +133,13 @@ def convert_dir_to_ILCD(path_to_dir, dir_path_to_save):
     # Input handling
     if not isinstance(path_to_dir, str) or not isinstance(dir_path_to_save, str):
         raise Exception("path_to_file or path_to_save_dir has to be a string")
-    if not os.path.isfile(path_to_dir):
+    if not os.path.isdir(path_to_dir):
         raise Exception(f"{path_to_dir} is not a valid file path")
     if not os.path.isdir(dir_path_to_save):
         raise Exception(f"{dir_path_to_save} is not a valid directory path")
         
     # Loop through all spold files on the directory
-    for file in glob.glob(os.path.join(path_to_dir,'/*.spold')):
+    for file in glob.glob(os.path.join(path_to_dir,'*.spold')):
         
         # Ecospold tree xml file initialization 
         parser = ET.XMLParser(remove_blank_text = True)
@@ -149,5 +150,5 @@ def convert_dir_to_ILCD(path_to_dir, dir_path_to_save):
         ilcd_tree = ET.ElementTree(processDataSet)
         
         # Call for single dataset conversion
-        file_convertion_caller(e_tree,ilcd_tree)
+        file_convertion_caller(e_tree,ilcd_tree,dir_path_to_save,hash_)
         
