@@ -30,7 +30,7 @@ Lavoisier will require the following packages:
 Since there are problems for a pip installation with the requirements, it is recommended to intall through this process using pip.
 
 + Install both dependent libraries
-```python
+```bash
 pip install lxml
 pip install cfunits
 ```
