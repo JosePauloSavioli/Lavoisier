@@ -63,7 +63,6 @@ It is important to use absolute paths and to make sure that the save path alread
 
 This projects were done by the GYRO laboratory from the Federal University of Technology - Paraná (UTFPR) with the Brazilian Institute of Information in Science and Technology (IBICT) and the help of Embrapa.
 
-<img src="https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/IBICT.png" alt="Logo IBICT" width="30" length="30" />
-
-[logo_gyro]:https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/logo%20gyro_email%20padr%C3%A3o.png "Logo GYRO"
-[logo_utfpr]:https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/utfpr.png "Logo UTFPR"
+<img src=https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/logo%20gyro_email%20padr%C3%A3o.png alt="Logo GYRO" width="300" length="300" />
+<img src=https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/utfpr.png alt="Logo UTFPR" width="300" length="300" />
+<img src="https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/IBICT.png" alt="Logo IBICT" width="300" length="300" />
