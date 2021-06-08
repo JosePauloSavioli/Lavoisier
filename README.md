@@ -65,6 +65,6 @@ This projects were done by the GYRO laboratory from the Federal University of Te
 
 ![alt text][logo_gyro] ![alt text][logo_utfpr] ![alt text][logo_ibict]
 
-[logo_ibict]:https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/IBICT.png "Logo IBICT"
+[logo_ibict]:https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/IBICT.png "Logo IBICT" {:height="24px" width="48px"}
 [logo_gyro]:https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/logo%20gyro_email%20padr%C3%A3o.png "Logo GYRO"
 [logo_utfpr]:https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/utfpr.png "Logo UTFPR"
