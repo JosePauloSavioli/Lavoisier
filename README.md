@@ -25,21 +25,17 @@ Important information about Ecospold2 and ILCD formats before conversion:
 
 Lavoisier will require the following packages:
 + `lxml`
-+ `cfunits`
  
-Since there are problems for a pip installation with the requirements, it is recommended to intall through this process using pip.
+Since the library is still on testpypi, the dependencies are not installed with the package (they are in the real pypi). It is recommended to install the dependences previous to installing Lavoisier following the instructions below:
 
 + Install both dependent libraries
 ```bash
 pip install lxml
-pip install cfunits
 ```
 + Install Lavoisier
 ```bash
 python3 pip install -i https://test.pypi.org/simple/ Lavoisier
 ```
-
-The library cfunits can raise some problems since it is based on a C library. See more details on https://ncas-cms.github.io/cfunits/installation.html.
 
 ## Functions
 
