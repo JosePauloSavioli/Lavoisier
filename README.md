@@ -28,7 +28,7 @@ Lavoisier will require the following packages:
  
 Since the library is still on testpypi, the dependencies are not installed with the package (they are in the real pypi). It is recommended to install the dependences previous to installing Lavoisier following the instructions below:
 
-+ Install both dependent libraries
++ Install dependent libraries
 ```bash
 pip install lxml
 ```
