@@ -18,6 +18,7 @@ from cfunits import Units
 from functools import wraps
 
 import Lavoisier.additional_files as additional_files
+from Lavoisier.units import unit_s, unit_pref
 
 ###############################################################################
 #############################***DEFINITIONS***#################################
@@ -333,6 +334,120 @@ def unit_conversion(v, u1, u2):
 
 
 ###############################################################################
+
+def convert_unit_raw(v, u1, u2):
+    '''This function converts a unit based on UDUNITS unit convertion library [cfunits for python]'''
+    
+    def check(u):
+        '''This function checks if unit has any prefix'''
+        if unit_s.get(u):
+            return False
+        else:
+            return True
+        
+    def check_(u):
+        '''This function checks if unit has any prefix and correct the value'''
+        
+        # If unit is a valid unit, return it
+        if unit_s.get(u):
+            return unit_s[u]
+        # Elif unit has a prefix
+        else:
+            for prefix in unit_pref.keys():
+                for unit in unit_s.keys():
+                    if u == prefix+unit:
+                        u = u[len(prefix):]
+                        n_unit = list(unit_s[u])
+                        n_unit[1] *= unit_pref[prefix]
+                        return tuple(n_unit)
+            else:
+                return None
+        
+    def check_1(u):
+        '''This function checks if any string correction can yield an unit value'''
+        
+        # If unit is seperated by a space, try verifications
+        if re.search(' ', u):
+            
+            mult_ = 1
+            
+            # If the first word of the unit is a valid unit (EX: calorie thermochemical)
+            if isinstance(check_(u.split(' ')[0]), tuple):
+                
+                # If the first word has a prefix, add a multiplier
+                if check(u.split(' ')[0]):
+                    for prefix in unit_pref.keys():
+                        for unit in unit_s.keys():
+                            if u.split(' ')[0] == prefix+unit:
+                                u = u[len(prefix):]
+                                mult_ = unit_pref[prefix]
+                
+                # Check if changing order of the first and last words results in a valid unit
+                if isinstance(check_(u.split(' ')[-1]+'_'+u.split(' ')[0]), tuple):
+                    f = list(check_(u.split(' ')[-1]+'_'+u.split(' ')[0]))
+                    f[1] *= mult_
+                    return tuple(f)
+                
+                # Check if there is an indication of ISO IT unit
+                elif "IT" in u:
+                    if isinstance(check_(u.split(' ')[0]), tuple):
+                        f = list(check_(u.split(' ')[0]))
+                        f[1] *= mult_
+                        return tuple(f)
+                    
+            # If there is only a problem with space, a non-valid character on UDUNITS
+            if isinstance(check_('_'.join(u.split(' '))), tuple):
+                return check_('_'.join(u.split(' ')))
+            
+        # If it is a plural form
+        if re.search('s$', u.lower()):
+            if isinstance(check_(u[:-1]), tuple):
+                return check_(u[:-1])
+            
+        # Else
+        else:
+            print(f"Warning: Unit {u1} or {u2} could not be converted")
+            return f"UnitConversion({v},{u1},{u2})"
+    
+    
+    # Main unit conversion
+    u1 = u1.strip()
+    u2 = u2.strip()
+    
+    v = float(v)
+    
+    a = check_(u1)
+    b = check_(u2)
+    
+    # If direct check for the unit fails
+    if a is None:
+        a = check_1(u1)
+    if b is None:
+        b = check_1(u2)
+    
+    # Case unit doesn't have a conversion, case units are not from the same measure
+    if "UnitConversion" in a or "UnitConversion"  in b:
+        return f"UnitConversion({v},{u1},{u2})"
+    elif a[0] != b[0]:
+        print("Warning: units with different measures {a[0]} and {b[0]}")
+        return f"UnitConversion({v},{u1},{u2})"
+    # Calculation of the conversion
+    else:
+        
+        result = v * a[1]
+        
+        if len(a) == 4:
+            result = a[2](result)
+            
+        result *= 1/b[1]
+        
+        if len(b) == 4:
+            result = b[3](result)
+        
+        return str(result)
+        
+        
+###############################################################################
 #########################***COMPLEX FUNCTIONS***###############################
 ###############################################################################
 
@@ -496,7 +611,8 @@ def unit_conv(name, single = False):
     # Single unit conversion
     if single:
         
-        return unit_conversion(*name)
+        return convert_unit_raw(*name)
+        #return unit_conversion(*name)
         
         '''
         path_ = os.path.abspath(os.path.dirname(__file__))
