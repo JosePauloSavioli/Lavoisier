@@ -37,6 +37,18 @@ pip install lxml
 python3 pip install -i https://test.pypi.org/simple/ Lavoisier
 ```
 
+If you want to install it via github clone, it's just executing the `setup.py` file. In the case of uninstalling or trying to install it by pip again, it is recomended to run as administrator or sudo, since problems related to `.pyc` files could raise. Follow the steps bellow:
+
++ Clone github repository
+```bash
+git clone https://github.com/JosePauloSavioli/IBICT-converter
+```
++ Go to repository and install the library
+```bash
+cd path/to/cloned/library
+python3 setup.py install
+```
+
 ## Functions
 
 Lavoisier has two main functions:
