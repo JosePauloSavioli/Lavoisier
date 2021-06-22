@@ -16,7 +16,7 @@ from re import search
 # Basic additional functions
 from Lavoisier.collection import str_, create_folder, root_, sub, texts, do_uncertainty, do_reference
 # Complex additional functions
-from Lavoisier.collection import flow_set_and_internal_ID, flow_allocation_info, set_parameters_and_variables, unit_conv
+from Lavoisier.collection import flow_set_and_internal_ID, flow_allocation_info, set_parameters_and_variables
 # Triggered functions (See mapping.py file - they're called by eval on line 296)
 from Lavoisier.collection import review, bool_, time_year, class_, pedigree, f_property, type_product, flow_ref, elem_f_property, elementary_flow_info, compartment
 # Functions to create additional files
@@ -32,6 +32,7 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
     
     # Main loop through all elements of the mapping dictionary
     for key,level in map_.items():
+        
         
         # Check special mapping of intermadiate flows
         if key == 'IntermFlows':
@@ -52,7 +53,7 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                 
                 # Allocation check
                 if al is not None:
-                    if flow.get('intermediateExchangeId') not in (ids_[0][0] for ids_ in al):
+                    if flow.get('id') not in (ids_[0][0] for ids_ in al):
                         flow_allocation_info(al, exc)
                 
                 # Recursive call for flow specific mapping inside processDataSet of ILCD
@@ -69,12 +70,7 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                 id_.update(set_parameters_and_variables(o_t, flow_tree, original_tree, flow, exc))
                 
                 # Do uncertainty calculations for the flow
-                if flow.find('{http://www.EcoInvent.org/EcoSpold02}unitName') is not None:
-                    r = unit_conv(flow.find('{http://www.EcoInvent.org/EcoSpold02}unitName').text)
-                    do_uncertainty(root_(flow), exc, flow.get('amount'), 1, '//{http://www.EcoInvent.org/EcoSpold02}uncertainty', r[2])
-                else:
-                    r = None
-                    do_uncertainty(root_(flow), exc, flow.get('amount'), 1)
+                do_uncertainty(root_(flow), exc, flow.get('amount'), 1)
                 
                 # Create flow folder on save directory
                 create_folder(save_dir+"/flows")
@@ -109,12 +105,7 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                 id_.update(set_parameters_and_variables(o_t, flow_tree, original_tree, flow, exc))
                 
                 # Do uncertainty calculations for the flow
-                if flow.find('{http://www.EcoInvent.org/EcoSpold02}unitName') is not None:
-                    r = unit_conv(flow.find('{http://www.EcoInvent.org/EcoSpold02}unitName').text)
-                    do_uncertainty(root_(flow), exc, flow.get('amount'), 1, '//{http://www.EcoInvent.org/EcoSpold02}uncertainty', r[2])
-                else:
-                    r = None
-                    do_uncertainty(root_(flow), exc, flow.get('amount'), 1)
+                do_uncertainty(root_(flow), exc, flow.get('amount'), 1)
                 
                 # Create flow folder on save directory
                 create_folder(save_dir+"/flows")
@@ -135,6 +126,7 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
         # Call for any other normal mapping functions
         else:
             for info in level.values():
+                
 
                 # Check if element has to be created
                 if info.get('bound_verification'):
@@ -206,6 +198,13 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                                                 else:
                                                     tex_ = tex_ + '\n' + child.text
                                     t = tex_
+                                # 4. Elif tuple command is to find all text within an element of that name (ex: tag)
+                                elif i[2] == 'findtext':
+                                    tex_ = ''
+                                    for comment in e_tree.findall(str_(i[1])):
+                                        if comment.text is not None:
+                                            tex_ = tex_ + comment.text + '; '
+                                    t = tex_
                                 # 4. Elif tuple command is to find all subelements of text and place in different instances of the same element
                                 elif i[2] == 'findname':
                                     fields = e_tree.findall(str_(i[1]))
@@ -235,7 +234,7 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                             
                             # Check if there is a related mapping table to the field
                             if i[2]:
-                                if i[2] not in ('findall', 'findname'):
+                                if i[2] not in ('findall', 'findname', 'findtext'):
                                     table = info[i[2]]
                                     t = table.get(t)
                             
@@ -288,7 +287,7 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                             create_contact(ET.ElementTree(ET.Element("contactDataSet", version = '1.1', nsmap = {None: "http://lca.jrc.it/ILCD/Contact",
                                                                                                            'c': "http://lca.jrc.it/ILCD/Common"})),
                                             ref_uuid, original_tree, *ref.split(', email: '), {'active': act})
-                    
+                
                 # Check function triggers for the created element
                 if info.get('specific'):
                     
@@ -306,4 +305,6 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                         func(o_t, e_tree, el, original_tree, info.get('specific').get('args'))
                     else:
                         func(e_tree, el, info.get('specific').get('args'))
+                        
+                        
 

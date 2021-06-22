@@ -38,6 +38,7 @@ def file_convertion_caller(e_tree, ilcd_tree, dir_path_to_save, hash_ = '', retu
                        ', ' +\
                        e_tree.find(str_(['geography', 'shortname'])).text +\
                        hash_ + '.zip'
+                       
     if re.search('/', text):
         text = re.sub('/', 'per', text)
     ILCD_zip = ZipFile(dir_path_to_save + '/' +  text, 'w')

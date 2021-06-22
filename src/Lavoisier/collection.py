@@ -11,30 +11,14 @@ Collection of functions for the conversion library
 import os, csv, re
 from lxml import etree as ET
 from math import exp
-from shutil import copy
 from uuid import uuid4
 from time import strptime
-from cfunits import Units
 from functools import wraps
 
 import Lavoisier.additional_files as additional_files
-from Lavoisier.units import unit_s, unit_pref
+from Lavoisier.units import unit_s, unit_pref, unit_uid, unit_ecoinvent, special_property_list, factor_elem_flow
 
-###############################################################################
-#############################***DEFINITIONS***#################################
-###############################################################################
 
-d = {'tera': 1e12,
-     'giga': 1e9,
-     'mega': 1e6,
-     'kilo': 1e3,
-     'deci': 1e-1,
-     'centi': 1e-2,
-     'milli': 1e-3,
-     'micro': 1e-6,
-     'nano': 1e-9}
-     
-     
 ###############################################################################
 #############################***DECORATORS***##################################
 ###############################################################################
@@ -56,21 +40,20 @@ def memory(func, count = [0]):
         else:
             
             # Verifies if it is a new activity, clearing the memory
-            act_id = ort.find(str_(['activity'])).get('id')
-            if act_id not in trigger:
-                trigger.add(act_id)
+            if args[0] not in trigger:
+                trigger.add(args[0])
                 count[0] = 0
                 memory.clear()
             
             # Verifies if the intermediateExchangeId is doubled, if it is, add a counter to the name
-            v = tt.find('{http://www.EcoInvent.org/EcoSpold02}intermediateExchange').get('intermediateExchangeId')
+            v = tt.find('{http://www.EcoInvent.org/EcoSpold02}intermediateExchange').get('id')
             if v not in memory:
                 memory.add(v)
                 func(ort, tt, ee, *args)
             else:
                 count[0] += 1
                 func(ort, tt, ee, args[0],
-                     tt.find('{http://www.EcoInvent.org/EcoSpold02}intermediateExchange').get('intermediateExchangeId'),
+                     tt.find('{http://www.EcoInvent.org/EcoSpold02}intermediateExchange').get('id'),
                      tt.find('//{http://www.EcoInvent.org/EcoSpold02}name').text + '_' + str(count[0]))
             
     memory = set()
@@ -165,6 +148,10 @@ def texts(tree,name):
 
 def do_uncertainty(tree, par, mean_v, bool_ = 0, path = '//{http://www.EcoInvent.org/EcoSpold02}uncertainty', mult = 1):
     '''Uncertainty calculation for any variable'''
+    
+    # Subtree of property correction
+    if tree.find('./').get('propertyId'):
+        tree = tree.find('./')
     
     if tree.find(path) is not None:
         
@@ -270,100 +257,48 @@ def do_classification(text, classification):
             
     # Set class' text
     clas0.text,clas1.text,clas2.text,clas3.text = lvl[3],lvl[2],lvl[1],lvl[0]
-    
-
-###############################################################################
-
-def unit_conversion(v, u1, u2):
-    '''This function converts a unit based on UDUNITS unit convertion library [cfunits for python]'''
-    
-    def check_1(u):
-        '''This function checks if any string correction can yield an unit value'''
-        
-        nonlocal v, u1, u2
-        
-        # If unit is a valid unit, return it
-        if Units(u).isvalid:
-            return Units(u)
-        
-        # If unit is seperated by a space, try verifications 
-        if re.search(' ', u):
-            
-            # If unit has a prefix, take out (some specific units on UDUNITS exist only without prefix)
-            for i in d.keys():
-                if i in u.split(' ')[0]:
-                    # Correction of original value since unit will be without prefix
-                    if u == u1:
-                        v = float(v)*d[i]
-                    elif u == u2:
-                        v = float(v)/d[i]
-                    u = re.sub(i, '', u)
-            
-            # If the first word of the unit is a valid unit (EX: calorie thermochemical)
-            if Units(u.split(' ')[0]).isvalid:
-                # Check if changing order of the first and last words results in a valid unit
-                if Units(u.split(' ')[-1]+'_'+u.split(' ')[0]).isvalid:
-                    return Units(u.split(' ')[-1]+'_'+u.split(' ')[0])    
-                # Check if there is an indication of ISO IT unit
-                elif "IT" in u:
-                    if Units(u.split(' ')[0]).isvalid():
-                        return Units(u.split(' ')[0])
-                    
-            # If there is only a problem with space, a non-valid character on UDUNITS
-            if Units('_'.join(u.split(' '))).isvalid:
-                return Units('_'.join(u.split(' ')))
-            
-        # If it is a problem with multiplication (EX: kWh to kW.h)
-        if re.search('wh$', u.lower()):
-            if Units(u[-1]+".h").isvalid:
-                return Units(u[:-1]+".h")
-            
-        # Else
-        else:
-            print(f"Warning: Unit {u1} or {u2} could not be converted")
-            return f"UnitConversion({v},{u1},{u2})"
-        
-            
-    a = check_1(u1)
-    b = check_1(u2)
-    
-    if "UnitConversion" in str(a) or "UnitConversion" in str(b):
-        return a if "UnitConversion" in a else b
-    else:
-        return str(Units.conform(float(v), a, b))
 
 
 ###############################################################################
 
-def convert_unit_raw(v, u1, u2):
+def convert_unit_raw(v, u1, u2, full_result = False):
     '''This function converts a unit based on UDUNITS unit convertion library [cfunits for python]'''
     
-    def check(u):
+    def check(u, key):
         '''This function checks if unit has any prefix'''
-        if unit_s.get(u):
+        if unit_s[key].get(u):
             return False
         else:
             return True
         
-    def check_(u):
+    def check_(u, key):
         '''This function checks if unit has any prefix and correct the value'''
         
         # If unit is a valid unit, return it
-        if unit_s.get(u):
-            return unit_s[u]
+        if unit_s[key].get(u):
+            return unit_s[key][u]
         # Elif unit has a prefix
         else:
             for prefix in unit_pref.keys():
-                for unit in unit_s.keys():
+                for unit in unit_s[key].keys():
                     if u == prefix+unit:
                         u = u[len(prefix):]
-                        n_unit = list(unit_s[u])
-                        n_unit[1] *= unit_pref[prefix]
+                        n_unit = list(unit_s[key][u])
+                        
+                        # Exponent in the case of higher order units
+                        if "2" in u or "²" in u or 'square' in u:
+                            a = 2
+                        elif "3" in u or "³" in u or 'cubic' in u:
+                            a = 3
+                        else:
+                            a = 1
+                        
+                        n_unit[1] *= unit_pref[prefix]**a
                         return tuple(n_unit)
             else:
                 return None
         
-    def check_1(u):
+    def check_1(u, key):
         '''This function checks if any string correction can yield an unit value'''
         
         # If unit is seperated by a space, try verifications
@@ -372,42 +307,56 @@ def convert_unit_raw(v, u1, u2):
             mult_ = 1
             
             # If the first word of the unit is a valid unit (EX: calorie thermochemical)
-            if isinstance(check_(u.split(' ')[0]), tuple):
+            if isinstance(check_(u.split(' ')[0], key), tuple):
                 
                 # If the first word has a prefix, add a multiplier
-                if check(u.split(' ')[0]):
+                if check(u.split(' ')[0], key):
                     for prefix in unit_pref.keys():
-                        for unit in unit_s.keys():
+                        for unit in unit_s[key].keys():
                             if u.split(' ')[0] == prefix+unit:
                                 u = u[len(prefix):]
-                                mult_ = unit_pref[prefix]
+                                
+                                # Exponent in the case of higher order units
+                                if "2" in u or "²" in u or 'square' in u:
+                                    a = 2
+                                elif "3" in u or "³" in u or 'cubic' in u:
+                                    a = 3
+                                else:
+                                    a = 1
+                                
+                                mult_ = unit_pref[prefix]**a
                 
                 # Check if changing order of the first and last words results in a valid unit
-                if isinstance(check_(u.split(' ')[-1]+'_'+u.split(' ')[0]), tuple):
-                    f = list(check_(u.split(' ')[-1]+'_'+u.split(' ')[0]))
+                if isinstance(check_(u.split(' ')[-1]+'_'+u.split(' ')[0], key), tuple):
+                    f = list(check_(u.split(' ')[-1]+'_'+u.split(' ')[0], key))
                     f[1] *= mult_
                     return tuple(f)
                 
                 # Check if there is an indication of ISO IT unit
                 elif "IT" in u:
-                    if isinstance(check_(u.split(' ')[0]), tuple):
-                        f = list(check_(u.split(' ')[0]))
+                    if isinstance(check_(u.split(' ')[0], key), tuple):
+                        f = list(check_(u.split(' ')[0], key))
                         f[1] *= mult_
                         return tuple(f)
                     
             # If there is only a problem with space, a non-valid character on UDUNITS
-            if isinstance(check_('_'.join(u.split(' '))), tuple):
-                return check_('_'.join(u.split(' ')))
+            if isinstance(check_('_'.join(u.split(' ')), key), tuple):
+                return check_('_'.join(u.split(' ')), key)
+            
+            # Check if changing order of the first and last words results in a valid unit
+            if isinstance(check_(u.split(' ')[-1]+'_'+u.split(' ')[0], key), tuple):
+                f = list(check_(u.split(' ')[-1]+'_'+u.split(' ')[0], key))
+                f[1] *= mult_
+                return tuple(f)
             
         # If it is a plural form
         if re.search('s$', u.lower()):
-            if isinstance(check_(u[:-1]), tuple):
-                return check_(u[:-1])
+            if isinstance(check_(u[:-1], key), tuple):
+                return check_(u[:-1], key)
             
         # Else
         else:
-            print(f"Warning: Unit {u1} or {u2} could not be converted")
-            return f"UnitConversion({v},{u1},{u2})"
+            return None
     
     
     # Main unit conversion
@@ -416,22 +365,30 @@ def convert_unit_raw(v, u1, u2):
     
     v = float(v)
     
-    a = check_(u1)
-    b = check_(u2)
+    for key, units in unit_s.items():
+        
+        a, b = None, None
+        
+        a = check_(u1, key)
+        b = check_(u2, key)
+        
+        # If direct check fails, check for units changing the string
+        if a is None:
+            a = check_1(u1, key)
+        if b is None:
+            b = check_1(u2, key)
     
-    # If direct check for the unit fails
-    if a is None:
-        a = check_1(u1)
-    if b is None:
-        b = check_1(u2)
-    
-    # Case unit doesn't have a conversion, case units are not from the same measure
-    if "UnitConversion" in a or "UnitConversion"  in b:
+        if a is not None and b is not None:
+            break
+    else:
+        print(f"Warning: Unit {u1} or {u2} could not be converted")
         return f"UnitConversion({v},{u1},{u2})"
-    elif a[0] != b[0]:
+    
+    if a[0] != b[0]:
         print("Warning: units with different measures {a[0]} and {b[0]}")
         return f"UnitConversion({v},{u1},{u2})"
-    # Calculation of the conversion
+    
+    # Calculation of the new value after the conversion
     else:
         
         result = v * a[1]
@@ -444,9 +401,12 @@ def convert_unit_raw(v, u1, u2):
         if len(b) == 4:
             result = b[3](result)
         
-        return str(result)
-        
-        
+        if full_result:
+            return a, b
+        else:
+            return str(result)
+
+
 ###############################################################################
 #########################***COMPLEX FUNCTIONS***###############################
 ###############################################################################
@@ -487,7 +447,7 @@ def allocation(e_tree):
                 for prop in flow.iterfind('{http://www.EcoInvent.org/EcoSpold02}property'):
                     if prop.get('propertyId') == id_allocation:
                         al.append(float(prop.get('amount'))*float(flow.get('amount')))
-                        flow_id.append((flow.get('intermediateExchangeId'), count-a))
+                        flow_id.append((flow.get('id'), count-a))
             
             count +=1
             a = 0
@@ -552,8 +512,18 @@ def f_property(tree, el, *args, **kwargs):
     create_folder(save_dir+'/flowproperties')
     create_folder(save_dir+'/unitgroups')
     
+    
+    if "intermediateExchange" in tree.find('./').tag:
+        unit_id = tree.find('./').get('unitId')
+    elif "elementaryExchange" in tree.find('./').tag:
+        unit_id = tree.find('./').get('unitId')
+    else:
+        unit_id = kwargs['unit_id']
+        
+    flow_prop, info, factor = unit_conv(unit_id)
+    
     # Sets the ID of the flowPropertyDataSet
-    el.set('dataSetInternalID', args[1][0])
+    el.set('dataSetInternalID', args[2][0])
     
     # Check if the property is a special property that is not on ILCD default properties
     if kwargs.get('special_property'):
@@ -564,13 +534,8 @@ def f_property(tree, el, *args, **kwargs):
         do_reference(ref, 'flow property data set', kwargs.get('uuid'), kwargs.get('name'))
         
         # Copies the flowPropertyDataSet and unitDataSet from the repository to the zip folder
-        mv.text = kwargs.get('amount')
-        path_ = os.path.abspath(os.path.dirname(__file__))
-        pathILCD = os.path.join(path_, "ILCD_flowProperties_and_units/flow_properties/"+kwargs.get('uuid')+".xml")
-        copy(pathILCD, save_dir+'/flowproperties')
-        if kwargs.get('unit_id'):
-            pathILCD = os.path.join(path_, "ILCD_flowProperties_and_units/unit_groups/"+kwargs.get('unit_id')+".xml")
-            copy(pathILCD, save_dir+'/unitgroups')
+        mv.text = str(float(kwargs.get('amount')) * factor)
+        
             
     # Else it's a default property
     else:
@@ -584,23 +549,27 @@ def f_property(tree, el, *args, **kwargs):
             mv = ET.SubElement(el, 'meanValue')
         
         # If the unit is converted
-        if len(args) == 2:
+        if len(args) == 3:
             args = list(args)
-            args.append(tree.find('//{http://www.EcoInvent.org/EcoSpold02}unitName').text)
-        r = unit_conv(args[2])
+            args.append(tree.find('./').get('unitId'))
+        
+        flow_prop, info, factor = unit_conv(args[3])
         
         # Set reference subelement
-        do_reference(ref, 'flow property data set', r[0], r[1])
+        do_reference(ref, 'flow property data set', flow_prop[2], flow_prop[0])
         
         # Set correct mean value to flowProperties
-        mv.text = args[1][-1]
+        mv.text = args[2][-1]
         
-        # Copies the flowPropertyDataSet and unitDataSet from the repository to the zip folder
-        path_ = os.path.abspath(os.path.dirname(__file__))
-        pathILCD = os.path.join(path_, "ILCD_flowProperties_and_units/flow_properties/"+r[0]+".xml")
-        copy(pathILCD, save_dir+'/flowproperties')
-        pathILCD = os.path.join(path_, "ILCD_flowProperties_and_units/unit_groups/"+r[3]+".xml")
-        copy(pathILCD, save_dir+'/unitgroups')
+    # Create flowPropertyDataSet and unitGroupDataSet
+    if kwargs.get('special_property'):
+        nn = tree.find('{http://www.EcoInvent.org/EcoSpold02}name').text
+        nn = nn[0].upper() + nn[1:]
+        additional_files.create_f_prop(args[1], tree.get('propertyId'), nn, flow_prop[3], info[-1])
+        additional_files.create_unit_group(args[1], flow_prop[3], "Units of " + info[-1], info[-1], flow_prop[1])
+    else:
+        additional_files.create_f_prop(args[1], flow_prop[2], flow_prop[0], flow_prop[3], info[-1])
+        additional_files.create_unit_group(args[1], flow_prop[3], "Units of " + info[-1], info[-1], flow_prop[1])
 
 
 ###############################################################################
@@ -610,147 +579,192 @@ def unit_conv(name, single = False):
     
     # Single unit conversion
     if single:
-        
         return convert_unit_raw(*name)
-        #return unit_conversion(*name)
-        
-        '''
-        path_ = os.path.abspath(os.path.dirname(__file__))
-        pathMP = os.path.join(path_, "Mapping_files/conv_unit.csv")
-        with open(pathMP, 'r') as conv_unit:
-            conv_r = csv.reader(conv_unit, delimiter = ',')
-            for row in conv_r:
-                if name[1] == row[1] and name[2] == row[2]:
-                    return str(float(name[0])*float(row[0]))
-            else:
-                return None'''
+                
     # Flow property unit conversion
     else:
-        path_ = os.path.abspath(os.path.dirname(__file__))
-        pathMP = os.path.join(path_, "Mapping_files/property_to_unit.csv")
-        with open(pathMP, 'r') as conv_unit:
-            conv_r = csv.reader(conv_unit, delimiter = ',')
-            for row in conv_r:
-                if name in [row[0]]+row[4:]:
-                    uuid = row[1]
-                    name = row[2]
-                    conv = float(row[3]) if row[3] != '' else 1
-                    unit_id = row[4]
-                    return uuid, name, conv, unit_id
-
+        
+        info = unit_ecoinvent[name]
+        flow_prop = unit_uid[info[1]]
+        mult_ = convert_unit_raw(1, info[0], flow_prop[1])
+        
+        return flow_prop, info, float(mult_)
+            
 
 ###############################################################################
 
-def var(mult, o_t, comm, o_tree, flow, exc, text, amount, is_math = 0, is_ref = 1, path = '//{http://www.EcoInvent.org/EcoSpold02}uncertainty'):
-    '''
-    Multifunction for all calculation of any variable (parameters). Has the following:
+def set_equation(is_math, o_t):
+    '''Corrects the equations of variables to make them usable'''
+
+    # Unit convertion correction
+    if re.search('UnitConversion', is_math):
+        for elem in re.findall("UnitConversion\(([\w -.',]+?)\)", is_math):
+            elem_ = elem.replace("'", '').split(', ')
+            elem_[0] = elem_[0].replace(',','.')
+            is_math = re.sub('UnitConversion\('+elem+'\)',unit_conv(elem_, True),is_math)
+    # Reference to other flow ID or production volume ID correction
+    if re.search('Ref\(', is_math):
+        for elem in re.findall("Ref\('(.*?)'\)", is_math):
+            for e in o_t.findall(str_(['intermediateExchange'])):
+                if e.get('id') == elem.split("'")[0]:
+                    elem_ = elem.split("'")
+                    if len(elem_)>1:
+                        if elem_[2] == 'ProductionVolume':
+                            value = e.get('productionVolumeAmount')
+                    else:
+                        value = e.get('amount')
+                    is_math = re.sub("Ref\('"+elem+"'\)", value, is_math)
+    # Percentage correction
+    if re.search('%', is_math):
+        is_math = re.sub('%','/100',is_math)
+    # Float with ',' as decimal separator correction
+    if re.search('[0-9]+,[0-9]+', is_math):
+        is_math = re.sub(',', '.', is_math)
         
-        1. 
+    return is_math
+       
+
+###############################################################################
+
+def parameter_for_v_calculation(o_tree, o_t, name, formula, amount, comment, uncertainty):
+    '''Creates a variableParameter for Ecospold2 variable equation'''
     
-    Inputs:
-        mult:   convertion factor (multiplyier) of the unit for uncertainty purposes
-        o_t:    deepcopy of original Ecospold2 tree
-        comm:   commentary element of variable if any
-        o_tree: original ILCD tree (it is a copy of the main ILCD tree)
-        flow:   reference to exchange element of Ecospold2
-        exc:    reference to flow (exchange) element of ILCD
-        text:   initial text for parameter name if any
-        amount: quantitative amount of the flow
-        
-        is_math:    if the variable is a calculation (equation)
-        is_ref:     if the variable is the reference variable for the flow amount
-        path:       element path of uncertainty, serves as an trigger for uncertainty calculations
-        
-    Output:
-        id_     reference id_ for the list of ids of the main conversion file
-    '''
-    
-    # Creation of the subelement variableParameter under mathematicalRelations
     math_r = o_tree.find('//mathematicalRelations')
     var = ET.SubElement(math_r,'variableParameter')
     
-    # Set text (name) of variableParameter
-    if re.search('for_$',text):
-        if flow.get('elementaryExchangeId'):
-            id_ = text + flow.get('elementaryExchangeId').replace('-','_')
-        elif flow.get('intermediateExchangeId'):
-            id_ = text + flow.get('intermediateExchangeId').replace('-','_')
-        elif flow.get('parameterId'):
-            id_ = text + flow.get('parameterId').replace('-','_')
-    else:
-        id_ = text
-    var.set('name', id_)
+    var.set('name', name)
     
-    # Mean amount of the variableParameter
     mean_v = ET.SubElement(var,'meanValue')
-    mean_v.text = amount
+    mean_v.text = str(amount)
     
-    # Mathematical relation equation text and corrections 
-    #   (if takes a reference, its a unit conversion, a % or float with ',' as decimal separator)
-    if is_math:
-        is_math = is_math.rstrip()
-        # Unit convertion correction
-        if re.search('UnitConversion', is_math):
-            for elem in re.findall("UnitConversion\(([\w -.',]+?)\)", is_math):
-                elem_ = elem.replace("'", '').split(', ')
-                elem_[0] = elem_[0].replace(',','.')
-                is_math = re.sub('UnitConversion\('+elem+'\)',unit_conv(elem_, True),is_math)
-        # Reference to other flow ID or production volume ID correction
-        if re.search('Ref\(', is_math):
-            for elem in re.findall("Ref\('(.*?)'\)", is_math):
-                for e in o_t.findall(str_(['intermediateExchange'])):
-                    if e.get('id') == elem.split("'")[0]:
-                        elem_ = elem.split("'")
-                        if len(elem_)>1:
-                            if elem_[2] == 'ProductionVolume':
-                                value = e.get('productionVolumeAmount')
-                        else:
-                            value = e.get('amount')
-                        is_math = re.sub("Ref\('"+elem+"'\)", value, is_math)
-        # Percentage correction
-        if re.search('%', is_math):
-            is_math = re.sub('%','/100',is_math)
-        # Float with ',' as decimal separator correction
-        if re.search('[0-9]+,[0-9]+', is_math):
-            is_math = re.sub(',', '.', is_math)
-            
-        # Set equation text inside 'formula' subelement
-        form_v = ET.SubElement(var,'formula')
-        form_v.text = is_math
+    form_v = ET.SubElement(var,'formula')
+    f = set_equation(formula, o_t)
+    form_v.text = f
+    
+    if comment != '':
+        com = ET.SubElement(var, 'comment')
+        com.text = comment
         
-    # If the variable represents the quantitative value of the flow 
-    if is_ref:
-        ref_var = ET.SubElement(exc,'referenceToVariable')
-        ref_var.text = id_
-    
-    # If its necessary to set the uncertainty of the variable
-    if path:
-        do_uncertainty(root_(flow), var, amount, 0, path, mult)
+    if uncertainty[0] is not None:
+        do_uncertainty(root_(uncertainty[1]), var, amount, path = uncertainty[2])
         
-    # Set comment on the variableParameter
-    if comm != '':
-        if flow.find(comm) is not None:
-            comment = ET.SubElement(var, 'comment')
-            comment.text = texts(flow, comm)
-    
-    return id_
+    return name, f
 
 
 ###############################################################################
+
+def parameter_for_variables(o_tree, name, amount, comment, uncertainty):
+    '''Creates a variableParameter for Ecospold2 variable values'''
+    
+    math_r = o_tree.find('//mathematicalRelations')
+    var = ET.SubElement(math_r,'variableParameter')
+    
+    var.set('name', name)
+    
+    mean_v = ET.SubElement(var,'meanValue')
+    mean_v.text = str(amount)
+    
+    if comment != '':
+        com = ET.SubElement(var, 'comment')
+        com.text = comment
         
-def set_parameters_and_variables(o_t, f_tree, o_tree, flow, exc, par_bool=1):
+    if uncertainty[0] is not None:
+        do_uncertainty(root_(uncertainty[1]), var, amount, path = uncertainty[2])
+        
+    return name
+
+
+###############################################################################
+
+def parameter_for_unit_conversions(o_tree, original, converted, factor):
+    '''Creates a variableParameter for unit conversion values'''
+    
+    math_r = o_tree.find('//mathematicalRelations')
+    var = ET.SubElement(math_r,'variableParameter')
+    
+    var.set('name', f'_{original}_to_{converted}_')
+    
+    mean_v = ET.SubElement(var,'meanValue')
+    mean_v.text = str(factor)
+    
+    return f'_{original}_to_{converted}_'
+    
+
+###############################################################################
+
+def equation_for_unit_conversion(o_tree, o_t, original, converted, factor, amount, formula, uncertainty, id_for_name):
+    '''Creates a variableParameter for unit conversion values'''
+    
+    math_r = o_tree.find('//mathematicalRelations')
+    var = ET.SubElement(math_r,'variableParameter')
+    
+    var.set('name', f'Conversion_from_{original}_to_{converted}_for_'+id_for_name)
+    
+    mean_v = ET.SubElement(var,'meanValue')
+    mean_v.text = str(amount*factor)
+    
+    form_v = ET.SubElement(var,'formula')
+    form_v.text = set_equation('('+formula+f')*_{original}_to_{converted}_', o_t)
+    
+    com = ET.SubElement(var, 'comment')
+    com.text = "Additional equation for unit conversion"
+    
+    if uncertainty[0] is not None:
+        do_uncertainty(root_(uncertainty[1]), var, amount, path = uncertainty[2])
+    
+    return f'Conversion_from_{original}_to_{converted}_for_'+id_for_name
+    
+
+###############################################################################
+        
+def set_parameters_and_variables(o_t, f_tree, o_tree, flow, exc, is_flow=1):
     '''
-    Multifunction for flow subelements and attributes, mainly for calculations
-    and amount setting. Has the following ordered functionalities:
+    Multifunction to convert variableParameters, mathematical equations and
+        properties for flows and parameters of Ecospold2
+    Attribution of the resulting value for a different unit is done here
+    Uncertainty of equations, parameters, volume of production and properties are done here
         
-        1. Convertion of units if necessary
-        2. Check for variables and equations attributed to the flow
-        3. Check the variables and equations attributed to the flow's production volume
-        4. Check the variables and equations attributed to the flow's parameters 
+    Inputs:
+        flow: single flow element from Ecospold2 (parameter element for parameter entries)
+        exc:  single exchange root element for ILCD (None for parameter entries)
+        is_flow: 1 for flow and 0 for parameters
     '''
     
-    # Zero value has to be in the original id_ set
-    id_ = set(['0'])
+    # Functions to check if there is comment
+    def check_comment(field):
+        nonlocal flow
+        if flow.find(field) is not None:
+            return texts(flow, field)
+        else:
+            return ''
+    
+    def check_comment_prop(prop, field):
+        if prop.find(field) is not None:
+            return texts(prop, field)
+        else:
+            return ''
+        
+    # Functions to check if there is uncertainty
+    def check_unc(field):
+        nonlocal flow
+        if flow.find(field) is not None:
+            return (flow.find(field), flow, field)
+        else:
+            return (None, None, None)
+    
+    def check_unc_prop(prop, field):
+        if prop.find(field) is not None:
+            return (prop.find(field), prop, field)
+        else:
+            return (None, None, None) 
+    
+    # Initial variables 
+    id_ = set(['0']) # Zero value has to be in the original id_ set
+    is_var_with_equation = False
+    id_f = None # Specific error when isCalculatedAmount = true but there are no equation
+    
+    # Amount of ecoinvent flow
+    amount = float(flow.get('amount'))
     
     # Get activityLink if exists
     if flow.get('activityLinkId'):
@@ -758,108 +772,213 @@ def set_parameters_and_variables(o_t, f_tree, o_tree, flow, exc, par_bool=1):
             exc.find('generalComment').text += '\n' + "Original provider ID: " + flow.get('activityLinkId')
         else:
             gcom = ET.SubElement(exc, 'generalComment')
-            gcom.text = "Original provider ID: " + flow.get('activityLinkId')  
+            gcom.text = "Original provider ID: " + flow.get('activityLinkId')    
     
-    # Get conversion factors for units
+    
+    # 1. Create parameter for the main conversion of unit on the flow/parameter and get unit conversion values
     if flow.find('{http://www.EcoInvent.org/EcoSpold02}unitName') is not None:
-        r = unit_conv(flow.find('{http://www.EcoInvent.org/EcoSpold02}unitName').text)
-    else:
-        r = None
-    
-    # Get amount of flow (with unit correction using conversion factors)
-    if r:
-        if par_bool:
-            exc.find('meanAmount').text = str(float(exc.find('meanAmount').text) * r[2])
-            exc.find('resultingAmount').text = str(float(exc.find('resultingAmount').text) * r[2])
-        amount = str(float(flow.get('amount')) * r[2])
-    else:
-        amount = flow.get('amount')
-    
-    # Check for variables attributed to the exchange and if they're calculated
-    if flow.get('variableName') is not None:
         
-        # Unit convertion check
-        if not r:
-            r = [0,0,1]
-            
-        # Checks for equations 
-        if flow.get('isCalculatedAmount'):
-            if par_bool:
-                exc.find('meanAmount').text = '1.0'
-                id_.add(var(r[2], o_t, '', o_tree, flow, exc, flow.get('variableName'), amount, flow.get('mathematicalRelation')))
-            else:
-                id_.add(var(1, o_t, '{http://www.EcoInvent.org/EcoSpold02}comment', o_tree, flow, exc, flow.get('variableName'), amount, flow.get('mathematicalRelation'), 0))
+        # Check for values with only unitNames and no Id
+        if flow.get('unitId'):
+            flow_prop, info_eco, factor = unit_conv(flow.get('unitId'))
         else:
-            if par_bool:
-                exc.find('meanAmount').text = '1.0'
-                id_.add(var(r[2], o_t, '', o_tree, flow, exc, flow.get('variableName'), amount))
-            else:
-                id_.add(var(1, o_t, '{http://www.EcoInvent.org/EcoSpold02}comment', o_tree, flow, exc, flow.get('variableName'), amount, 0, 0))
+            u_ = flow.find('{http://www.EcoInvent.org/EcoSpold02}unitName').text
+            for k,v in unit_ecoinvent.items():
+                if u_ == v[0]:
+                    flow_prop, info_eco, factor = unit_conv(k)
+                    break
+    else:
+        flow_prop, info_eco, factor = None, None, 1
     
-    # Check for equations used to calculate something in the flow
-    elif flow.get('isCalculatedAmount') == 'true':
+    
+    # 1.5: Modify mean values and resulting values if there is a unit conversion
+    if is_flow and factor != 1:
+        exc.find('meanAmount').text = str(float(exc.find('meanAmount').text) * factor)
+        exc.find('resultingAmount').text = str(float(exc.find('resultingAmount').text) * factor)
         
-        # Unit convertion check
-        if not r:
-            r = [0,0,1]
         
-        # Checks if the variable is a parameter (parameters get its specific set of ifs at the end of this function)
-        if par_bool:
+    # 2. Create parameters in ILCD for the parameters already in Ecospold2 inside flows or parameter fields
+    if flow.get('variableName') or flow.get('isCalculatedAmount') == "true":
+        
+        
+        if is_flow:
             exc.find('meanAmount').text = '1.0'
-            id_.add(var(r[2], o_t, '', o_tree, flow, exc, 'Math_Rel_for_', amount, flow.get('mathematicalRelation')))
-        else:
-            id_.add(var(1, o_t, '{http://www.EcoInvent.org/EcoSpold02}comment', o_tree, flow, exc, 'Math_Rel_[parameter]_for_', amount, flow.get('mathematicalRelation'), 0))
-    
-    # Check for production volume values and their equations if any
-    if flow.get('productionVolumeAmount') is not None:
+            ref_to_var = ET.SubElement(exc,'referenceToVariable')
+            
+            
+        # Checks if variable is calculated
+        if flow.get('isCalculatedAmount') == "true":
+            
+            if flow.get('variableName'):
+                name = flow.get('variableName')
+                is_var_with_equation = True
+            else:
+                if flow.get('intermediateExchangeId'):
+                    name = 'Eq_for_'+flow.get('id').replace('-','_')
+                elif flow.get('elementaryExchangeId'):
+                    name = 'Eq_for_'+flow.get('elementaryExchangeId').replace('-','_')
+                else:
+                    name = 'Eq_[parameter]_for'+flow.get('parameterId').replace('-','_')
+                
+            # There are datasets which only indicates that is calculated
+            if flow.get('mathematicalRelation'):
+                id_f, formula = parameter_for_v_calculation(o_tree, o_t,
+                                                    name,
+                                                    flow.get('mathematicalRelation').rstrip(), 
+                                                    amount,
+                                                    check_comment('{http://www.EcoInvent.org/EcoSpold02}comment'),
+                                                    check_unc('{http://www.EcoInvent.org/EcoSpold02}uncertainty')
+                                                    )
+                id_.add(id_f)
+            else:
+                is_var_with_equation = False
+            
+        if flow.get('variableName') and not is_var_with_equation:
+            formula = flow.get('variableName')
+            id_f = parameter_for_variables(o_tree, 
+                                            flow.get('variableName'),
+                                            amount,
+                                            check_comment('{http://www.EcoInvent.org/EcoSpold02}comment'),
+                                            check_unc('{http://www.EcoInvent.org/EcoSpold02}uncertainty')
+                                            )
+            id_.add(id_f)
         
-        # Unit convertion check
-        if r:
-            pV_amount = str(float(flow.get('productionVolumeAmount')) * r[2])
-        else:
-            pV_amount = flow.get('productionVolumeAmount')
+            
+        # Checks if there was a unit conversion over the equation and/or variableParameter
+        if is_flow and id_f:
+            if factor != 1:
+                
+                id_.add(parameter_for_unit_conversions(o_tree, info_eco[0], 
+                                                       flow_prop[1], factor))
+                
+                if flow.get('intermediateExchangeId'):
+                    name = flow.get('id').replace('-','_')
+                elif flow.get('elementaryExchangeId'):
+                    name = flow.get('elementaryExchangeId').replace('-','_')
+                
+                id_f = equation_for_unit_conversion(o_tree, o_t,
+                                                     info_eco[0], 
+                                                     flow_prop[1],
+                                                     factor,
+                                                     amount,
+                                                     formula,
+                                                     check_unc('{http://www.EcoInvent.org/EcoSpold02}uncertainty'),
+                                                     name)
+                id_.add(id_f)
+                ref_to_var.text = id_f
+                
+            else:
+                ref_to_var.text = id_f
+            
+
+    # 3. Check for production volume values and their equations if any
+    if flow.get('productionVolumeAmount'):
         
+        p_amount = flow.get('productionVolumeAmount')
+        
+        p_text = 'Annual Production of ' + flow.find("{http://www.EcoInvent.org/EcoSpold02}name").text +\
+                        ' is ' + p_amount + ' ' +\
+                        flow.find('{http://www.EcoInvent.org/EcoSpold02}unitName').text
+                        
         # Set elements representing prodution volume on ILCD
-        annual_s = ET.SubElement(o_tree.find('//dataSourcesTreatmentAndRepresentativeness'),'annualSupplyOrProductionVolume')
-        annual_s.text = 'Annual Production of ' + flow.find("{http://www.EcoInvent.org/EcoSpold02}name").text +\
-                        ' is ' + flow.get('productionVolumeAmount') + ' ' + flow.find('{http://www.EcoInvent.org/EcoSpold02}unitName').text
+        for production in o_tree.iterfind('//dataSourcesTreatmentAndRepresentativeness/annualSupplyOrProductionVolume'):
+            if production.text == p_text:
+                break
+        else:
+            annual_s = ET.SubElement(o_tree.find('//dataSourcesTreatmentAndRepresentativeness'),'annualSupplyOrProductionVolume')
+            annual_s.text = p_text 
 
         # Set variables on mathematicalRelations relative to productionVolume value or calculations
-        if flow.get('productionVolumeVariableName') is not None:
-            if flow.get('productionVolumeMathematicalRelation') is not None:
-                id_.add(var(1, o_t, '{http://www.EcoInvent.org/EcoSpold02}productionVolumeComment', o_tree, flow, exc, flow.get('productionVolumeVariableName'), pV_amount,flow.get('productionVolumeMathematicalRelation'),0,'//{http://www.EcoInvent.org/EcoSpold02}productionVolumeUncertainty'))
-            else:
-                id_.add(var(1, o_t, '{http://www.EcoInvent.org/EcoSpold02}productionVolumeComment', o_tree, flow, exc, flow.get('productionVolumeVariableName'), pV_amount,0,0,'//{http://www.EcoInvent.org/EcoSpold02}productionVolumeUncertainty'))
-    
-        elif flow.get('productionVolumeMathematicalRelation') is not None:
-            id_.add(var(1, o_t, '{http://www.EcoInvent.org/EcoSpold02}productionVolumeComment', o_tree, flow, exc, 'Math_Rel_[product volume]_for_', pV_amount,flow.get('productionVolumeMathematicalRelation'),0,'//{http://www.EcoInvent.org/EcoSpold02}productionVolumeUncertainty'))
-
-    # Check for flow properties, it's values and equations if any. If it's an special flow property, creates a flowPropertyDataSet for it
+        if flow.get('productionVolumeVariableName') or flow.get('productionVolumeMathematicalRelation'):
+            is_var_with_equation = False # Default
+            
+            # Checks if variable is calculated
+            if flow.get('productionVolumeMathematicalRelation'):
+                
+                if flow.get('productionVolumeVariableName'):
+                    name = flow.get('productionVolumeVariableName')
+                    is_var_with_equation = True
+                else:
+                    if flow.get('intermediateExchangeId'):
+                        ex_id = flow.get('id').replace('-','_')
+                    elif flow.get('elementaryExchangeId'):
+                        ex_id = flow.get('elementaryExchangeId').replace('-','_')
+                    name = 'Eq_[product volume]_in_['+flow.find('{http://www.EcoInvent.org/EcoSpold02}unitName').text+']_for_'+ex_id
+                
+                id_f, formula = parameter_for_v_calculation(o_tree, o_t,
+                                                    name,
+                                                    flow.get('productionVolumeMathematicalRelation').rstrip(), 
+                                                    p_amount,
+                                                    check_comment('{http://www.EcoInvent.org/EcoSpold02}productionVolumeComment'),
+                                                    check_unc('{http://www.EcoInvent.org/EcoSpold02}productionVolumeUncertainty')
+                                                    )
+                id_.add(id_f)
+                
+            if flow.get('productionVolumeVariableName') and not is_var_with_equation:
+                formula = flow.get('productionVolumeVariableName')
+                id_f = parameter_for_variables(o_tree, 
+                                                flow.get('productionVolumeVariableName'),
+                                                p_amount,
+                                                check_comment('{http://www.EcoInvent.org/EcoSpold02}productionVolumeComment'),
+                                                check_unc('{http://www.EcoInvent.org/EcoSpold02}productionVolumeUncertainty')
+                                                )
+                id_.add(id_f)
+            
+            
+    # 4. Check for flow properties, it's values and equations if any. 
+    #    If it's an special flow property, creates a flowPropertyDataSet for it
     for prop in flow.iterfind('{http://www.EcoInvent.org/EcoSpold02}property'):
         
-        # Unit convertion check
-        if prop.find('{http://www.EcoInvent.org/EcoSpold02}unitName') is not None:
-            p = unit_conv(prop.find('{http://www.EcoInvent.org/EcoSpold02}unitName').text)
-        else:
-            p = None
-        if p:
-            prop_amount = str(float(prop.get('amount')) * p[2])
-        else:
-            prop_amount = prop.get('amount')
+        amount_for_parameters = prop.get('amount')
+       
+        # Set variables on mathematicalRelations relative to flow parameters' value or calculations (don't use p_amount)
+        if prop.get('variableName') or prop.get('isCalculatedAmount') == "true":
+            is_var_with_equation = False    
             
-        # Set variables on mathematicalRelations relative to flow parameters' value or calculations
-        if prop.get('variableName'):
-            if prop.get('isCalculatedAmount') == 'true':
-                id_.add(var(1, o_t, '{http://www.EcoInvent.org/EcoSpold02}comment', o_tree, prop, exc, prop.get('variableName'), prop_amount, prop.get('mathematicalRelation'),0,0))
-            else:
-                id_.add(var(1, o_t, '{http://www.EcoInvent.org/EcoSpold02}comment', o_tree, prop, exc, prop.get('variableName'), prop_amount,0,0,0))
+            # Checks if variable is calculated
+            if prop.get('isCalculatedAmount') == "true":
+                
+                if prop.get('variableName'):
+                    name = prop.get('variableName')
+                    is_var_with_equation = True
+                else:
+                    ex_id = prop.get('propertyId').replace(' ', '_')
+                    if prop.find('{http://www.EcoInvent.org/EcoSpold02}unitName') is not None:
+                        name = 'Eq_[property]_in_['+prop.find('{http://www.EcoInvent.org/EcoSpold02}unitName').text+']_for_'+ex_id
+                    else:
+                        name = 'Eq_[property]_in_[]_for_'+ex_id
+                
+                if prop.get('mathematicalRelation'):
+                    id_f, formula = parameter_for_v_calculation(o_tree, o_t,
+                                                        name,
+                                                        prop.get('mathematicalRelation').rstrip(), 
+                                                        amount_for_parameters,
+                                                        check_comment_prop(prop, '{http://www.EcoInvent.org/EcoSpold02}comment'),
+                                                        check_unc_prop(prop, '{http://www.EcoInvent.org/EcoSpold02}uncertainty')
+                                                        )
+                    id_.add(id_f)
+                else:
+                    is_var_with_equation = False
+                
+            if prop.get('variableName') and not is_var_with_equation:
+                id_f = parameter_for_variables(o_tree, 
+                                                prop.get('variableName'),
+                                                amount_for_parameters,
+                                                check_comment_prop(prop, '{http://www.EcoInvent.org/EcoSpold02}comment'),
+                                                check_unc_prop(prop, '{http://www.EcoInvent.org/EcoSpold02}uncertainty')
+                                                )
+                id_.add(id_f)
+        
         # For every new property in all the flows, creates a new flowPropertyDataSet for it and its specific unitDataSets
-        else:
-            if prop.find('{http://www.EcoInvent.org/EcoSpold02}name').text in ('water content', 'carbon content, non-fossil', 'carbon content, fossil', 'water in wet mass', 'wet mass', 'dry mass'):
-                el = ET.SubElement(f_tree.find('//flowProperties'), 'flowProperty')
-                f_property(f_tree, el, f_tree, [str(len(f_tree.findall('//flowProperty'))-1), ''], special_property = 1, uuid = prop.get('propertyId'), amount = prop.get('amount'), name = prop.find('{http://www.EcoInvent.org/EcoSpold02}name').text)
-          
+        if prop.find('{http://www.EcoInvent.org/EcoSpold02}name').text in special_property_list:
+            el = ET.SubElement(f_tree.find('//flowProperties'), 'flowProperty')
+            
+            # Some properties don't have unit names nor Ids, so are not converted as property
+            if prop.find('{http://www.EcoInvent.org/EcoSpold02}unitName') is not None:
+                f_property(prop, el, f_tree, o_tree, [str(len(f_tree.findall('//flowProperty'))-1), ''], special_property = 1, uuid = prop.get('propertyId'), amount = str(float(amount_for_parameters)/factor), name = prop.find('{http://www.EcoInvent.org/EcoSpold02}name').text, unit_id = prop.get('unitId'))
+    
     return id_
+
 
 ###############################################################################
 ########################***TRIGGERED FUNCTIONS***##############################
@@ -990,27 +1109,43 @@ def pedigree(tree, el, *args):
 def type_product(tree, el, *args):
     '''Set the type of the intermediate flow [product or waste]'''
     
-    if tree.find('//{http://www.EcoInvent.org/EcoSpold02}outputGroup') is not None:
-        if tree.find('//{http://www.EcoInvent.org/EcoSpold02}outputGroup').text == '0':
-            el.text = 'Product flow'
-        elif tree.find('//{http://www.EcoInvent.org/EcoSpold02}outputGroup').text in ('2','3'):
-            el.text = 'Waste flow'
-    else:
-        el.text = 'Product flow'
+    # Type of flow taken from the By-product classification
+    if tree.find('//{http://www.EcoInvent.org/EcoSpold02}classification') is not None:
+        for class_ in tree.findall('//{http://www.EcoInvent.org/EcoSpold02}classification'):
+            value = class_.find('{http://www.EcoInvent.org/EcoSpold02}classificationSystem').text
+            if class_.find('{http://www.EcoInvent.org/EcoSpold02}classificationValue') is not None and value == "By-product classification":
+                type_ = class_.find('{http://www.EcoInvent.org/EcoSpold02}classificationValue').text
+                if type_ == "Waste":
+                    el.text = 'Waste flow'
+                elif type_ in ("Recyclable", "allocatable product"):
+                    el.text = 'Product flow'
+    
+    if el.text is None:
         
+        # If there is no classification of the sort, use output and input values
+        if tree.find('//{http://www.EcoInvent.org/EcoSpold02}outputGroup') is not None:
+            if tree.find('//{http://www.EcoInvent.org/EcoSpold02}outputGroup').text == '0':
+                el.text = 'Product flow'
+            elif tree.find('//{http://www.EcoInvent.org/EcoSpold02}outputGroup').text in ('2','3'):
+                el.text = 'Waste flow'
+        else:
+            el.text = 'Product flow'
+            
 
 ###############################################################################
-        
+
 @memory
 def flow_ref(ortree, tree, el, *args):
     '''Creates the reference to a flowDataSet'''
     
-    el = args[0].find('exchanges')[-1]
+    el = args[0].findall('exchanges/exchange')[-1]
+    
+    #ref = sub(el2,'referenceToFlowDataSet','exchange',None)
     ref = ET.SubElement(el,'referenceToFlowDataSet')
     if args[1] is not None:
         do_reference(ref, 'flow data set', args[1], args[2])
     else:
-        do_reference(ref, 'flow data set', tree.find('{http://www.EcoInvent.org/EcoSpold02}intermediateExchange').get('intermediateExchangeId'),
+        do_reference(ref, 'flow data set', tree.find('{http://www.EcoInvent.org/EcoSpold02}intermediateExchange').get('id'),
                      tree.find('//{http://www.EcoInvent.org/EcoSpold02}name').text)
         
 
@@ -1068,25 +1203,18 @@ def elementary_flow_info(tree, el, *args):
 
 def elem_f_property(tree, el, *args):
     '''Gets specific convertion information to create flowPropertyDataSet of elementary flows'''
-    
-    # Checks if elementary flow has an specific convertion of values
-    path_ = os.path.abspath(os.path.dirname(__file__))
-    pathMP = os.path.join(path_, "Mapping_files/factor_c.csv")
-    with open(pathMP, 'r') as conv_fac:
-        conv_r = csv.reader(conv_fac, delimiter = ',')
+            
+    # If elementary flow have a specific multiplication factor when converted from ecospold2 to ILCD due to nomenclature
+    #   it creates two properties (one for the Ecospold original property and other for the correspondent ILCD one)
+    if tree.find('/').get('elementaryExchangeId') in factor_elem_flow.keys():
+        factor = factor_elem_flow[tree.find('/').get('elementaryExchangeId')]
+        f_property(tree, el, args[0], args[1], ['0', str(factor[0])], factor[1])
+        new_f = sub(args[0], 'flowProperty', 'flowProperties', None)
+        f_property(tree, new_f, args[0], args[1], ['1', '1.0'])
         
-        # Checks if id is on the list of specific convertion factors and send call to create flowPropertyDataSet
-        for row in conv_r:
-            if row[0] == tree.find('/').get('elementaryExchangeId'):
-                
-                f_property(tree, el, args[0], ['0', row[1]], row[2])
-                new_f = sub(args[0], 'flowProperty', 'flowProperties', None)
-                f_property(tree, new_f, args[0], ['1', '1.0'])
-                break
-        
-        # Else send call to create flowPropertyDataSet with basic information
-        else:
-            f_property(tree, el, args[0], ['0', '1.0'])
+    # Else send call to create flowPropertyDataSet with basic information
+    else:
+        f_property(tree, el, args[0], args[1], ['0', '1.0'])
             
 
 ###############################################################################
