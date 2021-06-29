@@ -1,0 +1,1137 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<CategorySystem xmlns="http://lca.jrc.it/ILCD/Categories"
+                name="ILCD">
+   <categories dataType="Process">
+      <category id="1" name="A.Agriculture, forestry and fishing">
+         <category id="1.1" name="01:Crop and animal production, hunting and related service activities">
+            <category id="1.1.1" name="011:Growing of non-perennial crops">
+               <category id="1.1.1.1" name="0111:Growing of cereals (except rice), leguminous crops and oil seeds"/>
+               <category id="1.1.1.2" name="0112:Growing of rice"/>
+               <category id="1.1.1.3" name="0113:Growing of vegetables and melons, roots and tubers"/>
+               <category id="1.1.1.4" name="0114:Growing of sugar cane"/>
+               <category id="1.1.1.5" name="0115:Growing of tobacco"/>
+               <category id="1.1.1.6" name="0116:Growing of fibre crops"/>
+               <category id="1.1.1.7" name="0119:Growing of other non-perennial crops"/>
+            </category> 
+            <category id="1.1.2" name="012:Growing of perennial crops">
+               <category id="1.1.2.1" name="0121:Growing of grapes"/>
+               <category id="1.1.2.2" name="0122:Growing of tropical and subtropical fruits"/>
+               <category id="1.1.2.3" name="0123:Growing of citrus fruits"/>
+               <category id="1.1.2.4" name="0124:Growing of pome fruits and stone fruits"/>
+               <category id="1.1.2.5" name="0125:Growing of other tree and bush fruits and nuts"/>
+               <category id="1.1.2.6" name="0126:Growing of oleaginous fruits"/>
+               <category id="1.1.2.7" name="0127:Growing of beverage crops"/>
+               <category id="1.1.2.8" name="0128:Growing of spices, aromatic, drug and pharmaceutical crops"/>
+               <category id="1.1.2.9" name="0129:Growing of other perennial crops"/>
+            </category>
+            <category id="1.1.3" name="013:Plant propagation">
+               <category id="1.1.3.1" name="0130:Plant propagation"/>
+            </category>
+            <category id="1.1.4" name="014:Animal production">
+               <category id="1.1.4.1" name="0141:Raising of cattle and buffaloes"/>
+               <category id="1.1.4.2" name="0142:Raising of horses and other equines"/>
+               <category id="1.1.4.3" name="0143:Raising of camels and camelids"/>
+               <category id="1.1.4.4" name="0144:Raising of sheep and goats"/>
+               <category id="1.1.4.5" name="0145:Raising of swine/pigs"/>
+               <category id="1.1.4.6" name="0146:Raising of poultry"/>
+               <category id="1.1.4.7" name="0149:Raising of other animals"/>
+            </category>
+            <category id="1.1.5" name="015:Mixed farming">
+               <category id="1.1.5.1" name="0150:Mixed farming"/>
+            </category>
+            <category id="1.1.6" name="016:Support activities to agriculture and post-harvest crop activities">
+               <category id="1.1.6.1" name="0161:Support activities for crop production"/>
+               <category id="1.1.6.2" name="0162:Support activities for animal production"/>
+               <category id="1.1.6.3" name="0163:Post-harvest crop activities"/>
+               <category id="1.1.6.4" name="0164:Seed processing for propagation"/>
+            </category>
+            <category id="1.1.7" name="017:Hunting, trapping and related service activities">
+               <category id="1.1.7.1" name="0170:Hunting, trapping and related service activities"/>
+            </category>
+            <category id="1.1.9" name="19a:Liquid and gaseous fuels from biomass"/>
+         </category> 
+         <category id="1.2" name="02:Forestry and logging">
+            <category id="1.2.1" name="021:Silviculture and other forestry activities">
+               <category id="1.2.1.1" name="0210:Silviculture and other forestry activities"/>
+            </category>
+            <category id="1.2.2" name="022:Logging">
+               <category id="1.2.2.1" name="0220:Logging"/>
+            </category>
+            <category id="1.2.3" name="023:Gathering of non-wood forest products">
+               <category id="1.2.3.1" name="0230:Gathering of non-wood forest products"/>
+            </category>
+            <category id="1.2.4" name="024:Support services to forestry">
+               <category id="1.2.4.1" name="0240:Support services to forestry"/>
+            </category>
+         </category>
+         <category id="1.3" name="03:Fishing and aquaculture">
+            <category id="1.3.1" name="031:Fishing">
+               <category id="1.3.1.1" name="0311:Marine fishing"/>
+               <category id="1.3.1.2" name="0312:Freshwater fishing"/>
+            </category>
+            <category id="1.3.2" name="032:Aquaculture">
+               <category id="1.3.2.1" name="0321:Marine aquaculture"/>
+               <category id="1.3.2.2" name="0322:Freshwater aquaculture"/>
+            </category>
+         </category>
+      </category>
+      <category id="2" name="B.Mining and quarrying">
+         <category id="2.1" name="05:Mining of coal and lignite">
+            <category id="2.1.1" name="051:Mining of hard coal">
+               <category id="2.1.1.1" name="0510:Mining of hard coal"/>
+            </category>
+            <category id="2.1.2" name="052:Mining of lignite">
+               <category id="2.1.2.1" name="0520:Mining of lignite"/>
+            </category>
+         </category>   
+         <category id="2.2" name="06:Extraction of crude petroleum and natural gas">
+            <category id="2.2.1" name="061:Extraction of crude petroleum">
+               <category id="2.2.1.1" name="0610:Extraction of crude petroleum"/>
+            </category>
+            <category id="2.2.2" name="062:Extraction of natural gas">
+               <category id="2.2.2.1" name="0620:Extraction of natural gas"/>
+            </category>
+         </category>   
+         <category id="2.3" name="07:Mining of metal ores">
+            <category id="2.3.1" name="071:Mining of iron ores">
+               <category id="2.3.1.1" name="0710:Mining of iron ores"/>
+            </category>
+            <category id="2.3.2" name="072:Mining of non-ferrous metal ores">
+               <category id="2.3.2.1" name="0721:Mining of uranium and thorium ores"/>
+               <category id="2.3.2.9" name="0729:Mining of other non-ferrous metal ores"/>
+            </category>
+         </category>   
+         <category id="2.4" name="08:Other mining and quarrying">
+            <category id="2.4.1" name="081:Quarrying of stone, sand and clay">
+               <category id="2.4.1.1" name="0810:Quarrying of stone, sand and clay"/>
+            </category>
+            <category id="2.4.9" name="089:Mining and quarrying n.e.c.">
+               <category id="2.4.9.1" name="0891:Mining of chemical and fertilizer minerals"/>
+               <category id="2.4.9.2" name="0892:Extraction of peat"/>
+               <category id="2.4.9.3" name="0893:Extraction of salt"/>
+               <category id="2.4.9.9" name="0899:Other mining and quarrying n.e.c."/>
+            </category>
+         </category>   
+         <category id="2.5" name="09:Mining support service activities">
+            <category id="2.5.1" name="091:Support activities for petroleum and natural gas extraction">
+               <category id="2.5.1.1" name="0910:Support activities for petroleum and natural gas extraction"/>
+            </category>
+            <category id="2.5.9" name="099:Support activities for other mining and quarrying">
+               <category id="2.5.9.1" name="0990:Support activities for other mining and quarrying"/>
+            </category>
+         </category>
+      </category>
+      <category id="3" name="C.Manufacturing">
+         <category id="3.1" name="10:Manufacture of food products">
+            <category id="3.1.1" name="101:Processing and preserving of meat">
+               <category id="3.1.1.1" name="1010:Processing and preserving of meat"/>
+            </category>
+            <category id="3.1.2" name="102:Processing and preserving of fish, crustaceans and molluscs">
+               <category id="3.1.2.1" name="1020:Processing and preserving of fish, crustaceans and molluscs"/>
+            </category>
+            <category id="3.1.3" name="103:Processing and preserving of fruit and vegetables">
+               <category id="3.1.3.1" name="1030:Processing and preserving of fruit and vegetables"/>
+            </category>
+            <category id="3.1.4" name="104:Manufacture of vegetable and animal oils and fats">
+               <category id="3.1.4.1" name="1040:Manufacture of vegetable and animal oils and fats"/>
+            </category>
+            <category id="3.1.5" name="105:Manufacture of dairy products">
+               <category id="3.1.5.1" name="1050:Manufacture of dairy products"/>
+            </category>
+            <category id="3.1.6" name="106:Manufacture of grain mill products, starches and starch products">
+               <category id="3.1.6.1" name="1061:Manufacture of grain mill products"/>
+               <category id="3.1.6.2" name="1062:Manufacture of starches and starch products"/>
+            </category>
+            <category id="3.1.7" name="107:Manufacture of other food products">
+               <category id="3.1.7.1" name="1071:Manufacture of bakery products"/>
+               <category id="3.1.7.2" name="1072:Manufacture of sugar"/>
+               <category id="3.1.7.3" name="1073:Manufacture of cocoa, chocolate and sugar confectionery"/>
+               <category id="3.1.7.4" name="1074:Manufacture of macaroni, noodles, couscous and similar farinaceous products"/>
+               <category id="3.1.7.5" name="1075:Manufacture of prepared meals and dishes"/>
+               <category id="3.1.7.9" name="1079:Manufacture of other food products n.e.c."/>
+            </category>
+            <category id="3.1.8" name="108:Manufacture of prepared animal feeds">
+               <category id="3.1.8.1" name="1080:Manufacture of prepared animal feeds"/>
+            </category>
+         </category>
+         <category id="3.2" name="11:Manufacture of beverages">
+            <category id="3.2.1" name="110:Manufacture of beverages">
+               <category id="3.2.1.1" name="1101:Distilling, rectifying and blending of spirits"/>
+               <category id="3.2.1.2" name="1102:Manufacture of wines"/>
+               <category id="3.2.1.3" name="1103:Manufacture of malt liquors and malt"/>
+               <category id="3.2.1.4" name="1104:Manufacture of soft drinks; production of mineral waters and other bottled waters"/>
+            </category>
+         </category>
+         <category id="3.3" name="12:Manufacture of tobacco products">
+            <category id="3.3.1" name="120:Manufacture of tobacco products">
+               <category id="3.3.1.1" name="1200:Manufacture of tobacco products"/>
+            </category>
+         </category>
+         <category id="3.4" name="13:Manufacture of textiles">
+            <category id="3.4.1" name="131:Spinning, weaving and finishing of textiles">
+               <category id="3.4.1.1" name="1311:Preparation and spinning of textile fibres"/>
+               <category id="3.4.1.2" name="1312:Weaving of textiles"/>
+               <category id="3.4.1.3" name="1313:Finishing of textiles"/>
+            </category>
+            <category id="3.4.9" name="139:Manufacture of other textiles">
+               <category id="3.4.9.1" name="1391:Manufacture of knitted and crocheted fabrics"/>
+               <category id="3.4.9.2" name="1392:Manufacture of made-up textile articles, except apparel"/>
+               <category id="3.4.9.3" name="1393:Manufacture of carpets and rugs"/>
+               <category id="3.4.9.4" name="1394:Manufacture of cordage, rope, twine and netting"/>
+               <category id="3.4.9.9" name="1399:Manufacture of other textiles n.e.c."/>
+            </category>
+         </category>
+         <category id="3.5" name="14:Manufacture of wearing apparel">
+            <category id="3.5.1" name="141:Manufacture of wearing apparel, except fur apparel">
+               <category id="3.5.1.1" name="1410:Manufacture of wearing apparel, except fur apparel"/>
+            </category>   
+            <category id="3.5.2" name="142:Manufacture of articles of fur">
+               <category id="3.5.2.1" name="1420:Manufacture of articles of fur"/>
+            </category>   
+            <category id="3.5.3" name="143:Manufacture of knitted and crocheted apparel">
+               <category id="3.5.3.1" name="1430:Manufacture of knitted and crocheted apparel"/>
+            </category>
+         </category>
+         <category id="3.6" name="15:Manufacture of leather and related products">
+            <category id="3.6.1" name="151:Tanning and dressing of leather; manufacture of luggage, handbags, saddlery and harness; dressing and dyeing of fur">
+               <category id="3.6.1.1" name="1511:Tanning and dressing of leather; dressing and dyeing of fur"/>
+               <category id="3.6.1.2" name="1512:Manufacture of luggage, handbags and the like, saddlery and harness"/>
+            </category>
+            <category id="3.6.2" name="152:Manufacture of footwear">
+               <category id="3.6.2.1" name="1520:Manufacture of footwear"/>
+            </category>
+         </category> 
+         <category id="3.7" name="16:Manufacture of wood and of products of wood and cork, except furniture; manufacture of articles of straw and plaiting materials">
+            <category id="3.7.1" name="161:Sawmilling and planing of wood">
+               <category id="3.7.1.1" name="1610:Sawmilling and planing of wood"/>
+            </category>
+            <category id="3.7.2" name="162:Manufacture of products of wood, cork, straw and plaiting materials">
+               <category id="3.7.2.1" name="1621:Manufacture of veneer sheets and wood-based panels"/>
+               <category id="3.7.2.2" name="1622:Manufacture of builders' carpentry and joinery"/>
+               <category id="3.7.2.3" name="1623:Manufacture of wooden containers"/>
+               <category id="3.7.2.9" name="1629:Manufacture of other products of wood; manufacture of articles of cork, straw and plaiting materials"/>
+            </category>
+         </category>
+         <category id="3.8" name="17:Manufacture of paper and paper products">
+            <category id="3.8.1" name="170:Manufacture of paper and paper products">
+               <category id="3.8.1.1" name="1701:Manufacture of pulp, paper and paperboard"/>
+               <category id="3.8.1.2" name="1702:Manufacture of corrugated paper and paperboard and of containers of paper and paperboard"/>
+               <category id="3.8.1.9" name="1709:Manufacture of other articles of paper and paperboard"/>
+            </category>
+         </category>
+         <category id="3.9" name="18:Printing and reproduction of recorded media">
+            <category id="3.9.1" name="181:Printing and service activities related to printing">
+               <category id="3.9.1.1" name="1811:Printing"/>
+               <category id="3.9.1.2" name="1812:Service activities related to printing"/>
+            </category>
+            <category id="3.9.2" name="182:Reproduction of recorded media">
+               <category id="3.9.2.1" name="1820:Reproduction of recorded media"/>
+            </category>
+         </category>
+         <category id="3.10" name="19:Manufacture of coke and refined petroleum products">
+            <category id="3.10.1" name="191:Manufacture of coke oven products">
+               <category id="3.10.1.1" name="1910:Manufacture of coke oven products"/>
+            </category>   
+            <category id="3.10.2" name="192:Manufacture of refined petroleum products">
+               <category id="3.10.2.1" name="1920:Manufacture of refined petroleum products"/>
+            </category>
+         </category> 
+         <category id="3.11" name="20:Manufacture of chemicals and chemical products">
+            <category id="3.11.1" name="201:Manufacture of basic chemicals, fertilizers and nitrogen compounds, plastics and synthetic rubber in primary forms">
+               <category id="3.11.1.1" name="2011:Manufacture of basic chemicals"/>
+               <category id="3.11.1.9" name="2011a:Manufacture of nuclear fuels"/>
+               <category id="3.11.1.2" name="2012:Manufacture of fertilizers and nitrogen compounds"/>
+               <category id="3.11.1.3" name="2013:Manufacture of plastics and synthetic rubber in primary forms"/>
+            </category>
+            <category id="3.11.2" name="202:Manufacture of other chemical products">
+               <category id="3.11.2.1" name="2021:Manufacture of pesticides and other agrochemical products"/>
+               <category id="3.11.2.2" name="2022:Manufacture of paints, varnishes and similar coatings, printing ink and mastics"/>
+               <category id="3.11.2.3" name="2023:Manufacture of soap and detergents, cleaning and polishing preparations, perfumes and toilet preparations"/>
+               <category id="3.11.2.9" name="2029:Manufacture of other chemical products n.e.c."/>
+            </category>
+            <category id="3.11.3" name="203:Manufacture of man-made fibres">
+               <category id="3.11.3.1" name="2030:Manufacture of man-made fibres"/>
+            </category>
+         </category> 
+         <category id="3.12" name="21:Manufacture of basic pharmaceutical products and pharmaceutical preparations">
+            <category id="3.12.1" name="210:Manufacture of pharmaceuticals, medicinal chemical and botanical products">
+               <category id="3.12.1.1" name="2100:Manufacture of pharmaceuticals, medicinal chemical and botanical products"/>
+            </category>
+         </category> 
+         <category id="3.13" name="22:Manufacture of rubber and plastics products">
+            <category id="3.13.1" name="221:Manufacture of rubber products">
+               <category id="3.13.1.1" name="2211:Manufacture of rubber tyres and tubes; retreading and rebuilding of rubber tyres"/>
+               <category id="3.13.1.9" name="2219:Manufacture of other rubber products"/>
+            </category>
+            <category id="3.13.2" name="222:Manufacture of plastics products">
+               <category id="3.13.2.1" name="2220:Manufacture of plastics products"/>
+            </category>
+         </category> 
+         <category id="3.14" name="23:Manufacture of other non-metallic mineral products">
+            <category id="3.14.1" name="231:Manufacture of glass and glass products">
+               <category id="3.14.1.1" name="2310:Manufacture of glass and glass products"/>
+            </category>
+            <category id="3.14.9" name="239:Manufacture of non-metallic mineral products n.e.c.">
+               <category id="3.14.9.1" name="2391:Manufacture of refractory products"/>
+               <category id="3.14.9.2" name="2392:Manufacture of clay building materials"/>
+               <category id="3.14.9.3" name="2393:Manufacture of other porcelain and ceramic products"/>
+               <category id="3.14.9.4" name="2394:Manufacture of cement, lime and plaster"/>
+               <category id="3.14.9.5" name="2395:Manufacture of articles of concrete, cement and plaster"/>
+               <category id="3.14.9.6" name="2396:Cutting, shaping and finishing of stone"/>
+               <category id="3.14.9.9" name="2399:Manufacture of other non-metallic mineral products n.e.c."/>
+            </category>
+         </category>
+         <category id="3.15" name="24:Manufacture of basic metals">
+            <category id="3.15.1" name="241:Manufacture of basic iron and steel">
+               <category id="3.15.1.1" name="2410:Manufacture of basic iron and steel"/>
+            </category>
+            <category id="3.15.2" name="242:Manufacture of basic precious and other non-ferrous metals">
+               <category id="3.15.2.1" name="2420:Manufacture of basic precious and other non-ferrous metals"/>
+               <category id="3.15.2.9" name="2420a:Smelting and refining"/>
+            </category>
+            <category id="3.15.3" name="243:Casting of metals">
+               <category id="3.15.3.1" name="2431:Casting of iron and steel"/>
+               <category id="3.15.3.2" name="2432:Casting of non-ferrous metals"/>
+            </category>
+         </category>
+         <category id="3.16" name="25:Manufacture of fabricated metal products, except machinery and equipment">
+            <category id="3.16.1" name="251:Manufacture of structural metal products, tanks, reservoirs and steam generators">
+               <category id="3.16.1.1" name="2511:Manufacture of structural metal products"/>
+               <category id="3.16.1.2" name="2512:Manufacture of tanks, reservoirs and containers of metal"/>
+               <category id="3.16.1.3" name="2513:Manufacture of steam generators, except central heating hot water boilers"/>
+            </category>
+            <category id="3.16.2" name="252:Manufacture of weapons and ammunition">
+               <category id="3.16.2.1" name="2520:Manufacture of weapons and ammunition"/>
+            </category>
+            <category id="3.16.9" name="259:Manufacture of other fabricated metal products; metalworking service activities">
+               <category id="3.16.9.1" name="2591:Forging, pressing, stamping and roll-forming of metal; powder metallurgy"/>
+               <category id="3.16.9.2" name="2592:Treatment and coating of metals; machining"/>
+               <category id="3.16.9.3" name="2593:Manufacture of cutlery, hand tools and general hardware"/>
+               <category id="3.16.9.9" name="2599:Manufacture of other fabricated metal products n.e.c."/>
+            </category>
+         </category> 
+         <category id="3.17" name="26:Manufacture of computer, electronic and optical products">
+            <category id="3.17.1" name="261:Manufacture of electronic components and boards">
+               <category id="3.17.1.1" name="2610:Manufacture of electronic components and boards"/>
+            </category>
+            <category id="3.17.2" name="262:Manufacture of computers and peripheral equipment">
+               <category id="3.17.2.1" name="2620:Manufacture of computers and peripheral equipment"/>
+            </category>
+            <category id="3.17.3" name="263:Manufacture of communication equipment">
+               <category id="3.17.3.1" name="2630:Manufacture of communication equipment"/>
+            </category>
+            <category id="3.17.4" name="264:Manufacture of consumer electronics">
+               <category id="3.17.4.1" name="2640:Manufacture of consumer electronics"/>
+            </category>
+            <category id="3.17.5" name="265:Manufacture of measuring, testing, navigating and control equipment; watches and clocks">
+               <category id="3.17.5.1" name="2651:Manufacture of measuring, testing, navigating and control equipment"/>
+               <category id="3.17.5.2" name="2652:Manufacture of watches and clocks"/>
+            </category>
+            <category id="3.17.6" name="266:Manufacture of irradiation, electromedical and electrotherapeutic equipment">
+               <category id="3.17.6.1" name="2660:Manufacture of irradiation, electromedical and electrotherapeutic equipment"/>
+            </category> 
+            <category id="3.17.7" name="267:Manufacture of optical instruments and photographic equipment">
+               <category id="3.17.7.1" name="2670:Manufacture of optical instruments and photographic equipment"/>
+            </category>
+            <category id="3.17.8" name="268:Manufacture of magnetic and optical media">
+               <category id="3.17.8.1" name="2680:Manufacture of magnetic and optical media"/>
+            </category>
+         </category>
+         <category id="3.18" name="27:Manufacture of electrical equipment">
+            <category id="3.18.1" name="271:Manufacture of electric motors, generators, transformers and electricity distribution and control apparatus">
+               <category id="3.18.1.1" name="2710:Manufacture of electric motors, generators, transformers and electricity distribution and control apparatus"/>
+            </category>
+            <category id="3.18.9" name="2710a:Manufacture of electric motors, generators, for liquid fuels"/>
+            <category id="3.18.2" name="272:Manufacture of batteries and accumulators">
+               <category id="3.18.2.1" name="2720:Manufacture of batteries and accumulators"/>
+            </category>
+            <category id="3.18.3" name="273:Manufacture of wiring and wiring devices">
+               <category id="3.18.3.1" name="2731:Manufacture of fibre optic cables"/>
+               <category id="3.18.3.2" name="2732:Manufacture of other electronic and electric wires and cables"/>
+               <category id="3.18.3.3" name="2733:Manufacture of wiring devices"/>
+            </category>
+            <category id="3.18.4" name="274:Manufacture of electric lighting equipment">
+               <category id="3.18.4.1" name="2740:Manufacture of electric lighting equipment"/>
+            </category>
+            <category id="3.18.5" name="275:Manufacture of domestic appliances">
+               <category id="3.18.5.1" name="2750:Manufacture of domestic appliances"/>
+            </category>
+            <category id="3.18.9" name="279:Manufacture of other electrical equipment">
+               <category id="3.18.9.1" name="2790:Manufacture of other electrical equipment"/>
+            </category>
+         </category> 
+         <category id="3.19" name="28:Manufacture of machinery and equipment n.e.c.">
+            <category id="3.19.1" name="281:Manufacture of general-purpose machinery">
+               <category id="3.19.1.1" name="2811:Manufacture of engines and turbines, except aircraft, vehicle and cycle engines"/>
+               <category id="3.19.1.2" name="2811a:Manufacture of engines and turbines for liquid fuels, except"/>
+               <category id="3.19.1.3" name="2812:Manufacture of fluid power equipment"/>
+               <category id="3.19.1.4" name="2813:Manufacture of other pumps, compressors, taps and valves"/>
+               <category id="3.19.1.5" name="2814:Manufacture of bearings, gears, gearing and driving elements"/>
+               <category id="3.19.1.6" name="2815:Manufacture of ovens, furnaces and furnace burners"/>
+               <category id="3.19.1.7" name="2815a:Manufacture of furnaces and boilers for liquid fuels"/>
+               <category id="3.19.1.8" name="2815b:Manufacture of permanent mount non-electric household heating"/>
+               <category id="3.19.1.9" name="2816:Manufacture of lifting and handling equipment"/>
+               <category id="3.19.1.10" name="2817:Manufacture of office machinery and equipment (except computers and peripheral equipment)"/>
+               <category id="3.19.1.11" name="2818:Manufacture of power-driven hand tools"/>
+               <category id="3.19.1.12" name="2819:Manufacture of other general-purpose machinery"/>
+            </category>
+            <category id="3.19.2" name="282:Manufacture of special-purpose machinery">
+               <category id="3.19.2.1" name="2821:Manufacture of agricultural and forestry machinery"/>
+               <category id="3.19.2.2" name="2822:Manufacture of metal-forming machinery and machine tools"/>
+               <category id="3.19.2.3" name="2823:Manufacture of machinery for metallurgy"/>
+               <category id="3.19.2.4" name="2824:Manufacture of machinery for mining, quarrying and construction"/>
+               <category id="3.19.2.5" name="2825:Manufacture of machinery for food, beverage and tobacco processing"/>
+               <category id="3.19.2.6" name="2826:Manufacture of machinery for textile, apparel and leather production"/>
+               <category id="3.19.2.9" name="2829:Manufacture of other special-purpose machinery"/>
+            </category>
+         </category> 
+         <category id="3.20" name="29:Manufacture of motor vehicles, trailers and semi-trailers">
+            <category id="3.20.1" name="291:Manufacture of motor vehicles">
+               <category id="3.20.1.1" name="2910:Manufacture of motor vehicles"/>
+            </category>
+            <category id="3.20.2" name="292:Manufacture of bodies (coachwork) for motor vehicles; manufacture of trailers and semi-trailers">
+               <category id="3.20.2.1" name="2920:Manufacture of bodies (coachwork) for motor vehicles; manufacture of trailers and semi-trailers"/>
+            </category>
+            <category id="3.20.3" name="293:Manufacture of parts and accessories for motor vehicles">
+               <category id="3.20.3.1" name="2930:Manufacture of parts and accessories for motor vehicles"/>
+            </category>
+         </category> 
+         <category id="3.21" name="30:Manufacture of other transport equipment">
+            <category id="3.21.1" name="301:Building of ships and boats">
+               <category id="3.21.1.1" name="3011:Building of ships and floating structures"/>
+               <category id="3.21.1.9" name="3011a:Construction of drilling platforms"/>
+               <category id="3.21.1.2" name="3012:Building of pleasure and sporting boats"/>
+            </category>
+            <category id="3.21.2" name="302:Manufacture of railway locomotives and rolling stock">
+               <category id="3.21.2.1" name="3020:Manufacture of railway locomotives and rolling stock"/>
+            </category>
+            <category id="3.21.3" name="303:Manufacture of air and spacecraft and related machinery">
+               <category id="3.21.3.1" name="3030:Manufacture of air and spacecraft and related machinery"/>
+            </category>
+            <category id="3.21.4" name="304:Manufacture of military fighting vehicles">
+               <category id="3.21.4.1" name="3040:Manufacture of military fighting vehicles"/>
+            </category>
+            <category id="3.21.9" name="309:Manufacture of transport equipment n.e.c.">
+               <category id="3.21.9.1" name="3091:Manufacture of motorcycles"/>
+               <category id="3.21.9.2" name="3092:Manufacture of bicycles and invalid carriages"/>
+               <category id="3.21.9.9" name="3099:Manufacture of other transport equipment n.e.c."/>
+            </category>
+         </category> 
+         <category id="3.22" name="31:Manufacture of furniture">
+            <category id="3.22.1" name="310:Manufacture of furniture">
+               <category id="3.22.1.1" name="3100:Manufacture of furniture"/>
+            </category>
+         </category>   
+         <category id="3.23" name="32:Other manufacturing">
+            <category id="3.23.1" name="321:Manufacture of jewellery, bijouterie and related articles">
+               <category id="3.23.1.1" name="3211:Manufacture of jewellery and related articles"/>
+               <category id="3.23.1.2" name="3212:Manufacture of imitation jewellery and related articles"/>
+            </category>
+            <category id="3.23.2" name="322:Manufacture of musical instruments">
+               <category id="3.23.2.1" name="3220:Manufacture of musical instruments"/>
+            </category>
+            <category id="3.23.3" name="323:Manufacture of sports goods">
+               <category id="3.23.3.1" name="3230:Manufacture of sports goods"/>
+            </category>
+            <category id="3.23.4" name="324:Manufacture of games and toys">
+               <category id="3.23.4.1" name="3240:Manufacture of games and toys"/>
+            </category>
+            <category id="3.23.5" name="325:Manufacture of medical and dental instruments and supplies">
+               <category id="3.23.5.1" name="3250:Manufacture of medical and dental instruments and supplies"/>
+            </category>
+            <category id="3.23.9" name="329:Other manufacturing n.e.c.">
+               <category id="3.23.9.1" name="3290:Other manufacturing n.e.c."/>
+            </category>
+         </category> 
+         <category id="3.24" name="33:Repair and installation of machinery and equipment">
+            <category id="3.24.1" name="331:Repair of fabricated metal products, machinery and equipment">
+               <category id="3.24.1.1" name="3311:Repair of fabricated metal products"/>
+               <category id="3.24.1.2" name="3312:Repair of machinery"/>
+               <category id="3.24.1.3" name="3313:Repair of electronic and optical equipment"/>
+               <category id="3.24.1.4" name="3314:Repair of electrical equipment"/>
+               <category id="3.24.1.5" name="3315:Repair of transport equipment, except motor vehicles"/>
+               <category id="3.24.1.9" name="3319:Repair of other equipment"/>
+            </category>
+            <category id="3.24.2" name="332:Installation of industrial machinery and equipment">
+               <category id="3.24.2.1" name="3320:Installation of industrial machinery and equipment"/>
+            </category>
+         </category>
+      </category>  
+      <category id="4" name="D.Electricity, gas, steam and air conditioning supply">
+         <category id="4.1" name="35:Electricity, gas, steam and air conditioning supply">
+            <category id="4.1.1" name="351:Electric power generation, transmission and distribution">
+               <category id="4.1.1.1" name="3510:Electric power generation, transmission and distribution"/>
+               <category id="4.1.1.7" name="3510a:Electric power generation based on liquid fuels"/>
+               <category id="4.1.1.8" name="3510b:Electric power generation, photovoltaic"/>
+               <category id="4.1.1.9" name="3510c:Electric power generation, wind"/>
+            </category>
+            <category id="4.1.2" name="352:Manufacture of gas; distribution of gaseous fuels through mains">
+               <category id="4.1.2.1" name="3520:Manufacture of gas; distribution of gaseous fuels through mains"/>
+            </category>
+            <category id="4.1.3" name="353:Steam and air conditioning supply">
+               <category id="4.1.3.1" name="3530:Steam and air conditioning supply"/>
+               <category id="4.1.3.8" name="3530a:Steam and air conditioning supply based on liquid fuels"/>
+               <category id="4.1.3.9" name="3530b:Solar collectors operation"/>
+            </category>
+         </category>
+      </category>
+      <category id="5" name="E.Water supply; sewerage, waste management and remediation activities">
+         <category id="5.1" name="36:Water collection, treatment and supply">
+            <category id="5.1.1" name="360:Water collection, treatment and supply">
+               <category id="5.1.1.1" name="3600:Water collection, treatment and supply"/>
+            </category>
+         </category> 
+         <category id="5.2" name="37:Sewerage">
+            <category id="5.2.1" name="370:Sewerage">
+               <category id="5.2.1.1" name="3700:Sewerage"/>
+            </category>
+         </category> 
+         <category id="5.3" name="38:Waste collection, treatment and disposal activities; materials recovery">
+            <category id="5.3.1" name="381:Waste collection">
+               <category id="5.3.1.1" name="3811:Collection of non-hazardous waste"/>
+               <category id="5.3.1.2" name="3812:Collection of hazardous waste"/>
+            </category>
+            <category id="5.3.2" name="382:Waste treatment and disposal">
+               <category id="5.3.2.1" name="3821:Treatment and disposal of non-hazardous waste"/>
+               <category id="5.3.2.2" name="3822:Treatment and disposal of hazardous waste"/>
+            </category>
+            <category id="5.3.3" name="383:Materials recovery">
+               <category id="5.3.3.1" name="3830:Materials recovery"/>
+            </category>
+         </category> 
+         <category id="5.4" name="39:Remediation activities and other waste management services">
+            <category id="5.4.1" name="390:Remediation activities and other waste management services">
+               <category id="5.4.1.1" name="3900:Remediation activities and other waste management services"/>
+            </category>
+         </category>
+      </category> 
+      <category id="6" name="F.Construction">
+         <category id="6.1" name="41:Construction of buildings">
+            <category id="6.1.1" name="410:Construction of buildings">
+               <category id="6.1.1.1" name="4100:Construction of buildings"/>
+               <category id="6.1.1.9" name="4100a:Construction of factory buildings for the metal industry"/>
+            </category>
+         </category> 
+         <category id="6.2" name="42:Civil engineering">
+            <category id="6.2.1" name="421:Construction of roads and railways">
+               <category id="6.2.1.1" name="4210:Construction of roads and railways"/>
+            </category>
+            <category id="6.2.2" name="422:Construction of utility projects">
+               <category id="6.2.2.1" name="4220:Construction of utility projects"/>
+               <category id="6.2.2.2" name="4220a:Construction of utility projects for electricity production"/>
+               <category id="6.2.2.3" name="4220b:Construction of utility projects for electricity production"/>
+            </category>
+            <category id="6.2.9" name="429:Construction of other civil engineering projects">
+               <category id="6.2.9.1" name="4290:Construction of other civil engineering projects"/>
+               <category id="6.2.9.2" name="4290a:Construction of infrastructure for petroleum refining and di"/>
+            </category>
+         </category> 
+         <category id="6.3" name="43:Specialized construction activities">
+            <category id="6.3.1" name="431:Demolition and site preparation">
+               <category id="6.3.1.1" name="4311:Demolition"/>
+               <category id="6.3.1.2" name="4312:Site preparation"/>
+            </category>
+            <category id="6.3.2" name="432:Electrical, plumbing and other construction installation activities">
+               <category id="6.3.2.1" name="4321:Electrical installation"/>
+               <category id="6.3.2.2" name="4322:Plumbing, heat and air-conditioning installation"/>
+               <category id="6.3.2.3" name="4322a:Installation of solar collector systems"/>
+               <category id="6.3.2.9" name="4329:Other construction installation"/>
+            </category>
+            <category id="6.3.3" name="433:Building completion and finishing">
+               <category id="6.3.3.1" name="4330:Building completion and finishing"/>
+            </category>
+            <category id="6.3.9" name="439:Other specialized construction activities">
+               <category id="6.3.9.1" name="4390:Other specialized construction activities"/>
+            </category>
+         </category>
+      </category>  
+      <category id="7" name="G.Wholesale and retail trade; repair of motor vehicles and motorcycles">
+         <category id="7.1" name="45:Wholesale and retail trade and repair of motor vehicles and motorcycles">
+            <category id="7.1.1" name="451:Sale of motor vehicles">
+               <category id="7.1.1.1" name="4510:Sale of motor vehicles"/>
+            </category>
+            <category id="7.1.2" name="452:Maintenance and repair of motor vehicles">
+               <category id="7.1.2.1" name="4520:Maintenance and repair of motor vehicles"/>
+            </category>
+            <category id="7.1.3" name="453:Sale of motor vehicle parts and accessories">
+               <category id="7.1.3.1" name="4530:Sale of motor vehicle parts and accessories"/>
+            </category>
+            <category id="7.1.4" name="454:Sale, maintenance and repair of motorcycles and related parts and accessories">
+               <category id="7.1.4.1" name="4540:Sale, maintenance and repair of motorcycles and related parts and accessories"/>
+            </category>
+         </category> 
+         <category id="7.2" name="46:Wholesale trade, except of motor vehicles and motorcycles">
+            <category id="7.2.1" name="461:Wholesale on a fee or contract basis">
+               <category id="7.2.1.1" name="4610:Wholesale on a fee or contract basis"/>
+            </category>
+            <category id="7.2.2" name="462:Wholesale of agricultural raw materials and live animals">
+               <category id="7.2.2.1" name="4620:Wholesale of agricultural raw materials and live animals"/>
+            </category>
+            <category id="7.2.3" name="463:Wholesale of food, beverages and tobacco">
+               <category id="7.2.3.1" name="4630:Wholesale of food, beverages and tobacco"/>
+            </category>
+            <category id="7.2.4" name="464:Wholesale of household goods">
+               <category id="7.2.4.1" name="4641:Wholesale of textiles, clothing and footwear"/>
+               <category id="7.2.4.9" name="4649:Wholesale of other household goods"/>
+            </category>
+            <category id="7.2.5" name="465:Wholesale of machinery, equipment and supplies">
+               <category id="7.2.5.1" name="4651:Wholesale of computers, computer peripheral equipment and software"/>
+               <category id="7.2.5.2" name="4652:Wholesale of electronic and telecommunications equipment and parts"/>
+               <category id="7.2.5.3" name="4653:Wholesale of agricultural machinery, equipment and supplies"/>
+               <category id="7.2.5.9" name="4659:Wholesale of other machinery and equipment"/>
+            </category>
+            <category id="7.2.6" name="466:Other specialized wholesale">
+               <category id="7.2.6.1" name="4661:Wholesale of solid, liquid and gaseous fuels and related products"/>
+               <category id="7.2.6.2" name="4662:Wholesale of metals and metal ores"/>
+               <category id="7.2.6.3" name="4663:Wholesale of construction materials, hardware, plumbing and heating equipment and supplies"/>
+               <category id="7.2.6.9" name="4669:Wholesale of waste and scrap and other products n.e.c."/>
+            </category>
+            <category id="7.2.9" name="469:Non-specialized wholesale trade">
+               <category id="7.2.9.1" name="4690:Non-specialized wholesale trade"/>
+            </category>
+         </category> 
+         <category id="7.3" name="47:Retail trade, except of motor vehicles and motorcycles">
+            <category id="7.3.1" name="471:Retail sale in non-specialized stores">
+               <category id="7.3.1.1" name="4711:Retail sale in non-specialized stores with food, beverages or tobacco predominating"/>
+               <category id="7.3.1.9" name="4719:Other retail sale in non-specialized stores"/>
+            </category>
+            <category id="7.3.2" name="472:Retail sale of food, beverages and tobacco in specialized stores">
+               <category id="7.3.2.1" name="4721:Retail sale of food in specialized stores"/>
+               <category id="7.3.2.2" name="4722:Retail sale of beverages in specialized stores"/>
+               <category id="7.3.2.3" name="4723:Retail sale of tobacco products in specialized stores"/>
+            </category>
+            <category id="7.3.3" name="473:Retail sale of automotive fuel in specialized stores">
+               <category id="7.3.3.1" name="4730:Retail sale of automotive fuel in specialized stores"/>
+            </category>
+            <category id="7.3.4" name="474:Retail sale of information and communications equipment in specialized stores">
+               <category id="7.3.4.1" name="4741:Retail sale of computers, peripheral units, software and telecommunications equipment in specialized stores"/>
+               <category id="7.3.4.2" name="4742:Retail sale of audio and video equipment in specialized stores"/>
+            </category>
+            <category id="7.3.5" name="475:Retail sale of other household equipment in specialized stores">
+               <category id="7.3.5.1" name="4751:Retail sale of textiles in specialized stores"/>
+               <category id="7.3.5.2" name="4752:Retail sale of hardware, paints and glass in specialized stores"/>
+               <category id="7.3.5.3" name="4753:Retail sale of carpets, rugs, wall and floor coverings in specialized stores"/>
+               <category id="7.3.5.9" name="4759:Retail sale of electrical household appliances, furniture, lighting equipment and other household articles in specialized stores"/>
+            </category>
+            <category id="7.3.6" name="476:Retail sale of cultural and recreation goods in specialized stores">
+               <category id="7.3.6.1" name="4761:Retail sale of books, newspapers and stationary in specialized stores"/>
+               <category id="7.3.6.2" name="4762:Retail sale of music and video recordings in specialized stores"/>
+               <category id="7.3.6.3" name="4763:Retail sale of sporting equipment in specialized stores"/>
+               <category id="7.3.6.4" name="4764:Retail sale of games and toys in specialized stores"/>
+            </category>
+            <category id="7.3.7" name="477:Retail sale of other goods in specialized stores">
+               <category id="7.3.7.1" name="4771:Retail sale of clothing, footwear and leather articles in specialized stores"/>
+               <category id="7.3.7.2" name="4772:Retail sale of pharmaceutical and medical goods, cosmetic and toilet articles in specialized stores"/>
+               <category id="7.3.7.3" name="4773:Other retail sale of new goods in specialized stores"/>
+               <category id="7.3.7.4" name="4774:Retail sale of second-hand goods"/>
+            </category>
+            <category id="7.3.8" name="478:Retail sale via stalls and markets">
+               <category id="7.3.8.1" name="4781:Retail sale via stalls and markets of food, beverages and tobacco products"/>
+               <category id="7.3.8.2" name="4782:Retail sale via stalls and markets of textiles, clothing and footwear"/>
+               <category id="7.3.8.9" name="4789:Retail sale via stalls and markets of other goods"/>
+            </category>
+            <category id="7.3.9" name="479:Retail trade not in stores, stalls or markets">
+               <category id="7.3.9.1" name="4791:Retail sale via mail order houses or via Internet"/>
+               <category id="7.3.9.9" name="4799:Other retail sale not in stores, stalls or markets"/>
+            </category>
+         </category>
+      </category>
+      <category id="8" name="H.Transportation and storage">
+         <category id="8.1" name="49:Land transport and transport via pipelines">
+            <category id="8.1.1" name="491:Transport via railways">
+               <category id="8.1.1.1" name="4911:Passenger rail transport, interurban"/>
+               <category id="8.1.1.2" name="4912:Freight rail transport"/>
+            </category>
+            <category id="8.1.2" name="492:Other land transport">
+               <category id="8.1.2.1" name="4921:Urban and suburban passenger land transport"/>
+               <category id="8.1.2.2" name="4922:Other passenger land transport"/>
+               <category id="8.1.2.3" name="4923:Freight transport by road"/>
+            </category>
+            <category id="8.1.3" name="493:Transport via pipeline">
+               <category id="8.1.3.1" name="4930:Transport via pipeline"/>
+            </category>
+         </category> 
+         <category id="8.2" name="50:Water transport">
+            <category id="8.2.1" name="501:Sea and coastal water transport">
+               <category id="8.2.1.1" name="5011:Sea and coastal passenger water transport"/>
+               <category id="8.2.1.2" name="5012:Sea and coastal freight water transport"/>
+            </category>
+            <category id="8.2.2" name="502:Inland water transport">
+               <category id="8.2.2.1" name="5021:Inland passenger water transport"/>
+               <category id="8.2.2.2" name="5022:Inland freight water transport"/>
+            </category>
+         </category> 
+         <category id="8.3" name="51:Air transport">
+            <category id="8.3.1" name="511:Passenger air transport">
+               <category id="8.3.1.1" name="5110:Passenger air transport"/>
+            </category>
+            <category id="8.3.2" name="512:Freight air transport">
+               <category id="8.3.2.1" name="5120:Freight air transport"/>
+            </category>
+         </category> 
+         <category id="8.4" name="52:Warehousing and support activities for transportation">
+            <category id="8.4.1" name="521:Warehousing and storage">
+               <category id="8.4.1.1" name="5210:Warehousing and storage"/>
+            </category>
+            <category id="8.4.2" name="522:Support activities for transportation">
+               <category id="8.4.2.1" name="5221:Service activities incidental to land transportation"/>
+               <category id="8.4.2.2" name="5222:Service activities incidental to water transportation"/>
+               <category id="8.4.2.3" name="5223:Service activities incidental to air transportation"/>
+               <category id="8.4.2.4" name="5224:Cargo handling"/>
+               <category id="8.4.2.9" name="5229:Other transportation support activities"/>
+            </category>
+         </category> 
+         <category id="8.5" name="53:Postal and courier activities">
+            <category id="8.5.1" name="531:Postal activities">
+               <category id="8.5.1.1" name="5310:Postal activities"/>
+            </category>
+            <category id="8.5.2" name="532:Courier activities">
+               <category id="8.5.2.1" name="5320:Courier activities"/>
+            </category>
+         </category>
+      </category>
+      <category id="9" name="I.Accommodation and food service activities">
+         <category id="9.1" name="55:Accommodation">
+            <category id="9.1.1" name="551:Short term accommodation activities">
+               <category id="9.1.1.1" name="5510:Short term accommodation activities"/>
+            </category>
+            <category id="9.1.2" name="552:Camping grounds, recreational vehicle parks and trailer parks">
+               <category id="9.1.2.1" name="5520:Camping grounds, recreational vehicle parks and trailer parks"/>
+            </category>
+            <category id="9.1.9" name="559:Other accommodation">
+               <category id="9.1.9.1" name="5590:Other accommodation"/>
+            </category>
+         </category> 
+         <category id="9.2" name="56:Food and beverage service activities">
+            <category id="9.2.1" name="561:Restaurants and mobile food service activities">
+               <category id="9.2.1.1" name="5610:Restaurants and mobile food service activities"/>
+            </category>
+            <category id="9.2.2" name="562:Event catering and other food service activities">
+               <category id="9.2.2.1" name="5621:Event catering"/>
+               <category id="9.2.2.9" name="5629:Other food service activities"/>
+            </category>
+            <category id="9.2.3" name="563:Beverage serving activities">
+               <category id="9.2.3.1" name="5630:Beverage serving activities"/>
+            </category>
+         </category>
+      </category>  
+      <category id="10" name="J.Information and communication">
+         <category id="10.1" name="58:Publishing activities">
+            <category id="10.1.1" name="581:Publishing of books, periodicals and other publishing activities">
+               <category id="10.1.1.1" name="5811:Book publishing"/>
+               <category id="10.1.1.2" name="5812:Publishing of directories and mailing lists"/>
+               <category id="10.1.1.3" name="5813:Publishing of newspapers, journals and periodicals"/>
+               <category id="10.1.1.9" name="5819:Other publishing activities"/>
+            </category>
+            <category id="10.1.2" name="582:Software publishing">
+               <category id="10.1.2.1" name="5820:Software publishing"/>
+            </category>
+         </category> 
+         <category id="10.2" name="59:Motion picture, video and television programme production, sound recording and music publishing activities">
+            <category id="10.2.1" name="591:Motion picture, video and television programme activities">
+               <category id="10.2.1.1" name="5911:Motion picture, video and television programme production activities"/>
+               <category id="10.2.1.2" name="5912:Motion picture, video and television programme post-production activities"/>
+               <category id="10.2.1.3" name="5913:Motion picture, video and television programme distribution activities"/>
+               <category id="10.2.1.4" name="5914:Motion picture projection activities"/>
+            </category>
+            <category id="10.2.2" name="592:Sound recording and music publishing activities">
+               <category id="10.2.2.1" name="5920:Sound recording and music publishing activities"/>
+            </category>
+         </category> 
+         <category id="10.3" name="60:Programming and broadcasting activities">
+            <category id="10.3.1" name="601:Radio broadcasting">
+               <category id="10.3.1.1" name="6010:Radio broadcasting"/>
+            </category>
+            <category id="10.3.2" name="602:Television programming and broadcasting activities">
+               <category id="10.3.2.1" name="6020:Television programming and broadcasting activities"/>
+            </category>
+         </category> 
+         <category id="10.4" name="61:Telecommunications">
+            <category id="10.4.1" name="611:Wired telecommunications activities">
+               <category id="10.4.1.1" name="6110:Wired telecommunications activities"/>
+            </category>
+            <category id="10.4.2" name="612:Wireless telecommunications activities">
+               <category id="10.4.2.1" name="6120:Wireless telecommunications activities"/>
+            </category>
+            <category id="10.4.3" name="613:Satellite telecommunications activities">
+               <category id="10.4.3.1" name="6130:Satellite telecommunications activities"/>
+            </category>
+            <category id="10.4.9" name="619:Other telecommunications activities">
+               <category id="10.4.9.1" name="6190:Other telecommunications activities"/>
+            </category>
+         </category> 
+         <category id="10.5" name="62:Computer programming, consultancy and related activities">
+            <category id="10.5.1" name="620:Computer programming, consultancy and related activities">
+               <category id="10.5.1.1" name="6201:Computer programming activities"/>
+               <category id="10.5.1.2" name="6202:Computer consultancy and computer facilities management activities"/>
+               <category id="10.5.1.9" name="6209:Other information technology and computer service activities"/>
+            </category>
+         </category> 
+         <category id="10.6" name="63:Information service activities">
+            <category id="10.6.1" name="631:Data processing, hosting and related activities; web portals">
+               <category id="10.6.1.1" name="6311:Data processing, hosting and related activities"/>
+               <category id="10.6.1.2" name="6312:Web portals"/>
+            </category>
+            <category id="10.6.9" name="639:Other information service activities">
+               <category id="10.6.9.1" name="6391:News agency activities"/>
+               <category id="10.6.9.9" name="6399:Other information service activities n.e.c."/>
+            </category>
+         </category>
+      </category>  
+      <category id="11" name="K.Financial and insurance activities">
+         <category id="11.1" name="64:Financial service activities, except insurance and pension funding">
+            <category id="11.1.1" name="641:Monetary intermediation">
+               <category id="11.1.1.1" name="6411:Central banking"/>
+               <category id="11.1.1.9" name="6419:Other monetary intermediation"/>
+            </category>
+            <category id="11.1.2" name="642:Activities of holding companies">
+               <category id="11.1.2.1" name="6420:Activities of holding companies"/>
+            </category>
+            <category id="11.1.3" name="643:Trusts, funds and similar financial entities">
+               <category id="11.1.3.1" name="6430:Trusts, funds and similar financial entities"/>
+            </category>
+            <category id="11.1.9" name="649:Other financial service activities, except insurance and pension funding activities">
+               <category id="11.1.9.1" name="6491:Financial leasing"/>
+               <category id="11.1.9.2" name="6492:Other credit granting"/>
+               <category id="11.1.9.9" name="6499:Other financial service activities, except insurance and pension funding activities, n.e.c."/>
+            </category>
+         </category> 
+         <category id="11.2" name="65:Insurance, reinsurance and pension funding, except compulsory social security">
+            <category id="11.2.1" name="651:Insurance">
+               <category id="11.2.1.1" name="6511:Life insurance"/>
+               <category id="11.2.1.2" name="6512:Non-life insurance"/>
+            </category>
+            <category id="11.2.2" name="652:Reinsurance">
+               <category id="11.2.2.1" name="6520:Reinsurance"/>
+            </category>
+            <category id="11.2.3" name="653:Pension funding">
+               <category id="11.2.3.1" name="6530:Pension funding"/>
+            </category>
+         </category> 
+         <category id="11.3" name="66:Activities auxiliary to financial service and insurance activities">
+            <category id="11.3.1" name="661:Activities auxiliary to financial service activities, except insurance and pension funding">
+               <category id="11.3.1.1" name="6611:Administration of financial markets"/>
+               <category id="11.3.1.2" name="6612:Security and commodity contracts brokerage"/>
+               <category id="11.3.1.9" name="6619:Other activities auxiliary to financial service activities"/>
+            </category>
+            <category id="11.3.2" name="662:Activities auxiliary to insurance and pension funding">
+               <category id="11.3.2.1" name="6621:Risk and damage evaluation"/>
+               <category id="11.3.2.2" name="6622:Activities of insurance agents and brokers"/>
+               <category id="11.3.2.9" name="6629:Other activities auxiliary to insurance and pension funding"/>
+            </category>
+            <category id="11.3.3" name="663:Fund management activities">
+               <category id="11.3.3.1" name="6630:Fund management activities"/>
+            </category>
+         </category>
+      </category>  
+      <category id="12" name="L.Real estate activities">
+         <category id="12.1" name="68:Real estate activities">
+            <category id="12.1.1" name="681:Real estate activities with own or leased property">
+               <category id="12.1.1.1" name="6810:Real estate activities with own or leased property"/>
+            </category>
+            <category id="12.1.2" name="682:Real estate activities on a fee or contract basis">
+               <category id="12.1.2.1" name="6820:Real estate activities on a fee or contract basis"/>
+            </category>
+         </category>
+      </category>  
+      <category id="13" name="M.Professional, scientific and technical activities">
+         <category id="13.1" name="69:Legal and accounting activities">
+            <category id="13.1.1" name="691:Legal activities">
+               <category id="13.1.1.1" name="6910:Legal activities"/>
+            </category>
+            <category id="13.1.2" name="692:Accounting, bookkeeping and auditing activities; tax consultancy">
+               <category id="13.1.2.1" name="6920:Accounting, bookkeeping and auditing activities; tax consultancy"/>
+            </category>
+         </category> 
+         <category id="13.2" name="70:Activities of head offices; management consultancy activities">
+            <category id="13.2.1" name="701:Activities of head offices">
+               <category id="13.2.1.1" name="7010:Activities of head offices"/>
+            </category>
+            <category id="13.2.2" name="702:Management consultancy activities">
+               <category id="13.2.2.1" name="7020:Management consultancy activities"/>
+            </category>
+         </category> 
+         <category id="13.3" name="71:Architectural and engineering activities; technical testing and analysis">
+            <category id="13.3.1" name="711:Architectural and engineering activities and related technical consultancy">
+               <category id="13.3.1.1" name="7110:Architectural and engineering activities and related technical consultancy"/>
+            </category>
+            <category id="13.3.2" name="712:Technical testing and analysis">
+               <category id="13.3.2.1" name="7120:Technical testing and analysis"/>
+            </category>
+         </category>
+         <category id="13.4" name="72:Scientific research and development">
+            <category id="13.4.1" name="721:Research and experimental development on natural sciences and engineering">
+               <category id="13.4.1.1" name="7210:Research and experimental development on natural sciences and engineering"/>
+            </category>
+            <category id="13.4.2" name="722:Research and experimental development on social sciences and humanities">
+               <category id="13.4.2.1" name="7220:Research and experimental development on social sciences and humanities"/>
+            </category>
+         </category>
+         <category id="13.5" name="73:Advertising and market research">
+            <category id="13.5.1" name="731:Advertising">
+               <category id="13.5.1.1" name="7310:Advertising"/>
+            </category>
+            <category id="13.5.2" name="732:Market research and public opinion polling">
+               <category id="13.5.2.1" name="7320:Market research and public opinion polling"/>
+            </category>
+         </category>
+         <category id="13.6" name="74:Other professional, scientific and technical activities">
+            <category id="13.6.1" name="741:Specialized design activities">
+               <category id="13.6.1.1" name="7410:Specialized design activities"/>
+            </category>
+            <category id="13.6.2" name="742:Photographic activities">
+               <category id="13.6.2.1" name="7420:Photographic activities"/>
+            </category>
+            <category id="13.6.9" name="749:Other professional, scientific and technical activities n.e.c.">
+               <category id="13.6.9.1" name="7490:Other professional, scientific and technical activities n.e.c."/>
+            </category>
+         </category> 
+         <category id="13.7" name="75:Veterinary activities">
+            <category id="13.7.1" name="750:Veterinary activities">
+               <category id="13.7.1.1" name="7500:Veterinary activities"/>
+            </category>
+         </category>
+      </category>  
+      <category id="14" name="N.Administrative and support service activities">
+         <category id="14.1" name="77:Rental and leasing activities">
+            <category id="14.1.1" name="771:Renting and leasing of motor vehicles">
+               <category id="14.1.1.1" name="7710:Renting and leasing of motor vehicles"/>
+            </category>
+            <category id="14.1.2" name="772:Renting and leasing of personal and household goods">
+               <category id="14.1.2.1" name="7721:Renting and leasing of recreational and sports goods"/>
+               <category id="14.1.2.2" name="7722:Renting of video tapes and disks"/>
+               <category id="14.1.2.9" name="7729:Renting and leasing of other personal and household goods"/>
+            </category>
+            <category id="14.1.3" name="773:Renting and leasing of other machinery, equipment and tangible goods">
+               <category id="14.1.3.1" name="7730:Renting and leasing of other machinery, equipment and tangible goods"/>
+            </category>
+            <category id="14.1.4" name="774:Leasing of intellectual property and similar products, except copyrighted works">
+               <category id="14.1.4.1" name="7740:Leasing of intellectual property and similar products, except copyrighted works"/>
+            </category>
+         </category> 
+         <category id="14.2" name="78:Employment activities">
+            <category id="14.2.1" name="781:Activities of employment placement agencies">
+               <category id="14.2.1.1" name="7810:Activities of employment placement agencies"/>
+            </category>
+            <category id="14.2.2" name="782:Temporary employment agency activities">
+               <category id="14.2.2.1" name="7820:Temporary employment agency activities"/>
+            </category>
+            <category id="14.2.3" name="783:Other human resources provision">
+               <category id="14.2.3.1" name="7830:Other human resources provision"/>
+            </category>
+         </category>
+         <category id="14.3" name="79:Travel agency, tour operator, reservation service and related activities">
+            <category id="14.3.1" name="791:Travel agency and tour operator activities">
+               <category id="14.3.1.1" name="7911:Travel agency activities"/>
+               <category id="14.3.1.2" name="7912:Tour operator activities"/>
+            </category>
+            <category id="14.3.9" name="799:Other reservation service and related activities">
+               <category id="14.3.9.1" name="7990:Other reservation service and related activities"/>
+            </category>
+         </category> 
+         <category id="14.4" name="80:Security and investigation activities">
+            <category id="14.4.1" name="801:Private security activities">
+               <category id="14.4.1.1" name="8010:Private security activities"/>
+            </category>
+            <category id="14.4.2" name="802:Security systems service activities">
+               <category id="14.4.2.1" name="8020:Security systems service activities"/>
+            </category>
+            <category id="14.4.3" name="803:Investigation activities">
+               <category id="14.4.3.1" name="8030:Investigation activities"/>
+            </category>
+         </category>
+         <category id="14.5" name="81:Services to buildings and landscape activities">
+            <category id="14.5.1" name="811:Combined facilities support activities">
+               <category id="14.5.1.1" name="8110:Combined facilities support activities"/>
+            </category>
+            <category id="14.5.2" name="812:Cleaning activities">
+               <category id="14.5.2.1" name="8121:General cleaning of buildings"/>
+               <category id="14.5.2.9" name="8129:Other building and industrial cleaning activities"/>
+            </category>
+            <category id="14.5.3" name="813:Landscape care and maintenance service activities">
+               <category id="14.5.3.1" name="8130:Landscape care and maintenance service activities"/>
+            </category>
+         </category> 
+         <category id="14.6" name="82:Office administrative, office support and other business support activities">
+            <category id="14.6.1" name="821:Office administrative and support activities">
+               <category id="14.6.1.1" name="8211:Combined office administrative service activities"/>
+               <category id="14.6.1.9" name="8219:Photocopying, document preparation and other specialized office support activities"/>
+            </category>
+            <category id="14.6.2" name="822:Activities of call centres">
+               <category id="14.6.2.1" name="8220:Activities of call centres"/>
+            </category>
+            <category id="14.6.3" name="823:Organization of conventions and trade shows">
+               <category id="14.6.3.1" name="8230:Organization of conventions and trade shows"/>
+            </category>
+            <category id="14.6.9" name="829:Business support service activities n.e.c.">
+               <category id="14.6.9.1" name="8291:Activities of collection agencies and credit bureaus"/>
+               <category id="14.6.9.2" name="8292:Packaging activities"/>
+               <category id="14.6.9.9" name="8299:Other business support service activities n.e.c."/>
+            </category>
+         </category>
+      </category>  
+      <category id="15" name="O.Public administration and defence; compulsory social security">
+         <category id="15.1" name="84:Public administration and defence; compulsory social security">
+            <category id="15.1.1" name="841:Administration of the State and the economic and social policy of the community">
+               <category id="15.1.1.1" name="8411:General public administration activities"/>
+               <category id="15.1.1.2" name="8412:Regulation of the activities of providing health care, education, cultural services and other social services, excluding social security"/>
+               <category id="15.1.1.3" name="8413:Regulation of and contribution to more efficient operation of businesses"/>
+            </category>
+            <category id="15.1.2" name="842:Provision of services to the community as a whole">
+               <category id="15.1.2.1" name="8421:Foreign affairs"/>
+               <category id="15.1.2.2" name="8422:Defence activities"/>
+               <category id="15.1.2.3" name="8423:Public order and safety activities"/>
+            </category>
+            <category id="15.1.3" name="843:Compulsory social security activities">
+               <category id="15.1.3.1" name="8430:Compulsory social security activities"/>
+            </category>
+         </category>
+      </category>  
+      <category id="16" name="P.Education">
+         <category id="16.1" name="85:Education">
+            <category id="16.1.1" name="851:Pre-primary and primary education">
+               <category id="16.1.1.1" name="8510:Pre-primary and primary education"/>
+            </category>
+            <category id="16.1.2" name="852:Secondary education">
+               <category id="16.1.2.1" name="8521:General secondary education"/>
+               <category id="16.1.2.2" name="8522:Technical and vocational secondary education"/>
+            </category>
+            <category id="16.1.3" name="853:Higher education">
+               <category id="16.1.3.1" name="8530:Higher education"/>
+            </category>
+            <category id="16.1.4" name="854:Other education">
+               <category id="16.1.4.1" name="8541:Sports and recreation education"/>
+               <category id="16.1.4.2" name="8542:Cultural education"/>
+               <category id="16.1.4.9" name="8549:Other education n.e.c."/>
+            </category>
+            <category id="16.1.5" name="855:Educational support activities">
+               <category id="16.1.5.1" name="8550:Educational support activities"/>
+            </category>
+         </category>
+      </category>  
+      <category id="17" name="Q.Human health and social work activities">
+         <category id="17.1" name="86:Human health activities">
+            <category id="17.1.1" name="861:Hospital activities">
+               <category id="17.1.1.1" name="8610:Hospital activities"/>
+            </category>
+            <category id="17.1.2" name="862:Medical and dental practice activities">
+               <category id="17.1.2.1" name="8620:Medical and dental practice activities"/>
+            </category>
+            <category id="17.1.9" name="869:Other human health activities">
+               <category id="17.1.9.1" name="8690:Other human health activities"/>
+            </category>
+         </category>
+         <category id="17.2" name="87:Residential care activities">
+            <category id="17.2.1" name="871:Residential nursing care facilities">
+               <category id="17.2.1.1" name="8710:Residential nursing care facilities"/>
+            </category>
+            <category id="17.2.2" name="872:Residential care activities for mental retardation, mental health and substance abuse">
+               <category id="17.2.2.1" name="8720:Residential care activities for mental retardation, mental health and substance abuse"/>
+            </category>
+            <category id="17.2.3" name="873:Residential care activities for the elderly and disabled">
+               <category id="17.2.3.1" name="8730:Residential care activities for the elderly and disabled"/>
+            </category>
+            <category id="17.2.9" name="879:Other residential care activities">
+               <category id="17.2.9.1" name="8790:Other residential care activities"/>
+            </category>
+         </category> 
+         <category id="17.3" name="88:Social work activities without accommodation">
+            <category id="17.3.1" name="881:Social work activities without accommodation for the elderly and disabled">
+               <category id="17.3.1.1" name="8810:Social work activities without accommodation for the elderly and disabled"/>
+            </category>
+            <category id="17.3.9" name="889:Other social work activities without accommodation">
+               <category id="17.3.9.1" name="8890:Other social work activities without accommodation"/>
+            </category>
+         </category>
+      </category>  
+      <category id="18" name="R.Arts, entertainment and recreation">
+         <category id="18.1" name="90:Creative, arts and entertainment activities">
+            <category id="18.1.1" name="900:Creative, arts and entertainment activities">
+               <category id="18.1.1.1" name="9000:Creative, arts and entertainment activities"/>
+            </category>
+         </category> 
+         <category id="18.2" name="91:Libraries, archives, museums and other cultural activities">
+            <category id="18.2.1" name="910:Libraries, archives, museums and other cultural activities">
+               <category id="18.2.1.1" name="9101:Library and archives activities"/>
+               <category id="18.2.1.2" name="9102:Museums activities and operation of historical sites and buildings"/>
+               <category id="18.2.1.3" name="9103:Botanical and zoological gardens and nature reserves activities"/>
+            </category>
+         </category> 
+         <category id="18.3" name="92:Gambling and betting activities">
+            <category id="18.3.1" name="920:Gambling and betting activities">
+               <category id="18.3.1.1" name="9200:Gambling and betting activities"/>
+            </category>
+         </category> 
+         <category id="18.4" name="93:Sports activities and amusement and recreation activities">
+            <category id="18.4.1" name="931:Sports activities">
+               <category id="18.4.1.1" name="9311:Operation of sports facilities"/>
+               <category id="18.4.1.2" name="9312:Activities of sports clubs"/>
+               <category id="18.4.1.9" name="9319:Other sports activities"/>
+            </category>
+            <category id="18.4.2" name="932:Other amusement and recreation activities">
+               <category id="18.4.2.1" name="9321:Activities of amusement parks and theme parks"/>
+               <category id="18.4.2.9" name="9329:Other amusement and recreation activities n.e.c."/>
+            </category>
+         </category>
+      </category>  
+      <category id="19" name="S.Other service activities">
+         <category id="19.1" name="94:Activities of membership organizations">
+            <category id="19.1.1" name="941:Activities of business, employers and professional membership organizations">
+               <category id="19.1.1.1" name="9411:Activities of business and employers membership organizations"/>
+               <category id="19.1.1.2" name="9412:Activities of professional membership organizations"/>
+            </category>
+            <category id="19.1.2" name="942:Activities of trade unions">
+               <category id="19.1.2.1" name="9420:Activities of trade unions"/>
+            </category>
+            <category id="19.1.9" name="949:Activities of other membership organizations">
+               <category id="19.1.9.1" name="9491:Activities of religious organizations"/>
+               <category id="19.1.9.2" name="9492:Activities of political organizations"/>
+               <category id="19.1.9.9" name="9499:Activities of other membership organizations n.e.c."/>
+            </category>
+         </category> 
+         <category id="19.2" name="95:Repair of computers and personal and household goods">
+            <category id="19.2.1" name="951:Repair of computers and communication equipment">
+               <category id="19.2.1.1" name="9511:Repair of computers and peripheral equipment"/>
+               <category id="19.2.1.2" name="9512:Repair of communication equipment"/>
+            </category>
+            <category id="19.2.2" name="952:Repair of personal and household goods">
+               <category id="19.2.2.1" name="9521:Repair of consumer electronics"/>
+               <category id="19.2.2.2" name="9522:Repair of household appliances and home and garden equipment"/>
+               <category id="19.2.2.3" name="9523:Repair of footwear and leather goods"/>
+               <category id="19.2.2.4" name="9524:Repair of furniture and home furnishings"/>
+               <category id="19.2.2.9" name="9529:Repair of other personal and household goods"/>
+            </category>
+         </category> 
+         <category id="19.3" name="96:Other personal service activities">
+            <category id="19.3.1" name="960:Other personal service activities">
+               <category id="19.3.1.1" name="9601:Washing and (dry-) cleaning of textile and fur products"/>
+               <category id="19.3.1.2" name="9602:Hairdressing and other beauty treatment"/>
+               <category id="19.3.1.3" name="9603:Funeral and related activities"/>
+               <category id="19.3.1.9" name="9609:Other personal service activities n.e.c."/>
+            </category>
+         </category>
+      </category>
+      <category id="20" name="T.Activities of households as employers; undifferentiated goods- and services-producing activities of households for own use">
+         <category id="20.1" name="97:Activities of households as employers of domestic personnel">
+            <category id="20.1.1" name="970:Activities of households as employers of domestic personnel">
+               <category id="20.1.1.1" name="9700:Activities of households as employers of domestic personnel"/>
+            </category>
+         </category>
+         <category id="20.2" name="98:Undifferentiated goods- and services-producing activities of private households for own use">
+            <category id="20.2.1" name="981:Undifferentiated goods-producing activities of private households for own use">
+               <category id="20.2.1.1" name="9810:Undifferentiated goods-producing activities of private households for own use"/>
+            </category>
+            <category id="20.2.2" name="982:Undifferentiated service-producing activities of private households for own use">
+               <category id="20.2.2.1" name="9820:Undifferentiated service-producing activities of private households for own use"/>
+            </category>
+         </category> 
+      </category> 
+      <category id="21" name="U.Activities of extraterritorial organizations and bodies">
+         <category id="21.1" name="99:Activities of extraterritorial organizations and bodies">
+            <category id="21.1.1" name="990:Activities of extraterritorial organizations and bodies">
+               <category id="21.1.1.1" name="9900:Activities of extraterritorial organizations and bodies"/>
+            </category>
+         </category>
+      </category>
+   </categories>
+</CategorySystem>

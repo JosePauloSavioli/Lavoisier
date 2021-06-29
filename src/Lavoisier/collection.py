@@ -63,6 +63,36 @@ def memory(func, count = [0]):
 
 
 ###############################################################################
+
+def memoryPar(func):
+    '''Wrapper with memory of ids created for duplicates check on variableParameters
+    
+    This function should be revised in future builds tackling market datasets
+    '''
+    
+    @wraps(func)
+    def c(ilcd_tree, name, *args):
+        
+        if ilcd_tree not in trigger:
+            trigger.add(ilcd_tree)
+            memory.clear()
+        if name not in memory:
+            memory.add(name)
+            result = func(ilcd_tree, name, *args)
+            return result
+        else:
+            if len(args) == 5:
+                return None, None
+            else:
+                return None
+            
+    memory = set()
+    trigger = set()
+    
+    return c
+
+
+###############################################################################
 ##########################***SIMPLE FUNCTIONS***###############################
 ###############################################################################
 
@@ -146,7 +176,32 @@ def texts(tree,name):
 
 ###############################################################################
 
-def do_uncertainty(tree, par, mean_v, bool_ = 0, path = '//{http://www.EcoInvent.org/EcoSpold02}uncertainty', mult = 1):
+def check_flow_type(flow):
+    '''Checks the type of flow'''
+    
+    if flow.find('.//{http://www.EcoInvent.org/EcoSpold02}classification') is not None:
+        for class_ in flow.findall('.//{http://www.EcoInvent.org/EcoSpold02}classification'):
+            value = class_.find('{http://www.EcoInvent.org/EcoSpold02}classificationSystem').text
+            if class_.find('{http://www.EcoInvent.org/EcoSpold02}classificationValue') is not None and value == "By-product classification":
+                type_ = class_.find('{http://www.EcoInvent.org/EcoSpold02}classificationValue').text
+                if type_ == "Waste":
+                    return 'Waste flow'
+                elif type_ in ("Recyclable", "allocatable product"):
+                    return 'Product flow'
+                
+    # If there is no classification of the sort, use output and input values
+    if flow.find('.//{http://www.EcoInvent.org/EcoSpold02}outputGroup') is not None:
+        if flow.find('.//{http://www.EcoInvent.org/EcoSpold02}outputGroup').text == '0':
+            return 'Product flow'
+        elif flow.find('//{http://www.EcoInvent.org/EcoSpold02}outputGroup').text in ('2','3'):
+            return 'Waste flow'
+    else:
+        return 'Other flow'
+    
+    
+###############################################################################
+
+def do_uncertainty(tree, par, mean_v, bool_ = 0, path = '//{http://www.EcoInvent.org/EcoSpold02}uncertainty', mult = 1, isGeneralComment = None):
     '''Uncertainty calculation for any variable'''
     
     # Subtree of property correction
@@ -156,43 +211,73 @@ def do_uncertainty(tree, par, mean_v, bool_ = 0, path = '//{http://www.EcoInvent
     if tree.find(path) is not None:
         
         # Checks if variable gets a value or an amount as field name
-        if bool_:
-            min_a = ET.SubElement(par, 'minimumAmount')
-            max_a = ET.SubElement(par, 'maximumAmount')
-        else:
-            min_a = ET.SubElement(par, 'minimumValue')
-            max_a = ET.SubElement(par, 'maximumValue')
+        def create_minmax_elem(bool_):
+            if bool_:
+                min_a = ET.SubElement(par, 'minimumAmount')
+                max_a = ET.SubElement(par, 'maximumAmount')
+            else:
+                min_a = ET.SubElement(par, 'minimumValue')
+                max_a = ET.SubElement(par, 'maximumValue')
+            return min_a, max_a
         
         # Sets uncertainty distribution name
-        unc_type = ET.SubElement(par, 'uncertaintyDistributionType')
-        unc_type.text = tree.find(path)[0].tag.split('}')[1]
+        unc_type_text = tree.find(path)[0].tag.split('}')[1]
             
         # Does uncertainty calculations depending on the type of uncertainty attributed to the flow
-        if unc_type.text == 'lognormal':
+        if unc_type_text == 'lognormal':
+            s = exp((float(tree.find(path)[0].attrib['varianceWithPedigreeUncertainty'])*(mult)**(1/2))**(1/2))
+            min_a, max_a = create_minmax_elem(bool_)
+            min_a.text = str(float(mean_v)/s)
+            max_a.text = str(float(mean_v)*s)
+            unc_type = ET.SubElement(par, 'uncertaintyDistributionType')
             unc_type.text = 'log-normal'
             std95 = ET.SubElement(par, 'relativeStandardDeviation95In')
-            std95.text = str(exp((float(tree.find(path)[0].attrib['varianceWithPedigreeUncertainty'])*(mult)**(1/2))**(1/2)))
-            min_a.text = str(float(mean_v)/float(std95.text))
-            max_a.text = str(float(mean_v)*float(std95.text))
-        elif unc_type.text == 'normal':
+            std95.text = str(s)[:5]
+        elif unc_type_text == 'normal':
+            s = (float(tree.find(path)[0].attrib['varianceWithPedigreeUncertainty'])*(mult)**(1/2))**(1/2)
+            min_a, max_a = create_minmax_elem(bool_)
+            min_a.text = str(float(mean_v)-s)
+            max_a.text = str(float(mean_v)+s)
+            unc_type = ET.SubElement(par, 'uncertaintyDistributionType')
+            unc_type.text = unc_type_text
             std95 = ET.SubElement(par, 'relativeStandardDeviation95In')
-            std95.text = str((float(tree.find(path)[0].attrib['varianceWithPedigreeUncertainty'])*(mult)**(1/2))**(1/2))
-            min_a.text = str(float(mean_v)-float(std95.text))
-            max_a.text = str(float(mean_v)+float(std95.text))
-        elif unc_type.text in ('normal', 'triangular'):
+            std95.text = str(s)[:5]
+        elif unc_type_text in ('normal', 'triangular'):
+            min_a, max_a = create_minmax_elem(bool_)
             min_a.text = tree.find(path)[0].attrib['minValue']
             max_a.text = tree.find(path)[0].attrib['maxValue']
+            unc_type = ET.SubElement(par, 'uncertaintyDistributionType')
+            unc_type.text = unc_type_text
         else:
-            comment = ET.SubElement(par, 'comment',{"{http://www.w3.org/XML/1998/namespace}lang":'en'})
-            comment.text = 'Uncertainty not supported (Beta, Gamma or Binomial) or Undefined.'
+            if isGeneralComment is not None:
+                if isGeneralComment == '':
+                    comment = ET.SubElement(par, 'generalComment',{"{http://www.w3.org/XML/1998/namespace}lang":'en'})
+                    comment.text = 'Uncertainty not supported (Beta, Gamma or Binomial) or Undefined.'
+                else:
+                    isGeneralComment.text += "; " + 'Uncertainty not supported (Beta, Gamma or Binomial) or Undefined.'
+            else:
+                if par.find("comment") is not None:
+                    comment = par.find("comment")
+                    comment.text += '; Uncertainty not supported (Beta, Gamma or Binomial) or Undefined'
+                else:
+                    comment = ET.SubElement(par, 'comment',{"{http://www.w3.org/XML/1998/namespace}lang":'en'})
+                    comment.text = 'Uncertainty not supported (Beta, Gamma or Binomial) or Undefined.'
         
         # Checks if there is any comment on the uncertainty
         if texts(tree, path+'/{http://www.EcoInvent.org/EcoSpold02}comment'):
-            if 'comment' in locals():
-                comment.text = comment.text + '\n' + tree.find(path+'/{http://www.EcoInvent.org/EcoSpold02}comment').text
+            if par.find("comment") is not None:
+                comment = par.find("comment")
+                comment.text = comment.text + '; ' + tree.find(path+'/{http://www.EcoInvent.org/EcoSpold02}comment').text
             else:
-                comment = ET.SubElement(par, 'comment',{"{http://www.w3.org/XML/1998/namespace}lang":'en'})
-                comment.text = tree.find(path+'/{http://www.EcoInvent.org/EcoSpold02}comment').text
+                if isGeneralComment is not None:
+                    if isGeneralComment == '':
+                        comment = ET.SubElement(par, 'generalComment',{"{http://www.w3.org/XML/1998/namespace}lang":'en'})
+                        comment.text = tree.find(path+'/{http://www.EcoInvent.org/EcoSpold02}comment').text
+                    else:
+                        isGeneralComment.text += "; " + tree.find(path+'/{http://www.EcoInvent.org/EcoSpold02}comment').text
+                else:
+                    comment = ET.SubElement(par, 'comment',{"{http://www.w3.org/XML/1998/namespace}lang":'en'})
+                    comment.text = tree.find(path+'/{http://www.EcoInvent.org/EcoSpold02}comment').text
 
 
 ###############################################################################
@@ -228,36 +313,45 @@ def do_reference(reference, type_r, refObjectId, short_d, version = '01.00.000')
 def do_classification(text, classification):
     '''ISIC Classification''' 
     
-    # Create class subelements under classification
-    clas0 = ET.SubElement(classification, '{http://lca.jrc.it/ILCD/Common}class')
-    clas0.set('level','0')
-    clas1 = ET.SubElement(classification, '{http://lca.jrc.it/ILCD/Common}class')
-    clas1.set('level','1')
-    clas2 = ET.SubElement(classification, '{http://lca.jrc.it/ILCD/Common}class')
-    clas2.set('level','2')
-    clas3 = ET.SubElement(classification, '{http://lca.jrc.it/ILCD/Common}class')
-    clas3.set('level','3')
+    classification.set('name', 'ISIC rev.4 ecoinvent')
+    classification.set('classes', '../classification.xml')
+    
+    div_text = text.split(':')
     
     t = 2
+    if len(div_text[0]) != 5:
+        if len(div_text[0]) != 3:
+            z = 2
+        else:
+            z = 1
+    else:
+        z = 3
     lvl = ['']*4
     
     # Find the correspondence of classification in ISIC.txt file
     path_ = os.path.abspath(os.path.dirname(__file__))
     pathMP = os.path.join(path_, "Mapping_files/ISIC.txt")
     with open(pathMP,'r') as f:
-        div_text = text.split(':')
         for line in f:
-            if div_text[0][:-t] == line.split(':::')[0]:
-                lvl[t] = div_text[0][:-t] + ':' + line.split(':::')[1]
+            if div_text[0][:-z] == line.split(':::')[0]:
+                lvl[t] = div_text[0][:-z] + ':' + line.split(':::')[1]
                 t = t-1
+                z = z-1
             elif div_text[0] == line.split(':::')[0]:
                 lvl[3] = line.split(':::')[2].rstrip('\n')
                 lvl[0] = div_text[0] + ':' + line.split(':::')[1]
                 break
-            
+    
+    lvl = [l for l in lvl if l != '']
+    if div_text[0] == '19a':
+        lvl = ['19a:Liquid and gaseous fuels from biomass', "01:Crop and animal production, hunting and related service activities", 'A.Agriculture, forestry and fishing']
+    
     # Set class' text
-    clas0.text,clas1.text,clas2.text,clas3.text = lvl[3],lvl[2],lvl[1],lvl[0]
-
+    for i, level in enumerate(lvl[::-1]):
+        clas = ET.SubElement(classification, '{http://lca.jrc.it/ILCD/Common}class')
+        clas.set('level',str(i))
+        clas.text = level
+        
 
 ###############################################################################
 
@@ -461,7 +555,7 @@ def allocation(e_tree):
 
 ###############################################################################
 
-def flow_set_and_internal_ID(i_tree, outputRef, countNonReference, referencePassed):
+def flow_set_and_internal_ID(i_tree, outputRef, countNonReference, referencePassed, alInfoActivation, flow, ref_exc):
     '''Creates flow element and sets an internal ID as attribute'''
     
     # Output case
@@ -469,11 +563,23 @@ def flow_set_and_internal_ID(i_tree, outputRef, countNonReference, referencePass
         dir_ = 'Output'
         if outputRef.text == '0':
             if referencePassed:
-                exchange = sub(i_tree,'exchange','exchanges',{'dataSetInternalID':str(countNonReference)})
-                countNonReference += 1
+                
+                # Product flow with outputGroup 0 are prioritized over Waste flows
+                if check_flow_type(flow) == "Product flow":
+                    ref_exc.set('dataSetInternalID',str(countNonReference))
+                    countNonReference += 1
+                    ref_exc.remove(ref_exc.find('allocations'))
+                    exchange = sub(i_tree,'exchange','exchanges',{'dataSetInternalID':'0'})
+                    ref_exc = exchange
+                    alInfoActivation = True
+                else:
+                    exchange = sub(i_tree,'exchange','exchanges',{'dataSetInternalID':str(countNonReference)})
+                    countNonReference += 1
             else:
                 exchange = sub(i_tree,'exchange','exchanges',{'dataSetInternalID':'0'})
-            referencePassed = True
+                ref_exc = exchange
+                alInfoActivation = True
+                referencePassed = True
         else:
             exchange = sub(i_tree,'exchange','exchanges',{'dataSetInternalID':str(countNonReference)})
             countNonReference += 1
@@ -487,7 +593,7 @@ def flow_set_and_internal_ID(i_tree, outputRef, countNonReference, referencePass
     e_direction = ET.SubElement(exchange,'exchangeDirection')
     e_direction.text = dir_
         
-    return exchange, countNonReference, referencePassed
+    return exchange, countNonReference, referencePassed, alInfoActivation, ref_exc
 
 
 ###############################################################################
@@ -495,8 +601,9 @@ def flow_set_and_internal_ID(i_tree, outputRef, countNonReference, referencePass
 def flow_allocation_info(al, exc):
     '''Creates allocation subelements inside the flow'''
     
-    for el in al:  
-        element_al = ET.SubElement(exc, 'allocation')
+    for el in al:
+        element_al1 = ET.SubElement(exc, 'allocations')
+        element_al = ET.SubElement(element_al1, 'allocation')
         element_al.set('internalReferenceToCoProduct', str(el[0][1]))
         element_al.set('allocatedFraction', str(el[1]*100))
 
@@ -626,7 +733,8 @@ def set_equation(is_math, o_t):
 
 ###############################################################################
 
-def parameter_for_v_calculation(o_tree, o_t, name, formula, amount, comment, uncertainty):
+@memoryPar
+def parameter_for_v_calculation(o_tree, name, o_t, formula, amount, comment, uncertainty):
     '''Creates a variableParameter for Ecospold2 variable equation'''
     
     math_r = o_tree.find('//mathematicalRelations')
@@ -634,25 +742,44 @@ def parameter_for_v_calculation(o_tree, o_t, name, formula, amount, comment, unc
     
     var.set('name', name)
     
-    mean_v = ET.SubElement(var,'meanValue')
-    mean_v.text = str(amount)
-    
     form_v = ET.SubElement(var,'formula')
     f = set_equation(formula, o_t)
     form_v.text = f
     
-    if comment != '':
-        com = ET.SubElement(var, 'comment')
-        com.text = comment
-        
+    mean_v = ET.SubElement(var,'meanValue')
+    mean_v.text = str(amount)
+    
     if uncertainty[0] is not None:
         do_uncertainty(root_(uncertainty[1]), var, amount, path = uncertainty[2])
+        
+    if comment != '' and comment is not None:
+        if len(comment) > 500:
+            gc = o_tree.find("//dataSetInformation/{http://lca.jrc.it/ILCD/Common}generalComment")
+            if gc is not None:
+                gc.text += '\n' + 'Comment for [variable] ' + name + ': ' + comment
+                if var.find("comment") is None:
+                    com = ET.SubElement(var, 'comment', {"{http://www.w3.org/XML/1998/namespace}lang":'en'})
+                    com.text = "Variable comment placed in dataset's general comment for passing the number of characters"
+            else:
+                gc = ET.SubElement(o_tree.find('//dataSetInformation'), '{http://lca.jrc.it/ILCD/Common}generalComment', {"{http://www.w3.org/XML/1998/namespace}lang":'en'})
+                gc.text = 'Comment for [variable] ' + name + ': ' + comment
+                if var.find("comment") is None:
+                    com = ET.SubElement(var, 'comment', {"{http://www.w3.org/XML/1998/namespace}lang":'en'})
+                    com.text = "Variable comment placed in dataset's general comment for passing the number of characters"
+        else:
+            if var.find("comment") is None:
+                com = ET.SubElement(var, 'comment', {"{http://www.w3.org/XML/1998/namespace}lang":'en'})
+                com.text = comment
+            else:
+                com = var.find("comment")
+                com.text += '; ' + comment
         
     return name, f
 
 
 ###############################################################################
 
+@memoryPar
 def parameter_for_variables(o_tree, name, amount, comment, uncertainty):
     '''Creates a variableParameter for Ecospold2 variable values'''
     
@@ -664,19 +791,39 @@ def parameter_for_variables(o_tree, name, amount, comment, uncertainty):
     mean_v = ET.SubElement(var,'meanValue')
     mean_v.text = str(amount)
     
-    if comment != '':
-        com = ET.SubElement(var, 'comment')
-        com.text = comment
-        
     if uncertainty[0] is not None:
         do_uncertainty(root_(uncertainty[1]), var, amount, path = uncertainty[2])
+        
+    if comment != '' and comment is not None:
+        if len(comment) > 500:
+            gc = o_tree.find("//dataSetInformation/{http://lca.jrc.it/ILCD/Common}generalComment")
+            if gc is not None:
+                gc.text += '\n' + 'Comment for [variable] ' + name + ': ' + comment
+                if var.find("comment") is None:
+                    com = ET.SubElement(var, 'comment', {"{http://www.w3.org/XML/1998/namespace}lang":'en'})
+                    com.text = "Variable comment placed in dataset's general comment for passing the number of characters"
+            else:
+                gc = ET.SubElement(o_tree.find('//dataSetInformation'), '{http://lca.jrc.it/ILCD/Common}generalComment', {"{http://www.w3.org/XML/1998/namespace}lang":'en'})
+                gc.text = 'Comment for [variable] ' + name + ': ' + comment
+                if var.find("comment") is None:
+                    com = ET.SubElement(var, 'comment', {"{http://www.w3.org/XML/1998/namespace}lang":'en'})
+                    com.text = "Variable comment placed in dataset's general comment for passing the number of characters"
+        else:
+            if var.find("comment") is None:
+                com = ET.SubElement(var, 'comment', {"{http://www.w3.org/XML/1998/namespace}lang":'en'})
+                com.text = comment
+            else:
+                com = var.find("comment")
+                com.text += '; ' + comment
+        
         
     return name
 
 
 ###############################################################################
 
-def parameter_for_unit_conversions(o_tree, original, converted, factor):
+@memoryPar
+def parameter_for_unit_conversions(o_tree, name, original, converted, factor):
     '''Creates a variableParameter for unit conversion values'''
     
     math_r = o_tree.find('//mathematicalRelations')
@@ -692,32 +839,39 @@ def parameter_for_unit_conversions(o_tree, original, converted, factor):
 
 ###############################################################################
 
-def equation_for_unit_conversion(o_tree, o_t, original, converted, factor, amount, formula, uncertainty, id_for_name):
+@memoryPar
+def equation_for_unit_conversion(o_tree, name, o_t, original, converted, factor, amount, formula, uncertainty, id_for_name):
     '''Creates a variableParameter for unit conversion values'''
     
     math_r = o_tree.find('//mathematicalRelations')
     var = ET.SubElement(math_r,'variableParameter')
     
-    var.set('name', f'Conversion_from_{original}_to_{converted}_for_'+id_for_name)
-    
-    mean_v = ET.SubElement(var,'meanValue')
-    mean_v.text = str(amount*factor)
+    if len(f'{original}_to_{converted}_') > 14:
+        nn = f'{original[:5]}_to_{converted[:5]}_'+id_for_name
+        var.set('name', nn)
+    else:
+        nn = f'{original}_to_{converted}_'+id_for_name
+        var.set('name', nn)
     
     form_v = ET.SubElement(var,'formula')
     form_v.text = set_equation('('+formula+f')*_{original}_to_{converted}_', o_t)
     
-    com = ET.SubElement(var, 'comment')
-    com.text = "Additional equation for unit conversion"
+    mean_v = ET.SubElement(var,'meanValue')
+    mean_v.text = str(amount*factor)
     
     if uncertainty[0] is not None:
         do_uncertainty(root_(uncertainty[1]), var, amount, path = uncertainty[2])
+        
+    com = ET.SubElement(var, 'comment', {"{http://www.w3.org/XML/1998/namespace}lang":'en'})
+    com.text = "Additional equation for unit conversion"
     
-    return f'Conversion_from_{original}_to_{converted}_for_'+id_for_name
+    
+    return nn
     
 
 ###############################################################################
         
-def set_parameters_and_variables(o_t, f_tree, o_tree, flow, exc, is_flow=1):
+def set_parameters_and_variables(o_t, f_tree, o_tree, flow, exc, orig_id, is_flow=1):
     '''
     Multifunction to convert variableParameters, mathematical equations and
         properties for flows and parameters of Ecospold2
@@ -758,6 +912,22 @@ def set_parameters_and_variables(o_t, f_tree, o_tree, flow, exc, is_flow=1):
         else:
             return (None, None, None) 
     
+    def order_dataSources_subelements(elem):
+        return {'dataCutOffAndCompletenessPrinciples':0,
+                 'deviationsFromCutOffAndCompletenessPrinciples':1,
+                 'dataSelectionAndCombinationPrinciples':2,
+                 'deviationsFromSelectionAndCombinationPrinciples':3,
+                 'dataTreatmentAndExtrapolationsPrinciples':4,
+                 'deviationsFromTreatmentAndExtrapolationPrinciples':5,
+                 'referenceToDataHandlingPrinciples':6,
+                 'referenceToDataSource':7,
+                 'percentageSupplyOrProductionCovered':8,
+                 'annualSupplyOrProductionVolume':9,
+                 'samplingProcedure':10,
+                 'dataCollectionPeriod':11,
+                 'uncertaintyAdjustments':12,
+                 'useAdviceForDataSet':13}.get(elem.tag)
+    
     # Initial variables 
     id_ = set(['0']) # Zero value has to be in the original id_ set
     is_var_with_equation = False
@@ -769,14 +939,25 @@ def set_parameters_and_variables(o_t, f_tree, o_tree, flow, exc, is_flow=1):
     # Get activityLink if exists
     if flow.get('activityLinkId'):
         if exc.find('generalComment') is not None:
-            exc.find('generalComment').text += '\n' + "Original provider ID: " + flow.get('activityLinkId')
+            exc.find('generalComment').text += '; ' + "Original provider ID: " + flow.get('activityLinkId')
         else:
-            gcom = ET.SubElement(exc, 'generalComment')
+            gcom = ET.SubElement(exc, 'generalComment', {"{http://www.w3.org/XML/1998/namespace}lang":'en'})
             gcom.text = "Original provider ID: " + flow.get('activityLinkId')    
     
     
     # 1. Create parameter for the main conversion of unit on the flow/parameter and get unit conversion values
     if flow.find('{http://www.EcoInvent.org/EcoSpold02}unitName') is not None:
+        
+        if is_flow:
+            if exc.find('generalComment') is not None:
+                if exc.find('generalComment').text is not None:
+                    exc.find('generalComment').text = f"[{flow.find('{http://www.EcoInvent.org/EcoSpold02}unitName').text}] " + exc.find('generalComment').text
+                else:
+                    exc.find('generalComment').text = f"[{flow.find('{http://www.EcoInvent.org/EcoSpold02}unitName').text}] "
+            else:
+                gcom = ET.SubElement(exc, 'generalComment', {"{http://www.w3.org/XML/1998/namespace}lang":'en'})
+                gcom.text = f"[{flow.find('{http://www.EcoInvent.org/EcoSpold02}unitName').text}] "
+                    
         
         # Check for values with only unitNames and no Id
         if flow.get('unitId'):
@@ -789,7 +970,7 @@ def set_parameters_and_variables(o_t, f_tree, o_tree, flow, exc, is_flow=1):
                     break
     else:
         flow_prop, info_eco, factor = None, None, 1
-    
+
     
     # 1.5: Modify mean values and resulting values if there is a unit conversion
     if is_flow and factor != 1:
@@ -799,13 +980,12 @@ def set_parameters_and_variables(o_t, f_tree, o_tree, flow, exc, is_flow=1):
         
     # 2. Create parameters in ILCD for the parameters already in Ecospold2 inside flows or parameter fields
     if flow.get('variableName') or flow.get('isCalculatedAmount') == "true":
-        
+            
         
         if is_flow:
             exc.find('meanAmount').text = '1.0'
             ref_to_var = ET.SubElement(exc,'referenceToVariable')
-            
-            
+        
         # Checks if variable is calculated
         if flow.get('isCalculatedAmount') == "true":
             
@@ -814,21 +994,21 @@ def set_parameters_and_variables(o_t, f_tree, o_tree, flow, exc, is_flow=1):
                 is_var_with_equation = True
             else:
                 if flow.get('intermediateExchangeId'):
-                    name = 'Eq_for_'+flow.get('id').replace('-','_')
+                    name = 'Eq_'+flow.get('id').replace('-','_')
                 elif flow.get('elementaryExchangeId'):
-                    name = 'Eq_for_'+flow.get('elementaryExchangeId').replace('-','_')
+                    name = 'Eq_'+flow.get('elementaryExchangeId').replace('-','_')
                 else:
-                    name = 'Eq_[parameter]_for'+flow.get('parameterId').replace('-','_')
+                    name = 'Eq_[par]_'+flow.get('parameterId').replace('-','_')
                 
             # There are datasets which only indicates that is calculated
-            if flow.get('mathematicalRelation'):
-                id_f, formula = parameter_for_v_calculation(o_tree, o_t,
-                                                    name,
-                                                    flow.get('mathematicalRelation').rstrip(), 
-                                                    amount,
-                                                    check_comment('{http://www.EcoInvent.org/EcoSpold02}comment'),
-                                                    check_unc('{http://www.EcoInvent.org/EcoSpold02}uncertainty')
-                                                    )
+            if flow.get('mathematicalRelation', '') != '':
+                id_f, formula = parameter_for_v_calculation(o_tree, 
+                                                            name, o_t,
+                                                            flow.get('mathematicalRelation').rstrip(), 
+                                                            amount,
+                                                            check_comment('{http://www.EcoInvent.org/EcoSpold02}comment'),
+                                                            check_unc('{http://www.EcoInvent.org/EcoSpold02}uncertainty')
+                                                            )
                 id_.add(id_f)
             else:
                 is_var_with_equation = False
@@ -848,27 +1028,39 @@ def set_parameters_and_variables(o_t, f_tree, o_tree, flow, exc, is_flow=1):
         if is_flow and id_f:
             if factor != 1:
                 
-                id_.add(parameter_for_unit_conversions(o_tree, info_eco[0], 
-                                                       flow_prop[1], factor))
+                if f'_{info_eco[0]}_to_{flow_prop[1]}_' not in orig_id:
+                    id_.add(parameter_for_unit_conversions(o_tree,
+                                                           f'_{info_eco[0]}_to_{flow_prop[1]}_',
+                                                           info_eco[0], 
+                                                           flow_prop[1], factor))
                 
                 if flow.get('intermediateExchangeId'):
                     name = flow.get('id').replace('-','_')
                 elif flow.get('elementaryExchangeId'):
                     name = flow.get('elementaryExchangeId').replace('-','_')
                 
-                id_f = equation_for_unit_conversion(o_tree, o_t,
-                                                     info_eco[0], 
-                                                     flow_prop[1],
-                                                     factor,
-                                                     amount,
-                                                     formula,
-                                                     check_unc('{http://www.EcoInvent.org/EcoSpold02}uncertainty'),
-                                                     name)
-                id_.add(id_f)
+                if f'{info_eco[0]}_to_{flow_prop[1]}_'+name not in orig_id:
+                    id_f = equation_for_unit_conversion(o_tree,
+                                                         f'{info_eco[0]}_to_{flow_prop[1]}_'+name,
+                                                         o_t,
+                                                         info_eco[0], 
+                                                         flow_prop[1],
+                                                         factor,
+                                                         amount,
+                                                         formula,
+                                                         check_unc('{http://www.EcoInvent.org/EcoSpold02}uncertainty'),
+                                                         name)
+                    id_.add(id_f)
+                
+                
+                
                 ref_to_var.text = id_f
                 
             else:
                 ref_to_var.text = id_f
+                
+        elif is_flow:
+            ref_to_var.getparent().remove(ref_to_var)
             
 
     # 3. Check for production volume values and their equations if any
@@ -876,17 +1068,46 @@ def set_parameters_and_variables(o_t, f_tree, o_tree, flow, exc, is_flow=1):
         
         p_amount = flow.get('productionVolumeAmount')
         
-        p_text = 'Annual Production of ' + flow.find("{http://www.EcoInvent.org/EcoSpold02}name").text +\
-                        ' is ' + p_amount + ' ' +\
+        p_text = "Annual prod. "+ flow.find("{http://www.EcoInvent.org/EcoSpold02}name").text +\
+                        ':' + p_amount +\
                         flow.find('{http://www.EcoInvent.org/EcoSpold02}unitName').text
                         
         # Set elements representing prodution volume on ILCD
-        for production in o_tree.iterfind('//dataSourcesTreatmentAndRepresentativeness/annualSupplyOrProductionVolume'):
-            if production.text == p_text:
-                break
+        if flow.find('.//{http://www.EcoInvent.org/EcoSpold02}outputGroup') is not None:
+            if flow.find('.//{http://www.EcoInvent.org/EcoSpold02}outputGroup').text == "0" and check_flow_type(flow) != "Waste flow":
+                if o_tree.find('//dataSourcesTreatmentAndRepresentativeness/annualSupplyOrProductionVolume') is not None:
+                    if p_text not in o_tree.find('//dataSourcesTreatmentAndRepresentativeness/annualSupplyOrProductionVolume').text:
+                        annual_s = o_tree.find('//dataSourcesTreatmentAndRepresentativeness/annualSupplyOrProductionVolume')
+                        annual_s.text += "; " + p_text
+                else:
+                    annual_s = ET.SubElement(o_tree.find('//dataSourcesTreatmentAndRepresentativeness'), 'annualSupplyOrProductionVolume', {"{http://www.w3.org/XML/1998/namespace}lang":'en'})
+                    annual_s.text = p_text
+            else:
+                if o_tree.find("//dataSetInformation/{http://lca.jrc.it/ILCD/Common}generalComment") is not None:
+                    gc = o_tree.find("//dataSetInformation/{http://lca.jrc.it/ILCD/Common}generalComment")
+                    if gc.text is not None:
+                        if p_text not in gc.text:
+                            gc.text += "; " + p_text
+                    else:
+                        gc.text = p_text
+                else:
+                    gc = ET.SubElement(o_tree.find("//dataSetInformation"), "{http://lca.jrc.it/ILCD/Common}generalComment", {"{http://www.w3.org/XML/1998/namespace}lang": 'en'})
+                    gc.text = p_text
         else:
-            annual_s = ET.SubElement(o_tree.find('//dataSourcesTreatmentAndRepresentativeness'),'annualSupplyOrProductionVolume')
-            annual_s.text = p_text 
+            if o_tree.find("//dataSetInformation/{http://lca.jrc.it/ILCD/Common}generalComment") is not None:
+                gc = o_tree.find("//dataSetInformation/{http://lca.jrc.it/ILCD/Common}generalComment")
+                if gc.text is not None:
+                    if p_text not in gc.text:
+                        gc.text += "; " + p_text
+                else:
+                    gc.text = p_text
+            else:
+                gc = ET.SubElement(o_tree.find("//dataSetInformation"), "{http://lca.jrc.it/ILCD/Common}generalComment", {"{http://www.w3.org/XML/1998/namespace}lang": 'en'})
+                gc.text = p_text
+                
+        dd = o_tree.find('//dataSourcesTreatmentAndRepresentativeness')
+        
+        dd[:] = sorted(dd, key=order_dataSources_subelements)
 
         # Set variables on mathematicalRelations relative to productionVolume value or calculations
         if flow.get('productionVolumeVariableName') or flow.get('productionVolumeMathematicalRelation'):
@@ -903,10 +1124,14 @@ def set_parameters_and_variables(o_t, f_tree, o_tree, flow, exc, is_flow=1):
                         ex_id = flow.get('id').replace('-','_')
                     elif flow.get('elementaryExchangeId'):
                         ex_id = flow.get('elementaryExchangeId').replace('-','_')
-                    name = 'Eq_[product volume]_in_['+flow.find('{http://www.EcoInvent.org/EcoSpold02}unitName').text+']_for_'+ex_id
+                    uname = flow.find('{http://www.EcoInvent.org/EcoSpold02}unitName').text
+                    if len(uname) < 8:
+                        name = 'pvl['+ uname +']_'+ex_id
+                    else:
+                        name = 'pvl['+ uname[:8] +']_'+ex_id
                 
-                id_f, formula = parameter_for_v_calculation(o_tree, o_t,
-                                                    name,
+                id_f, formula = parameter_for_v_calculation(o_tree, 
+                                                    name, o_t,
                                                     flow.get('productionVolumeMathematicalRelation').rstrip(), 
                                                     p_amount,
                                                     check_comment('{http://www.EcoInvent.org/EcoSpold02}productionVolumeComment'),
@@ -944,13 +1169,17 @@ def set_parameters_and_variables(o_t, f_tree, o_tree, flow, exc, is_flow=1):
                 else:
                     ex_id = prop.get('propertyId').replace(' ', '_')
                     if prop.find('{http://www.EcoInvent.org/EcoSpold02}unitName') is not None:
-                        name = 'Eq_[property]_in_['+prop.find('{http://www.EcoInvent.org/EcoSpold02}unitName').text+']_for_'+ex_id
+                        uname = prop.find('{http://www.EcoInvent.org/EcoSpold02}unitName').text
+                        if len(uname) < 7:
+                            name = 'prop['+ uname +']_'+ex_id
+                        else:
+                            name = 'prop['+ uname[:7] +']_'+ex_id
                     else:
-                        name = 'Eq_[property]_in_[]_for_'+ex_id
+                        name = 'prop[]_'+ex_id
                 
                 if prop.get('mathematicalRelation'):
-                    id_f, formula = parameter_for_v_calculation(o_tree, o_t,
-                                                        name,
+                    id_f, formula = parameter_for_v_calculation(o_tree,
+                                                        name, o_t,
                                                         prop.get('mathematicalRelation').rstrip(), 
                                                         amount_for_parameters,
                                                         check_comment_prop(prop, '{http://www.EcoInvent.org/EcoSpold02}comment'),
@@ -971,10 +1200,10 @@ def set_parameters_and_variables(o_t, f_tree, o_tree, flow, exc, is_flow=1):
         
         # For every new property in all the flows, creates a new flowPropertyDataSet for it and its specific unitDataSets
         if prop.find('{http://www.EcoInvent.org/EcoSpold02}name').text in special_property_list:
-            el = ET.SubElement(f_tree.find('//flowProperties'), 'flowProperty')
             
             # Some properties don't have unit names nor Ids, so are not converted as property
             if prop.find('{http://www.EcoInvent.org/EcoSpold02}unitName') is not None:
+                el = ET.SubElement(f_tree.find('//flowProperties'), 'flowProperty')
                 f_property(prop, el, f_tree, o_tree, [str(len(f_tree.findall('//flowProperty'))-1), ''], special_property = 1, uuid = prop.get('propertyId'), amount = str(float(amount_for_parameters)/factor), name = prop.find('{http://www.EcoInvent.org/EcoSpold02}name').text, unit_id = prop.get('unitId'))
     
     return id_
@@ -995,7 +1224,7 @@ def review(tree, el, *args):
     for rev in tree.findall(str_(['modellingAndValidation', 'review'])):
         
         # Create review subelement
-        _ = sub(args[0], 'review', args[1], {})
+        _ = sub(args[0], 'review', args[1], None)
         
         # Check if review is the last review done
         if rev.get('reviewDate') == last_revision:
@@ -1034,7 +1263,7 @@ def bool_(tree, el, *args):
         if 'generalComment' in el.tag:
             
             # Create reference for the external image url
-            ref = sub(args[0], 'referenceToExternalDocument','processInformation/dataSetInformation',None)
+            ref = sub(args[0], 'referenceToExternalDocumentation','processInformation/dataSetInformation',None)
             if re.search('[A-z0-9]{8}-[A-z0-9]{4}-[A-z0-9]{4}-[A-z0-9]{4}-[A-z0-9]{12}', el.text):
                 ref_uuid = re.search('[A-z0-9]{8}-[A-z0-9]{4}-[A-z0-9]{4}-[A-z0-9]{4}-[A-z0-9]{12}', el.text).group()
             else:
@@ -1097,11 +1326,14 @@ def pedigree(tree, el, *args):
     '''Set the values of pedigree matrix as a comment (uncertainty done in do_uncertainty function)'''
     
     ped = tree.find(str_(['uncertainty','pedigreeMatrix'])).values()
-    if el.getparent()[-2].tag == 'generalComment':
-        gc1 = el.getparent()[-2]
+    ell = el.getparent()
+    if ell[-2].tag == 'generalComment':
+        gc1 = ell[-2]
         gc1.text = 'Pedigree: ('+','.join(ped)+'). ' + gc1.text if gc1.text is not None else ''
     
-    el.text = 'Pedigree Matrix [reliab, complet, tempCorr, geogCorr, furtherTechCorr]: ('+','.join(ped)+')'
+    ell.remove(ell[-1])
+    
+    # el.text = 'Pedigree Matrix [reliab, complet, tempCorr, geogCorr, furtherTechCorr]: ('+','.join(ped)+')'
     
 
 ###############################################################################
@@ -1178,7 +1410,7 @@ def elementary_flow_info(tree, el, *args):
                     CASNumber.text = row[3]
                     
                 if row[4] != '':
-                    synonyms = sub(args[0],'synonyms', 'flowInformation/dataSetInformation', None)
+                    synonyms = sub(args[0],'{http://lca.jrc.it/ILCD/Common}synonyms', 'flowInformation/dataSetInformation', None)
                     synonyms.text = row[4]
                 break
             
@@ -1189,7 +1421,7 @@ def elementary_flow_info(tree, el, *args):
             # Set additional info if ID is not found
             baseName.text = texts(tree,str_(['name']))
             if tree.find('//{http://www.EcoInvent.org/EcoSpold02}synonym') is not None:
-                synonyms = sub(args[0],'synonyms', 'flowInformation/dataSetInformation', None)
+                synonyms = sub(args[0],'{http://lca.jrc.it/ILCD/Common}synonyms', 'flowInformation/dataSetInformation', None)
                 synonyms.text = texts(tree,str_(['synonym']))
             if tree.find('//{http://www.EcoInvent.org/EcoSpold02}casNumber') is not None:
                 CASNumber = sub(args[0],'CASNumber', 'flowInformation/dataSetInformation', None)
@@ -1221,6 +1453,9 @@ def elem_f_property(tree, el, *args):
             
 def compartment(tree, el, *args):
     '''Compartment conversion using mapping file'''
+    
+    el.set('name', "ElemFlowEcoinvent")
+    el.set('categories', "../flowCategories.xml")
     
     # Create subelements of compartment
     cat = ['']*3

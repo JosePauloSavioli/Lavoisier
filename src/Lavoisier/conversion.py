@@ -30,6 +30,24 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
     
     from Lavoisier.conversion_caller import save_dir
     
+    def order_exchange_subelements(elem):
+        return {'referenceToFlowDataSet':0,
+                 'location':1,
+                 'functionType':2,
+                 'exchangeDirection':3,
+                 'referenceToVariable':4,
+                 'meanAmount':5,
+                 'resultingAmount':6,
+                 'minimumAmount':7,
+                 'maximumAmount':8,
+                 'uncertaintyDistributionType':9,
+                 'relativeStandardDeviation95In':10,
+                 'allocations':11,
+                 'dataSourceType':12,
+                 'dataDerivationTypeStatus':13,
+                 'referencesToDataSource':14,
+                 'generalComment':15}.get(elem.tag)
+    
     # Main loop through all elements of the mapping dictionary
     for key,level in map_.items():
         
@@ -38,7 +56,7 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
         if key == 'IntermFlows':
             # Counter of non reference flows and boolean if reference flow was done
             #   for flow internal ID setting
-            countNonReference, referencePassed = 1, False
+            countNonReference, referencePassed, alInfoActivation, ref_exc = 1, False, False, None
             # Set of all ids of variables, properties and equations
             id_ = set()
             
@@ -46,16 +64,22 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
             for flow in e_tree.iterfind(str_(['intermediateExchange'])):
                 
                 # Creation of flow and internal ID setting
-                exc, countNonReference, referencePassed = flow_set_and_internal_ID(i_tree, 
+                exc, countNonReference, referencePassed, alInfoActivation, ref_exc = flow_set_and_internal_ID(i_tree, 
                                                                                    flow.find('{http://www.EcoInvent.org/EcoSpold02}outputGroup'), 
                                                                                    countNonReference, 
-                                                                                   referencePassed)
+                                                                                   referencePassed,
+                                                                                   alInfoActivation,
+                                                                                   flow, ref_exc)
                 
                 # Allocation check
                 if al is not None:
-                    if flow.get('id') not in (ids_[0][0] for ids_ in al):
+                    if flow.get('id') in (ids_[0][0] for ids_ in al):
                         flow_allocation_info(al, exc)
-                
+                # If Reference and it doesn't have an allocation master property
+                elif alInfoActivation:
+                    alInfoActivation = False
+                    flow_allocation_info(((("_", 0), 1),), exc)
+                    
                 # Recursive call for flow specific mapping inside processDataSet of ILCD
                 convert_spold(level, root_(flow), exc, i_tree, o_t, al)
                 
@@ -67,10 +91,31 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                 convert_spold(level.get('map_f'), root_(flow), flow_tree, i_tree, o_t, al) 
                 
                 # Get all variables, equations and parameters in the flow and set all references and variableParameters
-                id_.update(set_parameters_and_variables(o_t, flow_tree, original_tree, flow, exc))
+                id_.update(set_parameters_and_variables(o_t, flow_tree, original_tree, flow, exc, id_))
                 
                 # Do uncertainty calculations for the flow
-                do_uncertainty(root_(flow), exc, flow.get('amount'), 1)
+                x = exc.find("generalComment")
+                do_uncertainty(root_(flow), exc, flow.get('amount'), 1, isGeneralComment = x if x is not None else '')
+                
+                # Organize general comment
+                if x is not None:
+                    if x.text is not None:
+                        if len(x.text) > 500:
+                            xpedigree = x.text.split('). ')[0] + '). '
+                            xtext = '). '.join(x.text.split('). ')[1:])
+                            if len(xpedigree) > 70:
+                                xtext, xpedigree = xpedigree, ''
+                            gc = i_tree.find("//dataSetInformation/{http://lca.jrc.it/ILCD/Common}generalComment")
+                            if gc is not None:
+                                gc.text += '\n' + 'Comment for ' + flow_tree.find('//dataSetInformation/name/baseName').text + ': ' + xtext
+                                x.text = xpedigree + "Exchange comment placed in dataset's general comment for passing the number of characters"
+                            else:
+                                gc = ET.SubElement(i_tree.find('//dataSetInformation'), '{http://lca.jrc.it/ILCD/Common}generalComment', {"{http://www.w3.org/XML/1998/namespace}lang":'en'})
+                                gc.text = 'Comment for ' + flow_tree.find('//dataSetInformation/name/baseName').text + ': ' + xtext
+                                x.text = xpedigree + "Exchange comment placed in dataset's general comment for passing the number of characters"
+                    
+                # Organize exchange data
+                exc[:] = sorted(exc, key=order_exchange_subelements)
                 
                 # Create flow folder on save directory
                 create_folder(save_dir+"/flows")
@@ -86,10 +131,12 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
             for flow in e_tree.iterfind(str_(['elementaryExchange'])):
                 
                 # Creation of flow and internal ID setting
-                exc, countNonReference, referencePassed = flow_set_and_internal_ID(i_tree, 
+                exc, countNonReference, referencePassed, alInfoActivation, ref_exc = flow_set_and_internal_ID(i_tree, 
                                                                                    flow.find('{http://www.EcoInvent.org/EcoSpold02}outputGroup'), 
                                                                                    countNonReference, 
-                                                                                   referencePassed)
+                                                                                   referencePassed,
+                                                                                   alInfoActivation,
+                                                                                   flow, ref_exc)
                 
                 # Recursive call for flow specific mapping inside processDataSet of ILCD
                 convert_spold(level, root_(flow), exc, i_tree, o_t, al)
@@ -102,10 +149,31 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                 convert_spold(level.get('map_f'), root_(flow), flow_tree, i_tree, o_t, al)
                 
                 # Get all variables, equations and parameters in the flow and set all references and variableParameters
-                id_.update(set_parameters_and_variables(o_t, flow_tree, original_tree, flow, exc))
+                id_.update(set_parameters_and_variables(o_t, flow_tree, original_tree, flow, exc, id_))
                 
                 # Do uncertainty calculations for the flow
-                do_uncertainty(root_(flow), exc, flow.get('amount'), 1)
+                x = exc.find("generalComment")
+                do_uncertainty(root_(flow), exc, flow.get('amount'), 1, isGeneralComment = x if x is not None else '')
+                
+                # Organize general comment
+                if x is not None:
+                    if x.text is not None:
+                        if len(x.text) > 500:
+                            xpedigree = x.text.split('). ')[0] + '). '
+                            xtext = '). '.join(x.text.split('). ')[1:])
+                            if len(xpedigree) > 70:
+                                xtext, xpedigree = xpedigree, ''
+                            gc = i_tree.find("//dataSetInformation/{http://lca.jrc.it/ILCD/Common}generalComment")
+                            if gc is not None:
+                                gc.text += '\n' + 'Comment for ' + flow_tree.find('//dataSetInformation/name/baseName').text + ': ' + xtext
+                                x.text = xpedigree + "Exchange comment placed in dataset's general comment for passing the number of characters"
+                            else:
+                                gc = ET.SubElement(i_tree.find('//dataSetInformation'), '{http://lca.jrc.it/ILCD/Common}generalComment', {"{http://www.w3.org/XML/1998/namespace}lang":'en'})
+                                gc.text = 'Comment for ' + flow_tree.find('//dataSetInformation/name/baseName').text + ': ' + xtext
+                                x.text = xpedigree + "Exchange comment placed in dataset's general comment for passing the number of characters"
+                    
+                # Organize exchange data
+                exc[:] = sorted(exc, key=order_exchange_subelements)
                 
                 # Create flow folder on save directory
                 create_folder(save_dir+"/flows")
@@ -117,7 +185,7 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
         # Check all parameters to get variables and equations         
         elif key == 'Parameters':
             for param in e_tree.iterfind(str_(['parameter'])):
-                id_.update(set_parameters_and_variables(None, None, original_tree, param, None, 0))
+                id_.update(set_parameters_and_variables(None, None, original_tree, param, None, id_, 0))
         
         # Specific statement to ignore map_f mapping if in a recursive call
         elif key == 'map_f':
@@ -127,12 +195,22 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
         else:
             for info in level.values():
                 
-
+                # Check if element was already created in the ilcd tree
+                # If it has the element, don't make it even if the bound verification is true
+                if info.get('duplicate_verification'):
+                    if i_tree.find(info.get('duplicate_verification')[0]) is not None:
+                        continue
+                
                 # Check if element has to be created
                 if info.get('bound_verification'):
                     if e_tree.find(str_(info.get('bound_verification'))) is not None:
                         if isinstance(i_tree, ET._Element):
-                            el = ET.SubElement(i_tree, *info.get('args'))
+                            #print(info)
+                            #print("LEN", len(info.get('args')))
+                            if len(info.get('args')) == 2:
+                                el = ET.SubElement(i_tree, *info.get('args'))
+                            elif len(info.get('args')) == 3:
+                                el = ET.SubElement(i_tree.find(info.get('args')[1]), info.get('args')[0], info.get('args')[2])
                         else:
                             el = sub(i_tree, *info.get('args'))
                     else:
@@ -145,6 +223,7 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                 # Create subelement
                 else:
                     el = sub(i_tree, *info.get('args'))
+                
                 
                 # Check for info in attributes for created element
                 if info.get('attrib'):
@@ -189,15 +268,19 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                             if i[0]:
                                 # 4.Check if tuple command is to find all subelements of text and place in the same text field
                                 if i[2] == 'findall':
-                                    tex_ = ''
+                                    tex_ = [0]*50
                                     for comment in e_tree.findall(str_(i[1])):
                                         for child in comment:
                                             if child.text is not None:
+                                                numb = int(child.get('index', -1))
+                                                if numb > 49:
+                                                    numb = -2
                                                 if 'imageUrl' in child.tag:
-                                                    tex_ = tex_ + '\nImageURL: ' + child.text
+                                                    tex_[numb] = 'ImageURL: ' + child.text
                                                 else:
-                                                    tex_ = tex_ + '\n' + child.text
-                                    t = tex_
+                                                    tex_[numb] = child.text
+                                    tex_ = [t for t in tex_ if isinstance(t, str)]
+                                    t = '\n'.join(tex_)
                                 # 4. Elif tuple command is to find all text within an element of that name (ex: tag)
                                 elif i[2] == 'findtext':
                                     tex_ = ''
@@ -209,9 +292,12 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                                 elif i[2] == 'findname':
                                     fields = e_tree.findall(str_(i[1]))
                                     for comment in fields:
-                                        el.text = comment.text
-                                        if comment != fields[-1]:
-                                            el = sub(i_tree, *info.get('args'))
+                                        if el.text is not None:
+                                            el.text += '; ' + comment.text
+                                        else:
+                                            el.text = comment.text
+                                        #if comment != fields[-1]:
+                                        #    el = sub(i_tree, *info.get('args'))
                                     continue
                                 # 4. Else no tuple command for text loops, only check if the text exists 
                                 else:
@@ -227,6 +313,10 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                                 if search('@',i[1][-1]):
                                     if e_tree.find(str_(i[1])) is not None:
                                         t = e_tree.find(str_(i[1])).get(search('\[@([A-z]+)\]', i[1][-1]).group(1))
+                                        if i[1][-1] == 'intermediateExchange[@casNumber]' and len(t) < 11:
+                                            t = '0'*(11-len(t)) + t
+                                    elif i[1][-1] == 'dataGeneratorAndPublication[@dataPublishedIn]':
+                                        t = '2'
                                     else:
                                         continue
                                 else:

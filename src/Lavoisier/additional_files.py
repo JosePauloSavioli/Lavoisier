@@ -75,16 +75,16 @@ def create_contact(tree, *args):
     NameCT = collection.sub(tree, c+'name', dataSetInformationCT, {w:'en'}, 'contactDataSet')
     NameCT.text = args[2]
     
+    if len(args) >= 4:
+        if not isinstance(args[3], dict):
+            emailCT = collection.sub(tree, 'email', dataSetInformationCT, {}, 'contactDataSet')
+            emailCT.text = args[3]
+        
     if isinstance(args[-1], dict):
         if args[-1].get('active') != None:
             comment = collection.sub(tree, 'contactDescriptionOrComment', dataSetInformationCT, {}, 'contactDataSet')
             comment.text = args[-1]['active']
         args = args[:-1]
-        
-    if len(args) == 4:
-        emailCT = collection.sub(tree, 'email', dataSetInformationCT, {}, 'contactDataSet')
-        emailCT.text = args[3]
-    
 
     # Create administrativeInformation/dataEntryBy main subelements
     dataEntryByCT = collection.sub(tree, 'dataEntryBy', administrativeInformationCT, {}, 'contactDataSet')
@@ -96,7 +96,7 @@ def create_contact(tree, *args):
     publicationAndOwnershipCT = collection.sub(tree, 'publicationAndOwnership', administrativeInformationCT, {}, 'contactDataSet')
     
     dataSetVersionCT = collection.sub(tree, c+'dataSetVersion', publicationAndOwnershipCT, {}, 'contactDataSet')
-    dataSetVersionCT.text = "00.00.000"
+    dataSetVersionCT.text = "01.00.000"
     
     permanentDataSetURICT = collection.sub(tree, c+'permanentDataSetURI', publicationAndOwnershipCT, {}, 'contactDataSet')
     permanentDataSetURICT.text = 'http://sicv.acv.ibict.br'
@@ -196,7 +196,7 @@ def create_f_prop(ilcd_tree, id_, name, unit_id, unit_name):
     publicationAndOwnershipCT = collection.sub(tree, 'publicationAndOwnership', administrativeInformationCT, {}, 'flowPropertyDataSet')
     
     dataSetVersionCT = collection.sub(tree, c+'dataSetVersion', publicationAndOwnershipCT, {}, 'flowPropertyDataSet')
-    dataSetVersionCT.text = "00.00.000"
+    dataSetVersionCT.text = "01.00.000"
     
     permanentDataSetURICT = collection.sub(tree, c+'permanentDataSetURI', publicationAndOwnershipCT, {}, 'flowPropertyDataSet')
     permanentDataSetURICT.text = 'http://openlca.org/ilcd/resource/flowproperties/'+id_
@@ -250,7 +250,7 @@ def create_unit_group(ilcd_tree, id_, name, unit_group, main_unit):
     publicationAndOwnershipCT = collection.sub(tree, 'publicationAndOwnership', administrativeInformationCT, {}, 'unitGroupDataSet')
     
     dataSetVersionCT = collection.sub(tree, c+'dataSetVersion', publicationAndOwnershipCT, {}, 'unitGroupDataSet')
-    dataSetVersionCT.text = "00.00.000"
+    dataSetVersionCT.text = "01.00.000"
     
     permanentDataSetURICT = collection.sub(tree, c+'permanentDataSetURI', publicationAndOwnershipCT, {}, 'unitGroupDataSet')
     permanentDataSetURICT.text = 'http://openlca.org/ilcd/resource/unitgroups/'+id_
@@ -263,7 +263,7 @@ def create_unit_group(ilcd_tree, id_, name, unit_group, main_unit):
         if key == main_unit:
             unit.set("dataSetInternalID", '0')
         else:
-            unit.set("dataSetInternalID", str(i))
+            unit.set("dataSetInternalID", str(i+1))
         nameu = collection.sub(tree, 'name', unit, {}, 'unitGroupDataSet')
         nameu.text = key
         

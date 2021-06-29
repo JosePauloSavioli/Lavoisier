@@ -11,7 +11,7 @@ Open the spold files, save the ILCD files and calling of allocation mapping
 import os, glob, re
 from lxml import etree as ET
 from zipfile import ZipFile
-from shutil import rmtree
+from shutil import rmtree, copy
 from copy import deepcopy
 
 # Global variable
@@ -38,7 +38,9 @@ def file_convertion_caller(e_tree, ilcd_tree, dir_path_to_save, hash_ = '', retu
                        ', ' +\
                        e_tree.find(str_(['geography', 'shortname'])).text +\
                        hash_ + '.zip'
-                       
+    
+    print("Converting: " + text)                
+    
     if re.search('/', text):
         text = re.sub('/', 'per', text)
     ILCD_zip = ZipFile(dir_path_to_save + '/' +  text, 'w')
@@ -63,6 +65,15 @@ def file_convertion_caller(e_tree, ilcd_tree, dir_path_to_save, hash_ = '', retu
     # Save ILCD processDataSet
     with open(save_dir+'/processes/'+e_tree.find(str_(['activity'])).get('id')+'.xml', 'wb') as f:
         f.write(ET.tostring(ilcd_tree, pretty_print = True, xml_declaration = True, encoding="UTF-8", standalone="yes"))
+    
+    # Place additional xml files
+    path_ = os.path.abspath(os.path.dirname(__file__))
+    pathMP = os.path.join(path_, "Mapping_files/classification.xml")
+    copy(pathMP, save_dir)
+    pathMP = os.path.join(path_, "Mapping_files/locations.xml")
+    copy(pathMP, save_dir)
+    pathMP = os.path.join(path_, "Mapping_files/flowCategories.xml")
+    copy(pathMP, save_dir)
     
     # Zip the directory and close the zip file
     zipdir(save_dir, ILCD_zip)
@@ -109,6 +120,7 @@ def convert_file_to_ILCD(path_to_file, dir_path_to_save, hash_ = '', return_xml 
     # New ILCD tree xml file initialization
     processDataSet = ET.Element('processDataSet', version = '1.1', nsmap = get_namespace('ILCD_process'))
     ilcd_tree = ET.ElementTree(processDataSet)
+    processDataSet.set('locations', '../locations.xml')
     
     # Call for single dataset conversion
     if return_xml:
@@ -149,6 +161,7 @@ def convert_dir_to_ILCD(path_to_dir, dir_path_to_save, hash_ = ''):
         # New ILCD tree xml file initialization
         processDataSet = ET.Element('processDataSet', version = '1.1', nsmap = get_namespace('ILCD_process'))
         ilcd_tree = ET.ElementTree(processDataSet)
+        processDataSet.set('locations', '../locations.xml')
         
         # Call for single dataset conversion
         file_convertion_caller(e_tree,ilcd_tree,dir_path_to_save,hash_)

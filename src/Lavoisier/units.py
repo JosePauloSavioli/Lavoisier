@@ -2363,10 +2363,7 @@ unit_s2 = {
             'biot': ('electric current', 10)
             },
         'temperature': {
-            'K': ('temperature', 1),
-            'ºC': ('temperature', 1, cels_ent, cels_out),
-            'ºR': ('temperature', 1, rank_ent, rank_out),
-            'ºF': ('temperature', 1, fahr_ent, fahr_out)
+            'K': ('temperature', 1)
             },
         'amount of substance': {
             'mol': ('amount of substance', 1),
@@ -2377,14 +2374,14 @@ unit_s2 = {
             },
         'angle': {
             'rad': ('angle', 1),
-            'º': ('angle', pi/180),
-            "'": ('angle', (pi/180)/60),
-            '"': ('angle', ((pi/180)/60)/60),
-            'revolution': ('angle', 2*pi),
-            'degree_north': ('angle', pi/180),
-            'degree_east': ('angle', pi/180),
-            'degree_true': ('angle', pi/180),
-            'degree_west': ('angle', -pi/180)
+            'º': ('angle', 0.01745329251),
+            "'": ('angle', 0.01745329251/60),
+            '"': ('angle', (0.01745329251/60)/60),
+            'revolution': ('angle', 6.28318530718),
+            'degree_north': ('angle', 0.01745329251),
+            'degree_east': ('angle', 0.01745329251),
+            'degree_true': ('angle', 0.01745329251),
+            'degree_west': ('angle', -0.01745329251)
             },
         'sphere angle': {
             'sr': ('sphere angle', 1)
@@ -2577,7 +2574,7 @@ unit_s2 = {
             'm3/kWh': ('volume/energy', 1)
             },
         'productivity':{
-            'kg/m²': ('productivity', 1),
+            'kg/m2': ('productivity', 1),
             'kg/ha': ('productivity', 0.0001),
             'metric_ton/ha': ('productivity', 0.1),
             'kg_PO4/ha': ('productivity', 0.0001),
@@ -2603,8 +2600,7 @@ unit_s2 = {
             'ppm': ('items', 1e-6),
             'ppb': ('items', 1e-9),
             'ppt': ('items', 1e-12),
-            'ppq': ('items', 1e-15),
-            'B': ('items', bwat_ent, bwat_out)
+            'ppq': ('items', 1e-15)
             },
         'guest night': {
             'guest_night': ('guest night', 1)
@@ -2655,7 +2651,7 @@ unit_s2 = {
             },
         'angular velocity': {
             'rad/s': ('angular velocity', 1),
-            'rps': ('angular velocity', 1/(2*pi)),
+            'rps': ('angular velocity', 0.15915494309),
             'rpm': ('angular velocity', 0.10472)
             },
         'lineic mass': {
@@ -2684,8 +2680,7 @@ unit_s2 = {
         'inverse of distance': {
             '1/m': ('inverse of distance', 1),
             'm2/m3': ('inverse of distance', 1),
-            'kg/(kg_vehicle*km)': ('inverse of distance', 0.001),
-            'kayser': ('inverse of distance', 1, kay_ent, kay_out)
+            'kg/(kg_vehicle*km)': ('inverse of distance', 0.001)
             },
         'vorticity': {
             'm2/s.K/kg': ('vorticity', 1),
@@ -2746,10 +2741,10 @@ unit_s2 = {
         'illumination': {
             'cd/m2': ('illumination', 1),
             'footlambert': ('illumination', 3.426259),
-            'lambert': ('illumination', 1e4/pi),
+            'lambert': ('illumination', 3183.0988618),
             'sb': ('illumination', 1e4),
             'nt': ('illumination', 1),
-            'blondel': ('illumination', 1/pi)
+            'blondel': ('illumination', 0.31830988618)
             },
         'superficial tension': {
             'kg/s2': ('superficial tension', 1),
@@ -2790,7 +2785,7 @@ unit_s2 = {
             '(cmol*m2)/kg': ('psysicochemical filtration (transf.)',1)
             },
         'goods transport (mass*distance)': {
-            'tkm': ('goods transport (mass*distance)', 1),
+            't*km': ('goods transport (mass*distance)', 1),
             't*mi': ('goods transport (mass*distance)', 1.6),
             'lb*mi': ('goods transport (mass*distance)', 0.00073),
             't*nmi': ('goods transport (mass*distance)', 1.85),
