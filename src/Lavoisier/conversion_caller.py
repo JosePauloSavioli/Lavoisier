@@ -8,7 +8,7 @@ Open the spold files, save the ILCD files and calling of allocation mapping
 @author: jotape42p
 """
 
-import os, glob, re
+import os, glob, re, logging, time, sys
 from lxml import etree as ET
 from zipfile import ZipFile
 from shutil import rmtree, copy
@@ -23,6 +23,13 @@ from Lavoisier.collection import get_namespace, str_, create_folder, allocation,
 from Lavoisier.conversion import convert_spold
 # Mapping dict
 from Lavoisier.mapping import map_p
+
+if sys.version_info >= (3, 8):
+    import importlib.metadata as imp
+else:
+    import importlib_metadata as imp
+
+__version__ = imp.version("Lavoisier")
 
 ###############################################################################
 
@@ -39,7 +46,7 @@ def file_convertion_caller(e_tree, ilcd_tree, dir_path_to_save, hash_ = '', retu
                        e_tree.find(str_(['geography', 'shortname'])).text +\
                        hash_ + '.zip'
     
-    print("Converting: " + text)                
+    print("Converting: " + text)
     
     if re.search('/', text):
         text = re.sub('/', 'per', text)
@@ -52,12 +59,26 @@ def file_convertion_caller(e_tree, ilcd_tree, dir_path_to_save, hash_ = '', retu
     else:
         create_folder(save_dir)
         
+    logging.basicConfig(filename=save_dir+"/ilcd.log",
+                        format="%(message)s",
+                        force = True,
+                        level=logging.DEBUG)
+    
+    logging.info(f"\n###\nLavoisier version: {__version__}\nConversion started at: {time.strftime('%d/%m/%Y %H:%M:%S', time.localtime())}\nLavoisier, converter from Ecospold2 to ILCD, made by Gyro (UTFPR) and IBICT\nLicensed under GNU General Public License v3 (GPLv3)\n###\n")
+    
+    
     # Allocation data. It has to be before the mapping since allocation is a
     #   major property on Ecospold2 files
     al = allocation(e_tree)
     
+    logging.info(f"Activity  {text}: {e_tree.find(str_(['activity'])).get('id')}")
+    
+    logging.debug(f"allocation: {al}")
+    
     # Call main conversion function
     convert_spold(map_p, e_tree, ilcd_tree, ilcd_tree, deepcopy(e_tree), al)
+    
+    logging.info("Main conversion successful")
     
     # Create process folder to accomodate the resultant process file
     create_folder(save_dir+'/processes')

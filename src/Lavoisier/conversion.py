@@ -10,6 +10,9 @@ Main convertion application, uses the mapping of "mapping.py" to loop through
 @author: jotape42p
 """
 
+import logging
+log = logging.getLogger(__name__)
+
 from lxml import etree as ET
 from re import search
 
@@ -54,6 +57,9 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
         
         # Check special mapping of intermadiate flows
         if key == 'IntermFlows':
+            
+            log.debug("Converting intermediate flows")
+            
             # Counter of non reference flows and boolean if reference flow was done
             #   for flow internal ID setting
             countNonReference, referencePassed, alInfoActivation, ref_exc = 1, False, False, None
@@ -70,6 +76,8 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                                                                                    referencePassed,
                                                                                    alInfoActivation,
                                                                                    flow, ref_exc)
+                
+                log.debug(f"\tConverting {flow.find('{http://www.EcoInvent.org/EcoSpold02}name').text}: {flow.get('id')}")
                 
                 # Allocation check
                 if al is not None:
@@ -93,6 +101,8 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                 # Get all variables, equations and parameters in the flow and set all references and variableParameters
                 id_.update(set_parameters_and_variables(o_t, flow_tree, original_tree, flow, exc, id_))
                 
+                log.debug("\tSuccessfully converted flow variables")
+                
                 # Do uncertainty calculations for the flow
                 x = exc.find("generalComment")
                 do_uncertainty(root_(flow), exc, flow.get('amount'), 1, isGeneralComment = x if x is not None else '')
@@ -123,9 +133,13 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                 # Save flowDataSet to zip folder
                 with open(save_dir+"/flows/"+flow_tree.find('//dataSetInformation/{http://lca.jrc.it/ILCD/Common}UUID').text+".xml", 'wb') as f:
                     f.write(ET.tostring(flow_tree, pretty_print = True, xml_declaration = True, encoding="UTF-8", standalone="yes"))
-        
+                    
+                log.debug("\tSuccessfully converted flow\n")
+        	
         # Check special mapping of elementary flows (uses the counter from intermediate flows)            
         elif key == 'ElemFlows':
+            
+            log.debug("Converting elementary flows")
             
             # Loop through all elementary exchanges to create flow elements on ILCD and new flowDataSet files
             for flow in e_tree.iterfind(str_(['elementaryExchange'])):
@@ -137,7 +151,7 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                                                                                    referencePassed,
                                                                                    alInfoActivation,
                                                                                    flow, ref_exc)
-                
+                log.debug(f"\tConverting {flow.find('{http://www.EcoInvent.org/EcoSpold02}name').text}: {flow.get('id')}")
                 # Recursive call for flow specific mapping inside processDataSet of ILCD
                 convert_spold(level, root_(flow), exc, i_tree, o_t, al)
                 
@@ -151,6 +165,7 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                 # Get all variables, equations and parameters in the flow and set all references and variableParameters
                 id_.update(set_parameters_and_variables(o_t, flow_tree, original_tree, flow, exc, id_))
                 
+                log.debug("\tSuccessfully converted flow variables")
                 # Do uncertainty calculations for the flow
                 x = exc.find("generalComment")
                 do_uncertainty(root_(flow), exc, flow.get('amount'), 1, isGeneralComment = x if x is not None else '')
@@ -181,14 +196,20 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                 # Save flowDataSet to zip folder
                 with open(save_dir+"/flows/"+flow_tree.find('//dataSetInformation/{http://lca.jrc.it/ILCD/Common}UUID').text+".xml", 'wb') as f:
                     f.write(ET.tostring(flow_tree, pretty_print = True, xml_declaration = True, encoding="UTF-8", standalone="yes"))
+                    
+                log.debug("\tSuccessfully converted flow\n")
         
         # Check all parameters to get variables and equations         
         elif key == 'Parameters':
+            
+            log.debug("Converting parameters")
+            
             for param in e_tree.iterfind(str_(['parameter'])):
                 id_.update(set_parameters_and_variables(None, None, original_tree, param, None, id_, 0))
         
         # Specific statement to ignore map_f mapping if in a recursive call
         elif key == 'map_f':
+            log.debug("\tChange map_f")
             continue
         
         # Call for any other normal mapping functions
@@ -355,6 +376,8 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                     # If reference needs to add an additional file (sourceDataSet or contactDataSet)
                     if info.get('add_file'):
                         
+                        log.debug(f"\t\t -> Creating {info.get('add_file')} file")
+                        
                         # SourceDataSet
                         if info.get('add_file') == 'source':
                             
@@ -380,6 +403,8 @@ def convert_spold(map_, e_tree, i_tree, original_tree, o_t, al):
                 
                 # Check function triggers for the created element
                 if info.get('specific'):
+                    
+                    log.debug(f"\t\tRunning -> Function {info.get('specific').get('func')}")
                     
                     # Eval function
                     func = eval(info.get('specific').get('func'))
