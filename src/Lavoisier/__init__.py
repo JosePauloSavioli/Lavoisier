@@ -10,7 +10,7 @@ Initialization of primary modules of Lavoisier converter
 
 from .conversion_caller import convert_file_to_ILCD, convert_dir_to_ILCD
 
-__version__ = "2.0.7"
+__version__ = "2.0.12"
 __title__ = "Lavoisier"
 __summary__ = "This package converts Life Cycle Assessment format Ecospold2 (ecoinvent format) to ILCD (jrc format). Files can be converted by file using the 'convert_file_to_ILCD' function or entire directory using the 'convert_dir_to_ILCD' function. Lavoisier is developed by the Center of Life Cycle Sustainable Assessment (Gyro) of the Federal University of Technology - Paraná (UTFPR) and the  Brazilian Institute for Information in Science and Technology (IBICT)"
 __author__ = "José Paulo Pereira das Dores Savioli"

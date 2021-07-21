@@ -96,6 +96,10 @@ def file_convertion_caller(e_tree, ilcd_tree, dir_path_to_save, hash_ = '', retu
     pathMP = os.path.join(path_, "Mapping_files/flowCategories.xml")
     copy(pathMP, save_dir)
     
+    # Close logging handlers and logging (Permission Denied Error)
+    #logging.handlers.clear()
+    logging.shutdown()
+    
     # Zip the directory and close the zip file
     zipdir(save_dir, ILCD_zip)
     ILCD_zip.close()
