@@ -59,12 +59,12 @@ def file_convertion_caller(e_tree, ilcd_tree, dir_path_to_save, hash_ = '', retu
     else:
         create_folder(save_dir)
         
-    logging.basicConfig(filename=save_dir+"/ilcd.log",
+    logging.basicConfig(filename=save_dir+"/lavoisier.log",
                         format="%(message)s",
                         force = True,
                         level=logging.DEBUG)
     
-    logging.info(f"\n###\nLavoisier version: {__version__}\nConversion started at: {time.strftime('%d/%m/%Y %H:%M:%S', time.localtime())}\nLavoisier, converter from Ecospold2 to ILCD, made by Gyro (UTFPR) and IBICT\nLicensed under GNU General Public License v3 (GPLv3)\n###\n")
+    logging.info(f"\n###\nLavoisier version: {__version__}\nConversion started at: {time.strftime('%d/%m/%Y %H:%M:%S', time.localtime())}\nLavoisier, converter from Ecospold2 to ILCD, powered by Gyro (UTFPR) and IBICT\nLicensed under GNU General Public License v3 (GPLv3)\n###\n")
     
     
     # Allocation data. It has to be before the mapping since allocation is a
