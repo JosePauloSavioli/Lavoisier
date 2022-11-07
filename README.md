@@ -1,43 +1,36 @@
 # Lavoisier
-Python library to convert from Ecospold2 format to ILCD format.
 
-Lavoisier is a library exclusive for converting ecoinvent Ecospold2 inventories (`.spold`) to ILCD `.zip` format. The conversion is aimed essentialy for single inventory datasets gathered from EcoEditor or the own researcher's version. Lavoisier's objective is to make possible a more cohesive conversion with less information loss between the two formats and to populate ILCD repositories around the world. Right now, Lavoisier is to be incorpored on the Brazilian Life Cycle Inventory database (namely SICV-Brasil) to make possible the conversion of Ecospold2 datasets from reseach to ILCD format on upload.
+Python library for conversions between Life Cycle Assessment (LCA) inventory formats. Currently, it does both ways of conversion between EcoSpold 2 and ILCD 1 formats. Other versions and other dataset types are to be included due time as Lavoisier is a work in progress.
 
-The conversion is based on Greendelta's converter https://github.com/GreenDelta/olca-conversion-service, but Lavoisier can overcome some shortcomings from OpenLCA converter such as loss of Pedigree matrix uncertainty and coefficient information, some input flows not converted and loss of all parameters and mathematical equations.
+Lavoisier's objective is to make possible a cohesive conversion with lower loss of information between LCA inventory formats. This objective is in line with the efforts in the LCA community for a higher interoperability within data formats, in a way having a dataset of one inventory format does not limit its usability with other inventory formats.
 
-The project is still testing using testpypi and updating frequently, but feedback is wanted and welcomed from users. The pypi repo is currently https://test.pypi.org/project/Lavoisier/. Tests are made mainly on Linux (Ubuntu).
+Right now, Lavoisier is incorpored in the Brazilian Life Cycle Inventory database (namely SICV-Brasil) to make possible the conversion of Ecospold 2 datasets from Brazilian reseach to ILCD 1 format on the upload process.
 
-Important information about Ecospold2 and ILCD formats before conversion:
+The field conversion is based on Greendelta's converter https://github.com/GreenDelta/olca-conversion-service, but Lavoisier can overcome some shortcomings from OpenLCA converter such as loss of Pedigree matrix uncertainty and coefficient information, some input flows not converted and loss of all parameters and mathematical equations.
 
-1. It is better to use 'Unknown' files instead of allocated ones:
-
-   ILCD don't handle well linkage information due to the fact that there is no structure for a linking between processes and exchanges embeded in its xml files. Because of that, any conversion would loss linkage information present in the files of ecoinvent linked databases (a.k.a. the input information about the process that produces it is lost). Some way around it is to place additional namespace variables in the ILCD to make it store linking information, as done by a linked file on OpenLCA when it is exported as ILCD, but this is not addressed in this library. 
-
-2. Market datasets and Market Groups datasets:
-
-   Both this datasets are specific of linked ecoinvent databases and are not feasible in ILCD. Lavoisier still can manage to convert such files but there is loss of all linkage information such as original ecoinvent provider, which renders the result not so usefull for real life practicioners. Market datasets are made by the linking process of ecoinvent and are fully complete only within the database it was created.
-
-3. Usefulness of ILCD files
-
-   There are several reasons why one practicioner or repository could use ILCD. The main factor is that it is an OpenSource format and not bounded to any company for its development, but there are more reasons, such as that it produces standalone inventories (inventories with all information required inside it, thus not depending on other files or a database structure to be complete) that are great for data repositories, since they are a collection of different datasets and doesn't have any linking between them. ILCD files are more useful for finding specific processes then creating a hole background database with it, especially with regional datasets that can be connected via software to an existing background database or as a replacement of some of its datasets. 
+The project is still updating frequently and feedback is welcomed. The current version is 2.0.15. The pypi repo is currently https://test.pypi.org/project/Lavoisier/. Tests are made mainly on Linux (Ubuntu).
 
 ## Installation
 
 Lavoisier will require the following packages:
-+ `lxml`
++ `pathlib` to help with file and diretory paths
++ `pint` to help with unit conversion
++ `xmltodict` to help with XML parsing
++ `openturns` to help with uncertainty conversion
++ `Crypto` to help with UUID conversion
  
-Since the library is still on testpypi, the dependencies are not installed with the package (they are in the real pypi). It is recommended to install the dependences previous to installing Lavoisier following the instructions below:
+To install the dependencies beforehand, use the commands below
 
 + Install dependent libraries
 ```bash
-pip install lxml
+pip install pathlib pint xmltodict openturns crypto
 ```
 + Install Lavoisier
 ```bash
 python3 pip install -i https://test.pypi.org/simple/ Lavoisier
 ```
 
-If you want to install it via github clone, it's just executing the `setup.py` file. In the case of uninstalling or trying to install it by pip again, it is recomended to run as administrator or sudo, since problems related to `.pyc` files could raise. Follow the steps bellow:
+If you want to install it via github clone, just execute the `setup.py` file. In the case of uninstalling or trying to install it by pip again, it is recomended to run as administrator or sudo, since problems related to `.pyc` files could raise. Follow the steps bellow:
 
 + Clone github repository
 ```bash
@@ -49,27 +42,34 @@ cd path/to/cloned/library
 python3 setup.py install
 ```
 
-## Functions
+## Conversion
 
-Lavoisier has two main functions:
-+ For converting files
-```python
-# Lavoisier.convert_file_to_ILCD(path_to_file, path_to_save_dir)
-# Example:
-Lavoisier.convert_file_to_ILCD('/home/user_name/Documents/my_spold_file.spold', '/home/user_name/Documents/ILCD_save_folder')
-```
-+ For converting entire directories of files
-```python
-# Lavoisier.convert_dir_to_ILCD(path_to_dir, path_to_save_dir)
-# Example:
-Lavoisier.convert_dir_to_ILCD('/home/user_name/Documents/SpoldDirectory', '/home/user_name/Documents/ILCD_save_folder')
-```
+Lavoisier works by creating a `Converter` class using the method `get_converter(input_: tuple, output: tuple, path: str, save_path: str, mode: str)`. The `input_` and `output` tuples are the format and elementary flow mapping to be used in conversion. Currently, available format options are `"ILCD1"` and `"EcoSpold2"` and available elementary flow mappings are `"EF3.0"` for ILCD and `"ecoinvent3.7"` for EcoSpold 2. The `mode` is an entry to specify if the conversion is to single file(s) of the output format (`to file`) or to a single database (`to database` - available only for EcoSpold2 to ILCD1 conversion).
 
-It is important to use absolute paths and to make sure that the save path already exists.
+The `Converter` class has the information about the two formats and is changeable within that conversion. It has a main attributes that can be changed before conversion: the elementary flow mapping file (attr: `elem_flow_mapping`). Other attributes are set depending on the conversion being carried out. Too see these attribute options one can print the converter.
+
+For example, to convert a file and a directory of files from EcoSpold 2 to ILCD 1:
+```python
+
+# To convert a file
+converter = get_converter(("EcoSpold2", "ecoinvent3.7"), ("ILCD1", "EF3.0"),
+                           "path_to_file", "path_to_save_directory", "to_file")
+
+# To convert a directory with files
+converter = get_converter(("EcoSpold2", "ecoinvent3.7"), ("ILCD1", "EF3.0"),
+                           "path_to_directory", "path_to_save_directory", "to_file")
+
+# To see the available options
+print(converter)
+```
+The `Converter` class has one method called `convert` which is used to carry out the conversion at any given time.
+```python
+converter.convert()
+```
 
 ## Support
 
-This projects were done by the GYRO laboratory from the Federal University of Technology - Paraná (UTFPR) with the Brazilian Institute of Information in Science and Technology (IBICT) and the help of Embrapa.
--> GYRO site: http://gyro.ct.utfpr.edu.br
+This projects were supported by the GYRO laboratory from the Federal University of Technology - Paraná (UTFPR) with the Brazilian Institute of Information in Science and Technology (IBICT) and the help of Embrapa. It began with the support of REAL (Resource Efficiency through Application of Life Cycle Thinking) of the UN Environment and The Life Cycle Initiative funded by the European Commission.
+-> GYRO website: http://gyro.ct.utfpr.edu.br
 
 <img src=https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/logo%20gyro_email%20padr%C3%A3o.png alt="Logo GYRO" width="80" length="200" /><img src=https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/utfpr.png alt="Logo UTFPR" width="200" length="200" /><img src="https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/IBICT.png" alt="Logo IBICT" width="170" length="200" />
