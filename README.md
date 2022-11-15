@@ -8,7 +8,7 @@ Right now, Lavoisier is incorpored in the Brazilian Life Cycle Inventory databas
 
 The field conversion is based on Greendelta's converter https://github.com/GreenDelta/olca-conversion-service, but Lavoisier can overcome some shortcomings from OpenLCA converter such as loss of Pedigree matrix uncertainty and coefficient information, some input flows not converted and loss of all parameters and mathematical equations.
 
-The project is still updating frequently and feedback is welcomed. The current version is 2.0.15. The pypi repo is currently https://test.pypi.org/project/Lavoisier/. Tests are made mainly on Linux (Ubuntu).
+The project is still updating frequently and feedback is welcomed. The main branch has the most stable version, while the development branch has the latest updates of the library. Tests are made mainly on Linux (Ubuntu).
 
 ## Installation
 
