@@ -1733,7 +1733,7 @@ class ECS2ToILCD1BasicFieldMapping(FieldMapping, ABC):
     
     def set_mappings(self, ef_map, cl_map):
         self._elem_mapping = self._dict_from_file(
-            ef_map or type(self)._default_elem_mapping, 'SosurceFlowUUID')
+            ef_map or type(self)._default_elem_mapping, 'SourceFlowUUID')
         self._class_mapping = self._dict_from_file(
             cl_map or type(self)._default_class_mapping, 'SourceFlowUUID')
         # Attributions

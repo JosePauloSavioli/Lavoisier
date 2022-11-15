@@ -1,0 +1,782 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<CategorySystem xmlns="http://lca.jrc.it/ILCD/Categories"
+                name="Ecospold01Categories">
+   <categories dataType="Process">
+	<category id="1" name="agricultural means of production" >
+		<category id="1.1" name="buildings"/>
+		<category id="1.2" name="equipments"/>
+		<category id="1.3" name="feed"/>
+		<category id="1.4" name="machinery"/>
+		<category id="1.5" name="mineral fertiliser"/>
+		<category id="1.6" name="organic fertiliser"/>
+		<category id="1.7" name="other auxiliary materials"/>
+		<category id="1.8" name="pesticides"/>
+		<category id="1.9" name="seed"/>
+		<category id="1.10" name="work processes"/>
+	</category>
+	<category id="2" name="agricultural production" >
+		<category id="2.1" name="animal production"/>
+		<category id="2.2" name="plant production"/>
+	</category>
+	<category id="3" name="air" >
+		<category id="3.1" name="high population density"/>
+		<category id="3.2" name="low population density"/>
+		<category id="3.3" name="low population density, long-term"/>
+		<category id="3.4" name="lower stratosphere + upper troposphere"/>
+		<category id="3.5" name="unspecified"/>
+	</category>
+	<category id="4" name="biomass" >
+		<category id="4.1" name="cogeneration"/>
+		<category id="4.2" name="fuels"/>
+		<category id="4.3" name="heating systems"/>
+		<category id="4.4" name="others"/>
+		<category id="4.5" name="power plants"/>
+		<category id="4.6" name="production"/>
+	</category>
+	<category id="5" name="building components" >
+		<category id="5.1" name="cladding"/>
+		<category id="5.2" name="doors"/>
+		<category id="5.3" name="windows"/>
+	</category>
+	<category id="6" name="chemicals" >
+		<category id="6.1" name="inorganics"/>
+		<category id="6.2" name="organics"/>
+	</category>
+	<category id="7" name="CML 2001 w/o LT" >
+		<category id="7.1" name="acidification potential w/o LT"/>
+		<category id="7.2" name="climate change w/o LT"/>
+		<category id="7.3" name="eutrophication potential w/o LT"/>
+		<category id="7.4" name="freshwater aquatic ecotoxicity w/o LT"/>
+		<category id="7.5" name="freshwater sediment ecotoxicity w/o LT"/>
+		<category id="7.6" name="human toxicity w/o LT"/>
+		<category id="7.7" name="ionising radiation w/o LT"/>
+		<category id="7.8" name="land use w/o LT"/>
+		<category id="7.9" name="malodours air w/o LT"/>
+		<category id="7.10" name="marine aquatic ecotoxicity w/o LT"/>
+		<category id="7.11" name="marine sediment ecotoxicity w/o LT"/>
+		<category id="7.12" name="photochemical oxidation w/o LT"/>
+		<category id="7.13" name="resources w/o LT"/>
+		<category id="7.14" name="stratospheric ozone depletion w/o LT"/>
+		<category id="7.15" name="terrestrial ecotoxicity w/o LT"/>
+	</category>
+	<category id="8" name="CML 2001" >
+		<category id="8.1" name="acidification potential"/>
+		<category id="8.2" name="climate change"/>
+		<category id="8.3" name="eutrophication potential"/>
+		<category id="8.4" name="freshwater aquatic ecotoxicity"/>
+		<category id="8.5" name="freshwater sediment ecotoxicity"/>
+		<category id="8.6" name="human toxicity"/>
+		<category id="8.7" name="ionising radiation"/>
+		<category id="8.8" name="land use"/>
+		<category id="8.9" name="malodours air"/>
+		<category id="8.10" name="marine aquatic ecotoxicity"/>
+		<category id="8.11" name="marine sediment ecotoxicity"/>
+		<category id="8.12" name="photochemical oxidation (summer smog)"/>
+		<category id="8.13" name="resources"/>
+		<category id="8.14" name="stratospheric ozone depletion"/>
+		<category id="8.15" name="terrestrial ecotoxicity"/>
+	</category>
+	<category id="9" name="construction materials" >
+		<category id="9.1" name="additives"/>
+		<category id="9.2" name="binder"/>
+		<category id="9.3" name="bricks"/>
+		<category id="9.4" name="concrete"/>
+		<category id="9.5" name="coverings"/>
+		<category id="9.6" name="others"/>
+	</category>
+	<category id="10" name="construction processes" >
+		<category id="10.1" name="building construction "/>
+		<category id="10.2" name="buildings"/>
+		<category id="10.3" name="civil engineering"/>
+		<category id="10.4" name="machinery"/>
+	</category>
+	<category id="11" name="cooling" >
+		<category id="11.1" name="cogeneration"/>
+		<category id="11.2" name="plant"/>
+		<category id="11.3" name="production of components"/>
+	</category>
+	<category id="12" name="cumulative energy demand" >
+		<category id="12.1" name="biomass"/>
+		<category id="12.2" name="fossil"/>
+		<category id="12.3" name="geothermal"/>
+		<category id="12.4" name="nuclear"/>
+		<category id="12.5" name="primary forest"/>
+		<category id="12.6" name="solar"/>
+		<category id="12.7" name="water"/>
+		<category id="12.8" name="wind"/>
+		<category id="12.9" name="wind, solar, geothermal"/>
+	</category>
+	<category id="13" name="cumulative exergy demand" >
+		<category id="13.1" name="biomass"/>
+		<category id="13.2" name="fossil"/>
+		<category id="13.3" name="metals"/>
+		<category id="13.4" name="minerals"/>
+		<category id="13.5" name="nuclear"/>
+		<category id="13.6" name="primary forest"/>
+		<category id="13.7" name="solar"/>
+		<category id="13.8" name="water"/>
+		<category id="13.9" name="water resources"/>
+		<category id="13.10" name="wind"/>
+	</category>
+	<category id="14" name="district heating" >
+		<category id="14.1" name="production of components"/>
+		<category id="14.2" name="systems"/>
+	</category>
+	<category id="15" name="eco-indicator 99, (E,E)" >
+		<category id="15.1" name="ecosystem quality"/>
+		<category id="15.2" name="human health"/>
+		<category id="15.3" name="resources"/>
+		<category id="15.4" name="total"/>
+	</category>
+	<category id="16" name="eco-indicator 99, (H,A)" >
+		<category id="16.1" name="ecosystem quality"/>
+		<category id="16.2" name="human health"/>
+		<category id="16.3" name="resources"/>
+		<category id="16.4" name="total"/>
+	</category>
+	<category id="17" name="eco-indicator 99, (I,I)" >
+		<category id="17.1" name="ecosystem quality"/>
+		<category id="17.2" name="human health"/>
+		<category id="17.3" name="resources"/>
+		<category id="17.4" name="total"/>
+	</category>
+	<category id="18" name="ecological footprint" >
+		<category id="18.1" name="total"/>
+	</category>
+	<category id="19" name="ecological scarcity 1997" >
+		<category id="19.1" name="total"/>
+	</category>
+	<category id="20" name="ecological scarcity 2006" >
+		<category id="20.1" name="total"/>
+	</category>
+	<category id="21" name="ecosystem damage potential" >
+		<category id="21.1" name="total"/>
+	</category>
+	<category id="22" name="EDIP" >
+		<category id="22.1" name="environmental impact"/>
+		<category id="22.2" name="resource consumption"/>
+	</category>
+	<category id="23" name="EDIP2003" >
+		<category id="23.1" name="acidification"/>
+		<category id="23.2" name="ecotoxicity"/>
+		<category id="23.3" name="eutrophication"/>
+		<category id="23.4" name="global warming"/>
+		<category id="23.5" name="human toxicity"/>
+		<category id="23.6" name="land filling"/>
+		<category id="23.7" name="non-renewable resources"/>
+		<category id="23.8" name="nutrient enrichment"/>
+		<category id="23.9" name="photochemical ozone formation"/>
+		<category id="23.10" name="renewable resources"/>
+		<category id="23.11" name="stratospheric ozone depletion"/>
+	</category>
+	<category id="24" name="electricity" >
+		<category id="24.1" name="distribution"/>
+		<category id="24.2" name="final consumption"/>
+		<category id="24.3" name="production mix"/>
+		<category id="24.4" name="supply mix"/>
+	</category>
+	<category id="25" name="electronics" >
+		<category id="25.1" name="component"/>
+		<category id="25.2" name="devices"/>
+		<category id="25.3" name="module"/>
+		<category id="25.4" name="services"/>
+	</category>
+	<category id="26" name="EPS 2000" >
+		<category id="26.1" name="total"/>
+	</category>
+	<category id="27" name="food industry" >
+		<category id="27.1" name="distribution"/>
+		<category id="27.2" name="processing"/>
+	</category>
+	<category id="28" name="glass" >
+		<category id="28.1" name="construction"/>
+		<category id="28.2" name="packaging"/>
+	</category>
+	<category id="29" name="hard coal" >
+		<category id="29.1" name="fuels"/>
+		<category id="29.2" name="heating systems"/>
+		<category id="29.3" name="power plants"/>
+		<category id="29.4" name="production"/>
+	</category>
+	<category id="30" name="heat pumps" >
+		<category id="30.1" name="heating systems"/>
+		<category id="30.2" name="production of components"/>
+	</category>
+	<category id="31" name="hydro power" >
+		<category id="31.1" name="power plants"/>
+		<category id="31.2" name="production of components"/>
+	</category>
+	<category id="32" name="IMPACT 2002+ (Endpoint)" >
+		<category id="32.1" name="climate change"/>
+		<category id="32.2" name="ecosystem quality"/>
+		<category id="32.3" name="human health"/>
+		<category id="32.4" name="resources"/>
+	</category>
+	<category id="33" name="IMPACT 2002+ (Midpoint)" >
+		<category id="33.1" name="ecosystem quality"/>
+	</category>
+	<category id="34" name="insulation materials" >
+		<category id="34.1" name="production"/>
+	</category>
+	<category id="35" name="IPCC 2001" >
+		<category id="35.1" name="climate change"/>
+	</category>
+	<category id="36" name="IPCC 2007" >
+		<category id="36.1" name="climate change"/>
+	</category>
+	<category id="37" name="lignite" >
+		<category id="37.1" name="fuels"/>
+		<category id="37.2" name="heating systems"/>
+		<category id="37.3" name="power plants"/>
+		<category id="37.4" name="production"/>
+	</category>
+	<category id="38" name="mechanical engineering" >
+		<category id="38.1" name="compressed air equipment"/>
+		<category id="38.2" name="compressed air generation"/>
+		<category id="38.3" name="compressed air supply"/>
+		<category id="38.4" name="equipment and buildings"/>
+	</category>
+	<category id="39" name="metals" >
+		<category id="39.1" name="chipless shaping"/>
+		<category id="39.2" name="chipping"/>
+		<category id="39.3" name="extraction"/>
+		<category id="39.4" name="general manufacturing"/>
+		<category id="39.5" name="processing"/>
+		<category id="39.6" name="refinement"/>
+	</category>
+	<category id="40" name="mortar and plaster" >
+		<category id="40.1" name="production"/>
+	</category>
+	<category id="41" name="natural gas" >
+		<category id="41.1" name="cogeneration"/>
+		<category id="41.2" name="fuels"/>
+		<category id="41.3" name="heating systems"/>
+		<category id="41.4" name="power plants"/>
+		<category id="41.5" name="production"/>
+	</category>
+	<category id="42" name="non-material" >
+		<category id="42.1" name="unspecified"/>
+	</category>
+	<category id="43" name="nuclear power" >
+		<category id="43.1" name="power plants"/>
+		<category id="43.2" name="production"/>
+		<category id="43.3" name="waste treatment"/>
+	</category>
+	<category id="44" name="oil" >
+		<category id="44.1" name="cogeneration"/>
+		<category id="44.2" name="fuels"/>
+		<category id="44.3" name="heating systems"/>
+		<category id="44.4" name="power plants"/>
+		<category id="44.5" name="production"/>
+	</category>
+	<category id="45" name="others" >
+		<category id="45.1" name="unspecified"/>
+	</category>
+	<category id="46" name="paintings" >
+		<category id="46.1" name="processing"/>
+		<category id="46.2" name="production"/>
+	</category>
+	<category id="47" name="paper &amp; cardboard" >
+		<category id="47.1" name="cardboard &amp; corrugated board"/>
+		<category id="47.2" name="graphic paper"/>
+		<category id="47.3" name="packaging papers"/>
+		<category id="47.4" name="pulps"/>
+	</category>
+	<category id="48" name="photovoltaic" >
+		<category id="48.1" name="power plants"/>
+		<category id="48.2" name="production of components"/>
+	</category>
+	<category id="49" name="plastics" >
+		<category id="49.1" name="monomers"/>
+		<category id="49.2" name="others"/>
+		<category id="49.3" name="polymers"/>
+		<category id="49.4" name="processing"/>
+	</category>
+	<category id="50" name="private consumption" >
+		<category id="50.1" name="nutrition"/>
+	</category>
+	<category id="51" name="resource" >
+		<category id="51.1" name="biotic"/>
+		<category id="51.2" name="in air"/>
+		<category id="51.3" name="in ground"/>
+		<category id="51.4" name="in water"/>
+		<category id="51.5" name="land"/>
+	</category>
+	<category id="52" name="selected LCI results, additional" >
+		<category id="52.1" name="air"/>
+		<category id="52.2" name="air, radioactive"/>
+		<category id="52.3" name="resource"/>
+		<category id="52.4" name="total"/>
+		<category id="52.5" name="water, radioactive"/>
+	</category>
+	<category id="53" name="selected LCI results" >
+		<category id="53.1" name="air"/>
+		<category id="53.2" name="resource"/>
+		<category id="53.3" name="soil"/>
+		<category id="53.4" name="water"/>
+	</category>
+	<category id="54" name="soil" >
+		<category id="54.1" name="agricultural"/>
+		<category id="54.2" name="forestry"/>
+		<category id="54.3" name="industrial"/>
+		<category id="54.4" name="unspecified"/>
+	</category>
+	<category id="55" name="solar collector systems" >
+		<category id="55.1" name="production of components"/>
+		<category id="55.2" name="systems"/>
+	</category>
+	<category id="56" name="textiles" >
+		<category id="56.1" name="processing"/>
+		<category id="56.2" name="production"/>
+	</category>
+	<category id="57" name="TRACI" >
+		<category id="57.1" name="environmental impact"/>
+		<category id="57.2" name="human health"/>
+	</category>
+	<category id="58" name="transport systems" >
+		<category id="58.1" name="airplane"/>
+		<category id="58.2" name="road"/>
+		<category id="58.3" name="ship"/>
+		<category id="58.4" name="train"/>
+	</category>
+	<category id="59" name="ventilation" >
+		<category id="59.1" name="production of components"/>
+		<category id="59.2" name="ventilation systems"/>
+	</category>
+	<category id="60" name="washing agents" >
+		<category id="60.1" name="auxiliary agents"/>
+		<category id="60.2" name="bleaches"/>
+		<category id="60.3" name="builders"/>
+		<category id="60.4" name="tensides"/>
+	</category>
+	<category id="61" name="waste management" >
+		<category id="61.1" name="building demolition"/>
+		<category id="61.2" name="hazardous waste incineration"/>
+		<category id="61.3" name="inert material landfill"/>
+		<category id="61.4" name="landfarming"/>
+		<category id="61.5" name="municipal incineration"/>
+		<category id="61.6" name="others"/>
+		<category id="61.7" name="recycling"/>
+		<category id="61.8" name="residual material landfill"/>
+		<category id="61.9" name="sanitary landfill"/>
+		<category id="61.10" name="underground deposit"/>
+		<category id="61.11" name="wastewater treatment"/>
+	</category>
+	<category id="62" name="water supply" >
+		<category id="62.1" name="production"/>
+	</category>
+	<category id="63" name="water" >
+		<category id="63.1" name="fossil-"/>
+		<category id="63.2" name="ground-"/>
+		<category id="63.3" name="ground-, long-term"/>
+		<category id="63.4" name="lake"/>
+		<category id="63.5" name="ocean"/>
+		<category id="63.6" name="river"/>
+		<category id="63.7" name="river, long-term"/>
+		<category id="63.8" name="unspecified"/>
+	</category>
+	<category id="64" name="wind power" >
+		<category id="64.1" name="power plants"/>
+		<category id="64.2" name="production of components"/>
+	</category>
+	<category id="65" name="wood energy" >
+		<category id="65.1" name="cogeneration"/>
+		<category id="65.2" name="fuels"/>
+		<category id="65.3" name="heating systems"/>
+	</category>
+	<category id="66" name="wooden materials" >
+		<category id="66.1" name="extraction"/>
+		<category id="66.2" name="processing"/>
+		<category id="66.3" name="refinement"/>
+	</category>
+   </categories>
+   <categories dataType="Flow">
+	<category id="1" name="agricultural means of production" >
+		<category id="1.1" name="buildings"/>
+		<category id="1.2" name="equipments"/>
+		<category id="1.3" name="feed"/>
+		<category id="1.4" name="machinery"/>
+		<category id="1.5" name="mineral fertiliser"/>
+		<category id="1.6" name="organic fertiliser"/>
+		<category id="1.7" name="other auxiliary materials"/>
+		<category id="1.8" name="pesticides"/>
+		<category id="1.9" name="seed"/>
+		<category id="1.10" name="work processes"/>
+	</category>
+	<category id="2" name="agricultural production" >
+		<category id="2.1" name="animal production"/>
+		<category id="2.2" name="plant production"/>
+	</category>
+	<category id="3" name="air" >
+		<category id="3.1" name="high population density"/>
+		<category id="3.2" name="low population density"/>
+		<category id="3.3" name="low population density, long-term"/>
+		<category id="3.4" name="lower stratosphere + upper troposphere"/>
+		<category id="3.5" name="unspecified"/>
+	</category>
+	<category id="4" name="biomass" >
+		<category id="4.1" name="cogeneration"/>
+		<category id="4.2" name="fuels"/>
+		<category id="4.3" name="heating systems"/>
+		<category id="4.4" name="others"/>
+		<category id="4.5" name="power plants"/>
+		<category id="4.6" name="production"/>
+	</category>
+	<category id="5" name="building components" >
+		<category id="5.1" name="cladding"/>
+		<category id="5.2" name="doors"/>
+		<category id="5.3" name="windows"/>
+	</category>
+	<category id="6" name="chemicals" >
+		<category id="6.1" name="inorganics"/>
+		<category id="6.2" name="organics"/>
+	</category>
+	<category id="7" name="CML 2001 w/o LT" >
+		<category id="7.1" name="acidification potential w/o LT"/>
+		<category id="7.2" name="climate change w/o LT"/>
+		<category id="7.3" name="eutrophication potential w/o LT"/>
+		<category id="7.4" name="freshwater aquatic ecotoxicity w/o LT"/>
+		<category id="7.5" name="freshwater sediment ecotoxicity w/o LT"/>
+		<category id="7.6" name="human toxicity w/o LT"/>
+		<category id="7.7" name="ionising radiation w/o LT"/>
+		<category id="7.8" name="land use w/o LT"/>
+		<category id="7.9" name="malodours air w/o LT"/>
+		<category id="7.10" name="marine aquatic ecotoxicity w/o LT"/>
+		<category id="7.11" name="marine sediment ecotoxicity w/o LT"/>
+		<category id="7.12" name="photochemical oxidation w/o LT"/>
+		<category id="7.13" name="resources w/o LT"/>
+		<category id="7.14" name="stratospheric ozone depletion w/o LT"/>
+		<category id="7.15" name="terrestrial ecotoxicity w/o LT"/>
+	</category>
+	<category id="8" name="CML 2001" >
+		<category id="8.1" name="acidification potential"/>
+		<category id="8.2" name="climate change"/>
+		<category id="8.3" name="eutrophication potential"/>
+		<category id="8.4" name="freshwater aquatic ecotoxicity"/>
+		<category id="8.5" name="freshwater sediment ecotoxicity"/>
+		<category id="8.6" name="human toxicity"/>
+		<category id="8.7" name="ionising radiation"/>
+		<category id="8.8" name="land use"/>
+		<category id="8.9" name="malodours air"/>
+		<category id="8.10" name="marine aquatic ecotoxicity"/>
+		<category id="8.11" name="marine sediment ecotoxicity"/>
+		<category id="8.12" name="photochemical oxidation (summer smog)"/>
+		<category id="8.13" name="resources"/>
+		<category id="8.14" name="stratospheric ozone depletion"/>
+		<category id="8.15" name="terrestrial ecotoxicity"/>
+	</category>
+	<category id="9" name="construction materials" >
+		<category id="9.1" name="additives"/>
+		<category id="9.2" name="binder"/>
+		<category id="9.3" name="bricks"/>
+		<category id="9.4" name="concrete"/>
+		<category id="9.5" name="coverings"/>
+		<category id="9.6" name="others"/>
+	</category>
+	<category id="10" name="construction processes" >
+		<category id="10.1" name="building construction "/>
+		<category id="10.2" name="buildings"/>
+		<category id="10.3" name="civil engineering"/>
+		<category id="10.4" name="machinery"/>
+	</category>
+	<category id="11" name="cooling" >
+		<category id="11.1" name="cogeneration"/>
+		<category id="11.2" name="plant"/>
+		<category id="11.3" name="production of components"/>
+	</category>
+	<category id="12" name="cumulative energy demand" >
+		<category id="12.1" name="biomass"/>
+		<category id="12.2" name="fossil"/>
+		<category id="12.3" name="geothermal"/>
+		<category id="12.4" name="nuclear"/>
+		<category id="12.5" name="primary forest"/>
+		<category id="12.6" name="solar"/>
+		<category id="12.7" name="water"/>
+		<category id="12.8" name="wind"/>
+		<category id="12.9" name="wind, solar, geothermal"/>
+	</category>
+	<category id="13" name="cumulative exergy demand" >
+		<category id="13.1" name="biomass"/>
+		<category id="13.2" name="fossil"/>
+		<category id="13.3" name="metals"/>
+		<category id="13.4" name="minerals"/>
+		<category id="13.5" name="nuclear"/>
+		<category id="13.6" name="primary forest"/>
+		<category id="13.7" name="solar"/>
+		<category id="13.8" name="water"/>
+		<category id="13.9" name="water resources"/>
+		<category id="13.10" name="wind"/>
+	</category>
+	<category id="14" name="district heating" >
+		<category id="14.1" name="production of components"/>
+		<category id="14.2" name="systems"/>
+	</category>
+	<category id="15" name="eco-indicator 99, (E,E)" >
+		<category id="15.1" name="ecosystem quality"/>
+		<category id="15.2" name="human health"/>
+		<category id="15.3" name="resources"/>
+		<category id="15.4" name="total"/>
+	</category>
+	<category id="16" name="eco-indicator 99, (H,A)" >
+		<category id="16.1" name="ecosystem quality"/>
+		<category id="16.2" name="human health"/>
+		<category id="16.3" name="resources"/>
+		<category id="16.4" name="total"/>
+	</category>
+	<category id="17" name="eco-indicator 99, (I,I)" >
+		<category id="17.1" name="ecosystem quality"/>
+		<category id="17.2" name="human health"/>
+		<category id="17.3" name="resources"/>
+		<category id="17.4" name="total"/>
+	</category>
+	<category id="18" name="ecological footprint" >
+		<category id="18.1" name="total"/>
+	</category>
+	<category id="19" name="ecological scarcity 1997" >
+		<category id="19.1" name="total"/>
+	</category>
+	<category id="20" name="ecological scarcity 2006" >
+		<category id="20.1" name="total"/>
+	</category>
+	<category id="21" name="ecosystem damage potential" >
+		<category id="21.1" name="total"/>
+	</category>
+	<category id="22" name="EDIP" >
+		<category id="22.1" name="environmental impact"/>
+		<category id="22.2" name="resource consumption"/>
+	</category>
+	<category id="23" name="EDIP2003" >
+		<category id="23.1" name="acidification"/>
+		<category id="23.2" name="ecotoxicity"/>
+		<category id="23.3" name="eutrophication"/>
+		<category id="23.4" name="global warming"/>
+		<category id="23.5" name="human toxicity"/>
+		<category id="23.6" name="land filling"/>
+		<category id="23.7" name="non-renewable resources"/>
+		<category id="23.8" name="nutrient enrichment"/>
+		<category id="23.9" name="photochemical ozone formation"/>
+		<category id="23.10" name="renewable resources"/>
+		<category id="23.11" name="stratospheric ozone depletion"/>
+	</category>
+	<category id="24" name="electricity" >
+		<category id="24.1" name="distribution"/>
+		<category id="24.2" name="final consumption"/>
+		<category id="24.3" name="production mix"/>
+		<category id="24.4" name="supply mix"/>
+	</category>
+	<category id="25" name="electronics" >
+		<category id="25.1" name="component"/>
+		<category id="25.2" name="devices"/>
+		<category id="25.3" name="module"/>
+		<category id="25.4" name="services"/>
+	</category>
+	<category id="26" name="EPS 2000" >
+		<category id="26.1" name="total"/>
+	</category>
+	<category id="27" name="food industry" >
+		<category id="27.1" name="distribution"/>
+		<category id="27.2" name="processing"/>
+	</category>
+	<category id="28" name="glass" >
+		<category id="28.1" name="construction"/>
+		<category id="28.2" name="packaging"/>
+	</category>
+	<category id="29" name="hard coal" >
+		<category id="29.1" name="fuels"/>
+		<category id="29.2" name="heating systems"/>
+		<category id="29.3" name="power plants"/>
+		<category id="29.4" name="production"/>
+	</category>
+	<category id="30" name="heat pumps" >
+		<category id="30.1" name="heating systems"/>
+		<category id="30.2" name="production of components"/>
+	</category>
+	<category id="31" name="hydro power" >
+		<category id="31.1" name="power plants"/>
+		<category id="31.2" name="production of components"/>
+	</category>
+	<category id="32" name="IMPACT 2002+ (Endpoint)" >
+		<category id="32.1" name="climate change"/>
+		<category id="32.2" name="ecosystem quality"/>
+		<category id="32.3" name="human health"/>
+		<category id="32.4" name="resources"/>
+	</category>
+	<category id="33" name="IMPACT 2002+ (Midpoint)" >
+		<category id="33.1" name="ecosystem quality"/>
+	</category>
+	<category id="34" name="insulation materials" >
+		<category id="34.1" name="production"/>
+	</category>
+	<category id="35" name="IPCC 2001" >
+		<category id="35.1" name="climate change"/>
+	</category>
+	<category id="36" name="IPCC 2007" >
+		<category id="36.1" name="climate change"/>
+	</category>
+	<category id="37" name="lignite" >
+		<category id="37.1" name="fuels"/>
+		<category id="37.2" name="heating systems"/>
+		<category id="37.3" name="power plants"/>
+		<category id="37.4" name="production"/>
+	</category>
+	<category id="38" name="mechanical engineering" >
+		<category id="38.1" name="compressed air equipment"/>
+		<category id="38.2" name="compressed air generation"/>
+		<category id="38.3" name="compressed air supply"/>
+		<category id="38.4" name="equipment and buildings"/>
+	</category>
+	<category id="39" name="metals" >
+		<category id="39.1" name="chipless shaping"/>
+		<category id="39.2" name="chipping"/>
+		<category id="39.3" name="extraction"/>
+		<category id="39.4" name="general manufacturing"/>
+		<category id="39.5" name="processing"/>
+		<category id="39.6" name="refinement"/>
+	</category>
+	<category id="40" name="mortar and plaster" >
+		<category id="40.1" name="production"/>
+	</category>
+	<category id="41" name="natural gas" >
+		<category id="41.1" name="cogeneration"/>
+		<category id="41.2" name="fuels"/>
+		<category id="41.3" name="heating systems"/>
+		<category id="41.4" name="power plants"/>
+		<category id="41.5" name="production"/>
+	</category>
+	<category id="42" name="non-material" >
+		<category id="42.1" name="unspecified"/>
+	</category>
+	<category id="43" name="nuclear power" >
+		<category id="43.1" name="power plants"/>
+		<category id="43.2" name="production"/>
+		<category id="43.3" name="waste treatment"/>
+	</category>
+	<category id="44" name="oil" >
+		<category id="44.1" name="cogeneration"/>
+		<category id="44.2" name="fuels"/>
+		<category id="44.3" name="heating systems"/>
+		<category id="44.4" name="power plants"/>
+		<category id="44.5" name="production"/>
+	</category>
+	<category id="45" name="others" >
+		<category id="45.1" name="unspecified"/>
+	</category>
+	<category id="46" name="paintings" >
+		<category id="46.1" name="processing"/>
+		<category id="46.2" name="production"/>
+	</category>
+	<category id="47" name="paper &amp; cardboard" >
+		<category id="47.1" name="cardboard &amp; corrugated board"/>
+		<category id="47.2" name="graphic paper"/>
+		<category id="47.3" name="packaging papers"/>
+		<category id="47.4" name="pulps"/>
+	</category>
+	<category id="48" name="photovoltaic" >
+		<category id="48.1" name="power plants"/>
+		<category id="48.2" name="production of components"/>
+	</category>
+	<category id="49" name="plastics" >
+		<category id="49.1" name="monomers"/>
+		<category id="49.2" name="others"/>
+		<category id="49.3" name="polymers"/>
+		<category id="49.4" name="processing"/>
+	</category>
+	<category id="50" name="private consumption" >
+		<category id="50.1" name="nutrition"/>
+	</category>
+	<category id="51" name="resource" >
+		<category id="51.1" name="biotic"/>
+		<category id="51.2" name="in air"/>
+		<category id="51.3" name="in ground"/>
+		<category id="51.4" name="in water"/>
+		<category id="51.5" name="land"/>
+	</category>
+	<category id="52" name="selected LCI results, additional" >
+		<category id="52.1" name="air"/>
+		<category id="52.2" name="air, radioactive"/>
+		<category id="52.3" name="resource"/>
+		<category id="52.4" name="total"/>
+		<category id="52.5" name="water, radioactive"/>
+	</category>
+	<category id="53" name="selected LCI results" >
+		<category id="53.1" name="air"/>
+		<category id="53.2" name="resource"/>
+		<category id="53.3" name="soil"/>
+		<category id="53.4" name="water"/>
+	</category>
+	<category id="54" name="soil" >
+		<category id="54.1" name="agricultural"/>
+		<category id="54.2" name="forestry"/>
+		<category id="54.3" name="industrial"/>
+		<category id="54.4" name="unspecified"/>
+	</category>
+	<category id="55" name="solar collector systems" >
+		<category id="55.1" name="production of components"/>
+		<category id="55.2" name="systems"/>
+	</category>
+	<category id="56" name="textiles" >
+		<category id="56.1" name="processing"/>
+		<category id="56.2" name="production"/>
+	</category>
+	<category id="57" name="TRACI" >
+		<category id="57.1" name="environmental impact"/>
+		<category id="57.2" name="human health"/>
+	</category>
+	<category id="58" name="transport systems" >
+		<category id="58.1" name="airplane"/>
+		<category id="58.2" name="road"/>
+		<category id="58.3" name="ship"/>
+		<category id="58.4" name="train"/>
+	</category>
+	<category id="59" name="ventilation" >
+		<category id="59.1" name="production of components"/>
+		<category id="59.2" name="ventilation systems"/>
+	</category>
+	<category id="60" name="washing agents" >
+		<category id="60.1" name="auxiliary agents"/>
+		<category id="60.2" name="bleaches"/>
+		<category id="60.3" name="builders"/>
+		<category id="60.4" name="tensides"/>
+	</category>
+	<category id="61" name="waste management" >
+		<category id="61.1" name="building demolition"/>
+		<category id="61.2" name="hazardous waste incineration"/>
+		<category id="61.3" name="inert material landfill"/>
+		<category id="61.4" name="landfarming"/>
+		<category id="61.5" name="municipal incineration"/>
+		<category id="61.6" name="others"/>
+		<category id="61.7" name="recycling"/>
+		<category id="61.8" name="residual material landfill"/>
+		<category id="61.9" name="sanitary landfill"/>
+		<category id="61.10" name="underground deposit"/>
+		<category id="61.11" name="wastewater treatment"/>
+	</category>
+	<category id="62" name="water supply" >
+		<category id="62.1" name="production"/>
+	</category>
+	<category id="63" name="water" >
+		<category id="63.1" name="fossil-"/>
+		<category id="63.2" name="ground-"/>
+		<category id="63.3" name="ground-, long-term"/>
+		<category id="63.4" name="lake"/>
+		<category id="63.5" name="ocean"/>
+		<category id="63.6" name="river"/>
+		<category id="63.7" name="river, long-term"/>
+		<category id="63.8" name="unspecified"/>
+	</category>
+	<category id="64" name="wind power" >
+		<category id="64.1" name="power plants"/>
+		<category id="64.2" name="production of components"/>
+	</category>
+	<category id="65" name="wood energy" >
+		<category id="65.1" name="cogeneration"/>
+		<category id="65.2" name="fuels"/>
+		<category id="65.3" name="heating systems"/>
+	</category>
+	<category id="66" name="wooden materials" >
+		<category id="66.1" name="extraction"/>
+		<category id="66.2" name="processing"/>
+		<category id="66.3" name="refinement"/>
+	</category>
+   </categories>
+</CategorySystem>

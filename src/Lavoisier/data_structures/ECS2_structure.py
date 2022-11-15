@@ -18,6 +18,8 @@ class BOOL(Validator): # Anything can be a bool, so it is verified through a han
         if x not in self.VALID:
             raise ValueError(f'BOOL: {x} is not valid. Must be one of {", ".join([str(x) for x in self.VALID])}')
         return bool(x) if not isinstance(x, str) else x in ('1', 'true', 'True')
+    def end(self):
+        return 'true' if self._x else 'false'
 
 class Real(Validator):
     def _validate(self, x):
@@ -60,8 +62,11 @@ class InheritanceDepthINT(LimitedINT):
     limits = set(range(-1,4))
     can_be_negative = True
     
+class SourceTypeINT(LimitedINT):
+    limits = set(range(8))
+    
 class TypeINT(LimitedINT):
-    limits = set(range(1,3))
+    limits = set(range(1,4)) # Check
 
 class SpecialActivityTypeINT(LimitedINT):
     limits = set(range(11))
@@ -152,11 +157,20 @@ class UniqueLimitedString(LimitedString):
         self._x = self._validate(o)
         return self
 
+class ISOTwoLetterCode(LimitedString):
+    limit = 2
+
+class ISOThreeLetterCode(LimitedString):
+    limit = 3
+
 class Lang(LimitedString):
     limit = (2,5)
 
 class CompanyCode(LimitedString):
     limit = 7
+
+class BaseString20(LimitedString):
+    limit = 20
 
 class BaseString30(LimitedString):
     limit = 30
@@ -350,6 +364,9 @@ class IndexedMultiLangString(MultiLangString):
         x = self._end_validate(x)
         return x
 
+class String20(MultiLangString):
+    _text = BaseString20
+    
 class String40(MultiLangString):
     _text = BaseString40
 
@@ -362,6 +379,16 @@ class String80_NLR(NoLangRestrictionMultiLangString):
 class String120(MultiLangString):
     _text = BaseString120
 
+class ClassificationValueString120(String120):
+    def end(self):
+        x = super().end()
+        return x[0] # Only one entry is possible here
+
+class ExchangeNameString80(String80):
+    def end(self):
+        x = super().end()
+        return x[0] # Only one entry is possible here
+    
 class Name(String120):
     def add(self, o, sep=', '):
         self._x = self._x if hasattr(self, '_x') else []
@@ -382,6 +409,8 @@ class IndexedString32000(IndexedMultiLangString):
 
 class NamedString32000(NamedString):
     _text = BaseString32000
+
+### Basic classes
 
 class ECS2Uncertainty(DotDict):
     
@@ -487,16 +516,24 @@ class ECS2QuantitativeReference(DotDict):
         'a_amount': {'type': Real, 'mandatory': True, 'order': 0, 'unique': True},
         'a_mathematicalRelation': {'type': BaseString32000, 'mandatory': False, 'order': 0, 'unique': True},
         'a_isCalculatedAmount': {'type': BOOL, 'mandatory': False, 'order': 0, 'unique': True},
-        'uncertainty': {'type': ECS2Uncertainty, 'mandatory': False, 'order': 3, 'unique': True},
-        'comment': {'type': String32000, 'mandatory': False, 'order': 4, 'unique': False}
+        'comment': {'type': String32000, 'mandatory': False, 'order': 4, 'unique': False},
+        'uncertainty': {'type': ECS2Uncertainty, 'mandatory': False, 'order': 3, 'unique': True}
         }
     
     VALID = ECS2Source.VALID | {
         'a_amount': {'type': Real, 'mandatory': True, 'order': 0, 'unique': True},
         'a_mathematicalRelation': {'type': BaseString32000, 'mandatory': False, 'order': 0, 'unique': True},
         'a_isCalculatedAmount': {'type': BOOL, 'mandatory': False, 'order': 0, 'unique': True},
-        'uncertainty': {'type': ECS2Uncertainty, 'mandatory': False, 'order': 3, 'unique': True},
-        'comment': {'type': String32000, 'mandatory': False, 'order': 4, 'unique': False}
+        'comment': {'type': String32000, 'mandatory': False, 'order': 3, 'unique': False},
+        'uncertainty': {'type': ECS2Uncertainty, 'mandatory': False, 'order': 4, 'unique': True}
+        }
+    
+    VALID_PROP = ECS2Source.VALID | {
+        'a_amount': {'type': Real, 'mandatory': True, 'order': 0, 'unique': True},
+        'a_mathematicalRelation': {'type': BaseString32000, 'mandatory': False, 'order': 0, 'unique': True},
+        'a_isCalculatedAmount': {'type': BOOL, 'mandatory': False, 'order': 0, 'unique': True},
+        'comment': {'type': String32000, 'mandatory': False, 'order': 4, 'unique': False},
+        'uncertainty': {'type': ECS2Uncertainty, 'mandatory': False, 'order': 3, 'unique': True}
         }
     
 class ECS2QuantitativeReferenceWithUnit(DotDict):
@@ -505,7 +542,7 @@ class ECS2QuantitativeReferenceWithUnit(DotDict):
         'a_variableName': {'type': VariableName, 'mandatory': False, 'order': 0, 'unique': True},
         'a_unitId': {'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
         'a_unitContextId': {'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
-        'name': {'type': String80, 'mandatory': True, 'order': 1, 'unique': False},
+        'name': {'type': ExchangeNameString80, 'mandatory': True, 'order': 1, 'unique': False},
         'unitName': {'type': String40, 'mandatory': True, 'order': 2, 'unique': False},
         }
     
@@ -513,15 +550,310 @@ class ECS2QuantitativeReferenceWithUnit(DotDict):
         'a_variableName': {'type': VariableName, 'mandatory': False, 'order': 0, 'unique': True},
         'a_unitId': {'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
         'a_unitContextId': {'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
-        'name': {'type': String80, 'mandatory': True, 'order': 1, 'unique': False},
+        'name': {'type': ExchangeNameString80, 'mandatory': True, 'order': 1, 'unique': False},
         'unitName': {'type': String40, 'mandatory': False, 'order': 2, 'unique': False},
         }
+    
+    VALID_PROP = ECS2QuantitativeReference.VALID_PROP | { # Parameter doesn't have mandatoty unit id or name
+        'a_variableName': {'type': VariableName, 'mandatory': False, 'order': 0, 'unique': True},
+        'a_unitId': {'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
+        'a_unitContextId': {'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
+        'name': {'type': ExchangeNameString80, 'mandatory': True, 'order': 1, 'unique': False},
+        'unitName': {'type': String40, 'mandatory': False, 'order': 2, 'unique': False},
+        }
+    
+
+class ECS2TextAndImage(DotDict):
+    
+    VALID = {
+        'text': {'type': IndexedString32000, 'mandatory': False, 'order': 1, 'unique': False}, # Can't enumerate indexes beacuse this is separated
+        'imageUrl': {'type': IndexedStringSTR, 'mandatory': False, 'order': 2, 'unique': False},
+        'variable': {'type': NamedString32000, 'mandatory': False, 'order': 3, 'unique': False}
+        }
+
+
+class ECS2Classification(DotDict):
+    
+    VALID = {
+        'a_classificationId': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+        'a_classificationContextId': {'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
+        'classificationSystem': {'type': String255, 'mandatory': True, 'order': 1, 'unique': False},
+        'classificationValue': {'type': ClassificationValueString120, 'mandatory': True, 'order': 2, 'unique': False}
+        }
+
+### Master data files
+
+# xmlns="http://www.EcoInvent.org/UsedUserMasterData"
+class ECS2UsedUserMasterData(DotDict):
+    
+    class __ActivityNameMaster(DotDict):
+        
+        VALID = {
+            'a_id': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': False}, # Double
+            'name': {'type': String120, 'mandatory': True, 'order': 1, 'unique': False}
+            }
+
+    class __ClassificationSystemMaster(DotDict):
+        
+        class __ClassificationValue(DotDict):
+            
+            VALID = {
+                'a_id': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+                'name': {'type': ClassificationValueString120, 'mandatory': True, 'order': 1, 'unique': False},
+                'comment': {'type': String32000, 'mandatory': False, 'order': 2, 'unique': False}
+                }
+        
+        VALID = {
+            'a_id': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+            'a_type': {'type': TypeINT, 'mandatory': True, 'order': 0, 'unique': True}, # 1 = activity classification, 2 = product classification, 3 = activity and product classification
+            'name': {'type': String255, 'mandatory': True, 'order': 1, 'unique': False},
+            'comment': {'type': String32000, 'mandatory': False, 'order': 2, 'unique': False},
+            'classificationValue': {'type': __ClassificationValue, 'mandatory': True, 'order': 3, 'unique': False}
+            }
+    
+    class __CompanyMaster(DotDict):
+        
+        VALID = {
+            'a_id': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+            'a_code': {'type': CompanyCode, 'mandatory': True, 'order': 0, 'unique': True},
+            'a_website': {'type': BaseString255, 'mandatory': False, 'order': 0, 'unique': True},
+            'name': {'type': String255, 'mandatory': False, 'order': 1, 'unique': False},
+            'comment': {'type': String32000, 'mandatory': False, 'order': 2, 'unique': False}
+            }
+        
+    class __CompartmentMaster(DotDict):
+        
+        class __SubcompartmentMaster(DotDict):
+            
+            VALID = {
+                'a_id': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+                'name': {'type': String40, 'mandatory': True, 'order': 1, 'unique': False},
+                'comment': {'type': String32000, 'mandatory': False, 'order': 2, 'unique': False}
+                }
+        
+        VALID = {
+            'a_id': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+            'name': {'type': String40, 'mandatory': True, 'order': 1, 'unique': False},
+            'comment': {'type': String32000, 'mandatory': False, 'order': 2, 'unique': False},
+            'subcompartment': {'type': __SubcompartmentMaster, 'mandatory': True, 'order': 3, 'unique': False}
+            }
+    
+    class __ElementaryMaster(DotDict):
+        
+        class __Compartment(DotDict):
+            
+            VALID = {
+                'a_subcompartmentId': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+                'a_subcompartmentContextId': {'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
+                'compartment': {'type': String40, 'mandatory': True, 'order': 1, 'unique': False},
+                'subcompartment': {'type': String40, 'mandatory': True, 'order': 2, 'unique': False}
+                }
+            
+        class __Property(DotDict):
+            
+            VALID = ECS2QuantitativeReferenceWithUnit.VALID_PROP | {
+                'a_propertyId': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+                'a_propertyContextId': {'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
+                'a_isDefiningValue': {'type': BOOL, 'mandatory': False, 'order': 0, 'unique': True}
+                }
+        
+        VALID = {
+            'a_id': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+            'a_unitId': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+            'a_unitContextId': {'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_formula': {'type': BaseString40, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_casNumber': {'type': CASNumber, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_defaultVariableName': {'type': VariableName, 'mandatory': False, 'order': 0, 'unique': True},
+            'name': {'type': String120, 'mandatory': True, 'order': 1, 'unique': False},
+            'unitName': {'type': String40, 'mandatory': True, 'order': 2, 'unique': False},
+            'compartment': {'type': __Compartment, 'mandatory': True, 'order': 3, 'unique': False},
+            'comment': {'type': String32000, 'mandatory': False, 'order': 4, 'unique': False},
+            'synonym': {'type': String80_NLR, 'mandatory': False, 'order': 5, 'unique': False},
+            'property': {'type': __Property, 'mandatory': False, 'order': 6, 'unique': False},
+            'productInformation': {'type': ECS2TextAndImage, 'mandatory': False, 'order': 7, 'unique': False}
+            }
+    
+    class __GeographyMaster(DotDict):
+        
+        VALID = {
+            'a_id': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+            'a_longitude': {'type': Real, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_latitude': {'type': Real, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_ISOTwoLetterCode': {'type': ISOTwoLetterCode, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_ISOThreeLetterCode': {'type': ISOThreeLetterCode, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_uNCode': {'type': INT, 'mandatory': False, 'order': 0, 'unique': True}, # INT1
+            'a_uNRegionCode': {'type': INT, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_uNSubregionCode': {'type': INT, 'mandatory': False, 'order': 0, 'unique': True},
+            'name': {'type': String255, 'mandatory': True, 'order': 1, 'unique': False},
+            'shortname': {'type': String40, 'mandatory': True, 'order': 2, 'unique': False},
+            'comment': {'type': ECS2TextAndImage, 'mandatory': False, 'order': 3, 'unique': False},
+            # 'kml': {'type':}
+            }
+    
+    class __IntermediateMaster(DotDict):
+            
+        class __Property(DotDict):
+            
+            VALID = ECS2QuantitativeReferenceWithUnit.VALID_PROP | {
+                'a_propertyId': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+                'a_propertyContextId': {'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
+                'a_isDefiningValue': {'type': BOOL, 'mandatory': False, 'order': 0, 'unique': True}
+                }
+        
+        VALID = {
+            'a_id': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+            'a_unitId': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+            'a_unitContextId': {'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_casNumber': {'type': CASNumber, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_defaultVariableName': {'type': VariableName, 'mandatory': False, 'order': 0, 'unique': True},
+            'name': {'type': String120, 'mandatory': True, 'order': 1, 'unique': False},
+            'unitName': {'type': String40, 'mandatory': True, 'order': 2, 'unique': False},
+            'classification': {'type': ECS2Classification, 'mandatory': False, 'order': 3, 'unique': False},
+            'comment': {'type': String32000, 'mandatory': False, 'order': 4, 'unique': False},
+            'synonym': {'type': String80_NLR, 'mandatory': False, 'order': 5, 'unique': False},
+            'property': {'type': __Property, 'mandatory': False, 'order': 6, 'unique': False},
+            'productInformation': {'type': ECS2TextAndImage, 'mandatory': False, 'order': 7, 'unique': False}
+            }
+    
+    class __LanguageMaster(DotDict):
+        
+        VALID = {
+            'a_code': {'type': Lang, 'mandatory': True, 'order': 0, 'unique': True},
+            'comment': {'type': String32000, 'mandatory': False, 'order': 2, 'unique': False}
+            }
+    
+    class __MacroEconomicScenarioMaster(DotDict):
+        
+        VALID = {
+            'a_id': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+            'name': {'type': String80, 'mandatory': True, 'order': 1, 'unique': False},
+            'comment': {'type': String32000, 'mandatory': False, 'order': 2, 'unique': False}
+            }
+    
+    class __ParameterMaster(DotDict):
+        
+        VALID = {
+            'a_id': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+            'a_defaultVariableName': {'type': VariableName, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_unitId': {'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_unitContextId': {'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
+            'name': {'type': String80, 'mandatory': True, 'order': 1, 'unique': False},
+            'unitName': {'type': String40, 'mandatory': False, 'order': 2, 'unique': False},
+            'comment': {'type': String32000, 'mandatory': False, 'order': 3, 'unique': False}
+            }
+    
+    class __PersonMaster(DotDict):
+        
+        VALID = {
+            'a_id': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+            'a_name': {'type': BaseString40, 'mandatory': True, 'order': 0, 'unique': True},
+            'a_address': {'type': BaseString255, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_telephone': {'type': BaseString40, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_telefax': {'type': BaseString40, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_email': {'type': BaseString80, 'mandatory': True, 'order': 0, 'unique': True},
+            'a_companyId': {'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_companyContextId': {'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
+            'companyName': {'type': String255, 'mandatory': False, 'order': 1, 'unique': False}
+            }
+    
+    class __PropertyMaster(DotDict):
+        
+        VALID = {
+            'a_id': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+            'a_defaultVariableName': {'type': VariableName, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_unitId': {'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_unitContextId': {'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
+            'name': {'type': String80, 'mandatory': True, 'order': 1, 'unique': False},
+            'unitName': {'type': String40, 'mandatory': False, 'order': 2, 'unique': False},
+            'comment': {'type': String32000, 'mandatory': False, 'order': 3, 'unique': False}
+            }
+    
+    class __SourceMaster(DotDict):
+        
+        VALID = {
+            'a_id': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+            'a_sourceType': {'type': SourceTypeINT, 'mandatory': True, 'order': 0, 'unique': True},
+            'a_year': {'type': BaseString30, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_volumeNo': {'type': INT, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_firstAuthor': {'type': BaseString40, 'mandatory': True, 'order': 0, 'unique': True},
+            'a_additionalAuthors': {'type': BaseString255, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_title': {'type': BaseString255, 'mandatory': True, 'order': 0, 'unique': True},
+            'a_shortName': {'type': BaseString80, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_pageNumbers': {'type': BaseString30, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_nameOfEditors': {'type': BaseString255, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_titleOfAnthology': {'type': BaseString255, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_placeOfPublications': {'type': BaseString32000, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_publisher': {'type': BaseString40, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_journal': {'type': BaseString40, 'mandatory': False, 'order': 0, 'unique': True},
+            'a_issueNo': {'type': BaseString40, 'mandatory': False, 'order': 0, 'unique': True},
+            'comment': {'type': String32000, 'mandatory': False, 'order': 1, 'unique': False}
+            }
+    
+    class __SystemModelMaster(DotDict):
+        
+        VALID = {
+            'a_id': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+            'name': {'type': String120, 'mandatory': True, 'order': 1, 'unique': False},
+            'shortname': {'type': String20, 'mandatory': True, 'order': 2, 'unique': False},
+            'comment': {'type': String32000, 'mandatory': False, 'order': 3, 'unique': False}
+            }
+        
+    class __TagMaster(DotDict):
+        
+        VALID = {
+            'a_name': {'type': BaseString40, 'mandatory': True, 'order': 0, 'unique': True},
+            'comment': {'type': String32000, 'mandatory': False, 'order': 1, 'unique': False}
+            }
+        
+    class __UnitMaster(DotDict):
+        
+        VALID = {
+            'a_id': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+            'name': {'type': String40, 'mandatory': True, 'order': 1, 'unique': False},
+            'comment': {'type': String32000, 'mandatory': False, 'order': 2, 'unique': False}
+            }
+    
+    class __ActivityIndexEntryMaster(DotDict):
+        
+        VALID = {
+            'a_id': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True}, # OK
+            'a_activityNameId': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': False}, # OK
+            'a_geographyId': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True}, # OK
+            'a_startDate': {'type': Date, 'mandatory': True, 'order': 0, 'unique': True},
+            'a_endDate': {'type': Date, 'mandatory': True, 'order': 0, 'unique': True},
+            'a_specialActivityType': {'type': SpecialActivityTypeINT, 'mandatory': True, 'order': 0, 'unique': True},
+            'a_systemModelId': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True}
+            }
+    
+    VALID = {
+        'activityName': {'type': __ActivityNameMaster, 'mandatory': False, 'order': 0, 'unique': False},
+        'language': {'type': __LanguageMaster, 'mandatory': False, 'order': 1, 'unique': False},
+        'geography': {'type': __GeographyMaster, 'mandatory': False, 'order': 2, 'unique': False},
+        'systemModel': {'type': __SystemModelMaster, 'mandatory': False, 'order': 3, 'unique': False},
+        'tag': {'type': __TagMaster, 'mandatory': False, 'order': 4, 'unique': False},
+        'macroEconomicScenario': {'type': __MacroEconomicScenarioMaster, 'mandatory': False, 'order': 5, 'unique': False},
+        'compartment': {'type': __CompartmentMaster, 'mandatory': False, 'order': 6, 'unique': False},
+        'classificationSystem': {'type': __ClassificationSystemMaster, 'mandatory': False, 'order': 7, 'unique': False},
+        'company': {'type': __CompanyMaster, 'mandatory': False, 'order': 8, 'unique': False},
+        'person': {'type': __PersonMaster, 'mandatory': False, 'order': 9, 'unique': False},
+        'source': {'type': __SourceMaster, 'mandatory': False, 'order': 10, 'unique': False},
+        'units': {'type': __UnitMaster, 'mandatory': False, 'order': 11, 'unique': False},
+        'parameter': {'type': __ParameterMaster, 'mandatory': False, 'order': 12, 'unique': False},
+        'property': {'type': __PropertyMaster, 'mandatory': False, 'order': 13, 'unique': False},
+        # 'context': {'type': __ContextMaster, 'mandatory': False, 'order': 4, 'unique': False},
+        'elementaryExchange': {'type': __ElementaryMaster, 'mandatory': False, 'order': 14, 'unique': False},
+        'intermediateExchange': {'type': __IntermediateMaster, 'mandatory': False, 'order': 15, 'unique': False},
+        'activityIndexEntry': {'type': __ActivityIndexEntryMaster, 'mandatory': False, 'order': 16, 'unique': True},
+        }
+
+
+### Regular classes
 
 class ECS2CustomExchange(DotDict):
     
     class __Property(DotDict):
         
-        VALID = ECS2QuantitativeReferenceWithUnit.VALID | {
+        VALID = ECS2QuantitativeReferenceWithUnit.VALID_PROP | {
             'a_propertyId': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
             'a_propertyContextId': {'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
             'a_isDefiningValue': {'type': BOOL, 'mandatory': False, 'order': 0, 'unique': True}
@@ -546,22 +878,6 @@ class ECS2CustomExchange(DotDict):
         'tag': {'type': BaseString40, 'mandatory': False, 'order': 8, 'unique': False}
         }
 
-class ECS2Classification(DotDict):
-    
-    VALID = {
-        'a_classificationId': {'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
-        'a_classificationContextId': {'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
-        'classificationSystem': {'type': String255, 'mandatory': True, 'order': 1, 'unique': False},
-        'classificationValue': {'type': String120, 'mandatory': True, 'order': 2, 'unique': False}
-        }
-
-class ECS2TextAndImage(DotDict):
-    
-    VALID = {
-        'text': {'type': IndexedString32000, 'mandatory': False, 'order': 1, 'unique': False}, # Can't enumerate indexes beacuse this is separated
-        'imageUrl': {'type': IndexedStringSTR, 'mandatory': False, 'order': 2, 'unique': False},
-        'variable': {'type': NamedString32000, 'mandatory': False, 'order': 3, 'unique': False}
-        }
 
 class ECS2Structure:
         
@@ -823,17 +1139,24 @@ class ECS2Structure:
         self.textAndImage = ECS2TextAndImage
         self.property = ECS2CustomExchange()
         
+        self.userMaster = ECS2UsedUserMasterData()
+        
         self.main_activity_type = 'activityDataset'
         
     def get_dict(self):
+        # print('\n\n', self.userMaster.get_dict())
         return {
             'ecoSpold': {
                 '@xmlns': 'http://www.EcoInvent.org/EcoSpold02',
-                self.main_activity_type: {
+                'activityDataset': { # self.main_activity_type [child datasets are not accept by ecoeditor]
                     'activityDescription': self.activityDescription.get_dict(),
+                    'flowData': self.flowData.get_dict(),
                     'modellingAndValidation': self.modellingAndValidation.get_dict(),
-                    'administrativeInformation': self.administrativeInformation.get_dict(),
-                    'flowData': self.flowData.get_dict()
+                    'administrativeInformation': self.administrativeInformation.get_dict()
+                    },
+                'usedUserMasterData': {
+                    '@xmlns': 'http://www.EcoInvent.org/UsedUserMasterData',
+                    **self.userMaster.get_dict()
                     }
                 }
             }

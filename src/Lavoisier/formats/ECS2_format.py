@@ -6,7 +6,6 @@ Created on Sat Oct 15 11:37:05 2022
 @author: jotape42p
 """
 
-import sys
 import re
 import uuid
 import random
@@ -19,20 +18,14 @@ rdn = random.Random()
 from pathlib import Path
 from .utils import Dataset
 
-if sys.version_info >= (3, 8):
-    import importlib.metadata as imp
-else:
-    import importlib_metadata as imp
-
-__version__ = "NONE"#imp.version("Lavoisier")
-
 class ECS2Helper:
     
     @staticmethod
-    def _get_str(cl, cl_f, keys, pattern, text):
+    def _get_str(cl, cl_f, keys, pattern, text, extra=lambda x:None):
         if re.search(pattern+r' (.*)+?(?:\n|$)', text):
             g = re.search(pattern+r' (.*)+?(?:\n|$)', text).groups()[0]
             setattr(cl, cl_f, keys.get(g))
+            extra(keys.get(g))
             return re.sub(pattern+r' (.*)+?(?:\n|$)', '', text)
         return text
             
@@ -84,6 +77,7 @@ class ECS2(Dataset):
         self.start_log()
 
     def start_log(self):
+        from .. import __version__
         logging.basicConfig(filename=str(Path(self.save_path, f"lavoisier_{self.filename}.log")),
                             format="%(levelname)s - %(message)s",
                             force=True,

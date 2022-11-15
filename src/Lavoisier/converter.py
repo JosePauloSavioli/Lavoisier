@@ -65,7 +65,7 @@ class Converter(ABC):
                 raise TypeError(f"Option '{key}' only accepts booleans (True or False). Received '{value}' of type {type(value)}")
         super().__setattr__(key, value)
 
-    def __check_new_mapping(path):
+    def __check_new_mapping(self, path):
         p = Path(path)
         if p.suffix not in ('.csv', '.json'):
             raise OSError(

@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<CategorySystem xmlns="http://lca.jrc.it/ILCD/Categories"
+                name="By-product classification">
+   <categories dataType="Flow">
+	<category id="1" name="allocatable product"/>
+	<category id="2" name="Recyclable"/>
+	<category id="3" name="Waste"/>
+   </categories>
+</CategorySystem>

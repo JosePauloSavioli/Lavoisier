@@ -6,7 +6,6 @@ Created on Sat Oct 15 11:30:02 2022
 @author: jotape42p
 """
 
-import sys
 import time
 import shutil
 import logging
@@ -14,13 +13,6 @@ import xmltodict
 import zipfile
 from pathlib import Path
 from .utils import zipdir, Dataset
-
-if sys.version_info >= (3, 8):
-    import importlib.metadata as imp
-else:
-    import importlib_metadata as imp
-
-__version__ = "NONE"#imp.version("Lavoisier")
 
 class ILCD1Helper:
     
@@ -124,6 +116,7 @@ class ILCD(Dataset):
         self.start_log()
 
     def start_log(self):
+        from .. import __version__
         logging.basicConfig(filename=str(Path(self.save_dir, "lavoisier.log")),
                             format="%(levelname)s - %(message)s",
                             force=True,
