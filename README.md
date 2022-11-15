@@ -27,7 +27,7 @@ pip install pathlib pint xmltodict openturns crypto
 ```
 + Install Lavoisier
 ```bash
-python3 pip install -i https://test.pypi.org/simple/ Lavoisier
+python3 pip install Lavoisier
 ```
 
 If you want to install it via github clone, just execute the `setup.py` file. In the case of uninstalling or trying to install it by pip again, it is recomended to run as administrator or sudo, since problems related to `.pyc` files could raise. Follow the steps bellow:
