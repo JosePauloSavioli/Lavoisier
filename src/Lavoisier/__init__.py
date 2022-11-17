@@ -16,7 +16,7 @@ from .converter import (
     ConverterFactory
 )
 
-__version__ = "2.0.15"
+__version__ = "2.0.15.post1"
 __title__ = "Lavoisier"
 __summary__ = "This package converts Life Cycle Assessment inventory formats. Lavoisier is developed by the Center of Life Cycle Sustainable Assessment (Gyro) of the Federal University of Technology - Paraná (UTFPR) and the  Brazilian Institute for Information in Science and Technology (IBICT)"
 __author__ = "José Paulo Pereira das Dores Savioli"
