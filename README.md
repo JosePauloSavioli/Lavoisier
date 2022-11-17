@@ -17,13 +17,13 @@ Lavoisier will require the following packages:
 + `pint` to help with unit conversion
 + `xmltodict` to help with XML parsing
 + `openturns` to help with uncertainty conversion
-+ `Crypto` to help with UUID conversion
++ `pycryptodome` to help with UUID conversion
  
 To install the dependencies beforehand, use the commands below
 
 + Install dependent libraries
 ```bash
-pip install pathlib pint xmltodict openturns crypto
+pip install pathlib pint xmltodict openturns pycryptodome
 ```
 + Install Lavoisier
 ```bash
