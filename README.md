@@ -6,7 +6,7 @@ Lavoisier's objective is to make possible a cohesive conversion with lower loss 
 
 Right now, Lavoisier is incorpored in the Brazilian Life Cycle Inventory database (namely SICV-Brasil) to make possible the conversion of Ecospold 2 datasets from Brazilian reseach to ILCD 1 format on the upload process.
 
-The field conversion is based on Greendelta's converter https://github.com/GreenDelta/olca-conversion-service, but Lavoisier can overcome some shortcomings from OpenLCA converter such as loss of Pedigree matrix uncertainty and coefficient information, some input flows not converted and loss of all parameters and mathematical equations.
+The field conversion is based on Greendelta's converter https://github.com/GreenDelta/olca-conversion-service, but Lavoisier can overcome major shortcomings from OpenLCA converter such as loss of Pedigree matrix uncertainty and coefficient information, some input flows not converted and loss of all parameters and mathematical equations.
 
 The project is still updating frequently and feedback is welcomed. The main branch has the most stable version, while the development branch has the latest updates of the library. Tests are made mainly on Linux (Ubuntu).
 
