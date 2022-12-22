@@ -46,7 +46,7 @@ python3 setup.py install
 
 Lavoisier works by creating a `Converter` class using the method `get_converter(input_: tuple, output: tuple, path: str, save_path: str, mode: str)`. The `input_` and `output` tuples are the format and elementary flow mapping to be used in conversion. Currently, available format options are `"ILCD1"` and `"EcoSpold2"` and available elementary flow mappings are `"EF3.0"` for ILCD and `"ecoinvent3.7"` for EcoSpold 2. The `mode` is an entry to specify if the conversion is to single file(s) of the output format (`to file`) or to a single database (`to database` - available only for EcoSpold2 to ILCD1 conversion).
 
-The `Converter` class has the information about the two formats and is changeable within that conversion. It has a main attributes that can be changed before conversion: the elementary flow mapping file (attr: `elem_flow_mapping`). Other attributes are set depending on the conversion being carried out. Too see these attribute options one can print the converter.
+The `Converter` class has the information about the two formats and is changeable within that conversion. It has a main attribute that can be changed before conversion, the elementary flow mapping file (attr: `elem_flow_mapping`) and other attributes that are set depending on the conversion being carried out. To see these attribute options one can print the converter.
 
 For example, to convert a file and a directory of files from EcoSpold 2 to ILCD 1:
 ```python
