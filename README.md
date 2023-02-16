@@ -73,6 +73,6 @@ This project was developed in the Center for Life Cycle Sustainability Assessmen
 
 -> GYRO website: http://gyro.ct.utfpr.edu.br
 
-Code developed by José Paulo das Dores Savioli. Logo created by Larissa Ugaya Mazza.
+Code developed by José Paulo Pereira das Dores Savioli. Logo created by Larissa Ugaya Mazza.
 
 <img src=https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/logo%20gyro_email%20padr%C3%A3o.png alt="Logo GYRO" width="80" length="200" /><img src=https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/utfpr.png alt="Logo UTFPR" width="200" length="200" /><img src="https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/IBICT.png" alt="Logo IBICT" width="170" length="200" />
