@@ -1,4 +1,4 @@
-# Lavoisier
+<img src="https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/Lavoisier.png" alt="Logo Lavoisier" width="170" length="200" /># Lavoisier
 
 Python library for conversions between Life Cycle Assessment (LCA) inventory formats. Currently, it does both ways of conversion between EcoSpold 2 and ILCD 1 formats. Other versions and other dataset types are to be included due time as Lavoisier is a work in progress.
 
@@ -69,7 +69,10 @@ converter.convert()
 
 ## Support
 
-This projects were supported by the GYRO laboratory from the Federal University of Technology - Paraná (UTFPR) with the Brazilian Institute of Information in Science and Technology (IBICT) and the help of Embrapa. It began with the support of REAL (Resource Efficiency through Application of Life Cycle Thinking) of the UN Environment and The Life Cycle Initiative funded by the European Commission.
+This project was developed in the Center for Life Cycle Sustainability Assessment (GYRO) of the Federal University of Technology - Paraná (UTFPR) with the support of the Brazilian Institute of Information in Science and Technology (IBICT). It began with the support of REAL (Resource Efficiency through Application of Life Cycle Thinking) of the UN Environment and The Life Cycle Initiative funded by the European Commission. 
+
 -> GYRO website: http://gyro.ct.utfpr.edu.br
+
+Code developed by José Paulo das Dores Savioli. Logo created by Larissa Ugaya Mazza.
 
 <img src=https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/logo%20gyro_email%20padr%C3%A3o.png alt="Logo GYRO" width="80" length="200" /><img src=https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/utfpr.png alt="Logo UTFPR" width="200" length="200" /><img src="https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/IBICT.png" alt="Logo IBICT" width="170" length="200" />
