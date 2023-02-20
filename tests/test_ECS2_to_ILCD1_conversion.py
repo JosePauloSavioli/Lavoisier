@@ -119,6 +119,7 @@ unc_undefined = {
     'pedigreeMatrix': pedigree_1,
     'comment': ''
     }
+cund = {'@lang': 'en', '#text': "\nNot Converted: Undefined distribution with parameters minValue=10.0, standardDeviation95=100.0, maxValue=230.0"}
 
 unc_beta = {
     'beta': {
@@ -127,7 +128,7 @@ unc_beta = {
         '@maxValue': '0.5'
         }
     }
-cbeta = {'@lang': 'en', '#text': "\nNot Converted: Beta distribution with parameters min=0.0, most frequent=0.25, max=0.5"}
+cbeta = {'@lang': 'en', '#text': "\nNot Converted: Beta distribution with parameters minValue=0.0, mostLikelyValue=0.25, maxValue=0.5"}
 
 unc_gamma = {
     'gamma': {
@@ -137,7 +138,7 @@ unc_gamma = {
         },
     'pedigreeMatrix': pedigree_1,
     }
-cgamma = {'@lang': 'en', '#text': "\nNot Converted: Gamma distribution with parameters shape=0.02, scale=0.00574631326170398, min=0.0001"}
+cgamma = {'@lang': 'en', '#text': "\nNot Converted: Gamma distribution with parameters shape=0.02, scale=0.00574631326170398, minValue=0.0001"}
 
 unc_binomial = {
     'binomial': {
@@ -156,7 +157,7 @@ cbinomial = {'@lang': 'en', '#text': "\nNot Converted: Binomial distribution wit
     (unc_triangular_1, 'triangular', [('_min', 0), ('_max', 0.00587)], [c1, comment]),
     (unc_triangular_2, 'triangular', [('_min', 0), ('_max', 0.00537)], []),
     (unc_uniform, 'uniform', [('_min', 0.001), ('_max', 0.07)], [c1, p1c]),
-    (unc_undefined, 'undefined', [('_min', 10), ('_max', 230), ('_std', 100)], [c1, p1c]),
+    (unc_undefined, 'undefined', [], [c1, p1c, cund]),
     (unc_beta, 'beta', [], [c1, cbeta]),
     (unc_gamma, 'gamma', [], [c1, p1c, cgamma]),
     (unc_binomial, 'binomial', [], [c1, p1c, comment, cbinomial]),
@@ -199,7 +200,7 @@ zn = 1.9599639845 # z-factor for 95% for a lognormal
     (unc_triangular_1, 'triangular', fp, 'generalComment', [{'@xml:lang': 'en', '#text': '\n'.join([c1['#text'], comment['#text']])}], 'Value'),
     (unc_triangular_2, 'triangular', fp, 'generalComment', None, 'Value'),
     (unc_uniform, 'uniform', fp, 'generalComment', [{'@xml:lang': 'en', '#text': '\n'.join([c1['#text'], p1c['#text']])}], 'Value'),
-    (unc_undefined, 'undefined', fp, 'generalComment', [{'@xml:lang': 'en', '#text': '\n'.join([c1['#text'], p1c['#text']])}], 'Value'),
+    (unc_undefined, 'undefined', fp, 'generalComment', [{'@xml:lang': 'en', '#text': '\n'.join([c1['#text'], p1c['#text'], cund['#text']])}], 'Value'),
     (unc_beta, 'beta', fp, 'generalComment', [{'@xml:lang': 'en', '#text': '\n'.join([c1['#text'], cbeta['#text']])}], 'Value'),
     (unc_gamma, 'gamma', fp, 'generalComment', [{'@xml:lang': 'en', '#text': '\n'.join([c1['#text'], p1c['#text'], cgamma['#text']])}], 'Value'),
     (unc_binomial, 'binomial', fp, 'generalComment', [{'@xml:lang': 'en', '#text': '\n'.join([c1['#text'], comment['#text'], p1c['#text'], cbinomial['#text']])}], 'Value')
@@ -273,17 +274,17 @@ def test_get_uncertainty(unc, name, field, comment, com_res, type_):
         assert field.get('minimum'+type_) == pytest.approx(min_, 0.000001)
         assert field.get('maximum'+type_) == pytest.approx(max_, 0.000001)
     
-    elif name == 'undefined':
-        amount = ( float(unc['undefined']['@minValue']) + float(unc['undefined']['@maxValue']) ) / 2
-        r._calculate(amount*factor, factor).get_uncertainty(field, comment, not_converted=nc, type_=type_)
+    # elif name == 'undefined':
+    #     amount = ( float(unc['undefined']['@minValue']) + float(unc['undefined']['@maxValue']) ) / 2
+    #     r._calculate(amount*factor, factor).get_uncertainty(field, comment, not_converted=nc, type_=type_)
         
-        std95 = factor * (float(unc['undefined']['@standardDeviation95']))
-        min_ = amount*factor - std95
-        max_ = amount*factor + std95
+    #     std95 = factor * (float(unc['undefined']['@standardDeviation95']))
+    #     min_ = amount*factor - std95
+    #     max_ = amount*factor + std95
         
-        assert field.get('minimum'+type_) == pytest.approx(min_, 0.000001)
-        assert field.get('maximum'+type_) == pytest.approx(max_, 0.000001)
-        assert field.get('relativeStandardDeviation95In') == pytest.approx(std95, 0.000001)
+    #     assert field.get('minimum'+type_) == pytest.approx(min_, 0.000001)
+    #     assert field.get('maximum'+type_) == pytest.approx(max_, 0.000001)
+    #     assert field.get('relativeStandardDeviation95In') == pytest.approx(std95, 0.000001)
         
     else:
         amount = 1
@@ -579,7 +580,7 @@ def test_variable(unit, type_, varname, varres, res, mathrel, mathres, unc, comm
             varres[i] = 'Eq_'+type_[:2]+'_99'
             if not mathrel:
                 varres[i] = 'Eq_uv_99'
-        assert re.sub(r'(Eq_[a-z]+_)[0-9]+', r'\1', v.get('a_name')) in [re.sub(r'(Eq_[a-z]+_)[0-9]+', r'\1', i) for i in varres]
+        assert re.sub(r'(Eq_[a-z]+_)[0-9]+', r'\1', v.get('name')) in [re.sub(r'(Eq_[a-z]+_)[0-9]+', r'\1', i) for i in varres]
         if mathrel:
             assert v.get('formula') in mathres
         assert v.get('meanValue') in res
@@ -752,7 +753,7 @@ def test_parameter(par, unit_res, name_res):
     if name_res:
         if len(v_) == 1:
             v = v_[0]
-            assert v.get('a_name') in name_res
+            assert v.get('name') in name_res
             if par.get('@mathematicalRelation'):
                 assert v.get('formula') == '444*10'
             assert v.get('meanValue') == 10.0*r.amount.f
@@ -1759,11 +1760,11 @@ for id_, name, unit, com in property_info:
             ip['@sourceFirstAuthor'] = sfa
             ip['@sourceYear'] = sy
             ref_sc = ref()
-            ref_sc.a_type = 'source data set'
-            ref_sc.a_refObjectId = uuid_from_uuid(sid, b'_Lavosier_ECS2_/', 'to_ILCD1')
-            ref_sc.a_version = '01.00.000'
-            ref_sc.a_uri = '../sources/' + uuid_from_uuid(sid, b'_Lavosier_ECS2_/', 'to_ILCD1')
-            ref_sc.c_shortDescription = ILCD1Helper.text_dict_from_text(1, ILCD1Helper.source_short_ref(sfa, sy, None))
+            ref_sc.type = 'source data set'
+            ref_sc.refObjectId = uuid_from_uuid(sid, b'_Lavosier_ECS2_/', 'to_ILCD1')
+            ref_sc.version = '01.00.000'
+            ref_sc.uri = '../sources/' + uuid_from_uuid(sid, b'_Lavosier_ECS2_/', 'to_ILCD1')
+            ref_sc.shortDescription = ILCD1Helper.text_dict_from_text(1, ILCD1Helper.source_short_ref(sfa, sy, None))
             op['source_ref'] = ref_sc
         results.append(op)
         combinations.append(ip)
@@ -1874,11 +1875,11 @@ def test_property_results1(flow):
         ref_fp = ref()
         if uid is not None:
             
-            ref_fp.a_type = 'flow property data set'
-            ref_fp.a_refObjectId = uid[0]
-            ref_fp.a_version = uid[-2]
-            ref_fp.a_uri = '../flowproperties/' + uid[0]
-            ref_fp.c_shortDescription = ILCD1Helper.text_dict_from_text(1, uid[-1])        
+            ref_fp.type = 'flow property data set'
+            ref_fp.refObjectId = uid[0]
+            ref_fp.version = uid[-2]
+            ref_fp.uri = '../flowproperties/' + uid[0]
+            ref_fp.shortDescription = ILCD1Helper.text_dict_from_text(1, uid[-1])        
         amount = ECS2ToILCD1Amount(10, unit, unc_lognormal_1, (None, None), 'property')
         if type_ == 'factor':
             am = amount.m / flow.amount.f
@@ -1964,11 +1965,11 @@ def test_property_results2(flow):
         uid = pint_to_ilcd_fp.get(id_, None)
         if uid is not None:
             ref_fp = ref()
-            ref_fp.a_type = 'flow property data set'
-            ref_fp.a_refObjectId = uid[0]
-            ref_fp.a_version = uid[-2]
-            ref_fp.a_uri = '../flowproperties/' + uid[0]
-            ref_fp.c_shortDescription = ILCD1Helper.text_dict_from_text(1, uid[-1])       
+            ref_fp.type = 'flow property data set'
+            ref_fp.refObjectId = uid[0]
+            ref_fp.version = uid[-2]
+            ref_fp.uri = '../flowproperties/' + uid[0]
+            ref_fp.shortDescription = ILCD1Helper.text_dict_from_text(1, uid[-1])       
         amount = ECS2ToILCD1Amount(10, unit, unc_lognormal_1, (None, None), 'property')
         if type_ == 'factor':
             am = amount.m / flow.amount.f

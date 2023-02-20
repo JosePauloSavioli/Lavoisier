@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from copy import copy
 from collections import Counter
+from itertools import chain
 
 from .utils import (
     uuid_from_uuid,
@@ -51,21 +52,21 @@ up.define('fraction = [] = frac')
 for u in units_def.values():
     up.define(u)
 
-__version__ = "Debug"
-
+# __version__ = "Debug"
 
 class ILCD1ToECS2UncertaintyConversion:
 
     @classmethod
     def normal_init(cls, x):
         self = cls()
-        self._type = x['uncertaintyDistributionType']['#text'].replace(
+        self._type = x['uncertaintyDistributionType'].replace(
             'log-normal', 'lognormal')
 
         # Get Comment
         self.comment = []
         for c in ensure_list(x.get('generalComment', {}), ensure_text=True):
             if 'Uncertainty Comment:\n' in c['#text']:
+                # cc_ = c['#text'].split('Uncertainty Comment:\n')[0]
                 c_ = c['#text'].split('Uncertainty Comment:\n')[-1]
                 if 'Pedigree: (' in c_:
                     g = re.search(
@@ -75,11 +76,12 @@ class ILCD1ToECS2UncertaintyConversion:
                 if 'Basic Variance: ' in c_:
                     g = re.search(r"(Basic Variance: ([0-9\.]+))", c_).groups()
                     c_ = c_.replace(g[0], '')
-                    self.variance = g[1]
-                self.comment.append(ILCD1Helper.text_add_index(
-                    {'@lang': c['@lang'], '#text': c_}))
-            else:
-                self.comment.append(ILCD1Helper.text_add_index(c))
+                    self.var = float(g[1])
+                if (c_ and not c_.isspace()): # or (cc_ and not cc_.isspace()):
+                    self.comment.append(ILCD1Helper.text_add_index(
+                        {'@lang': c['@lang'], '#text': c_})) # The separator is included already
+            # else:
+            #     self.comment.append(ILCD1Helper.text_add_index(c))
 
         # Get basic data
         self._get_data(x)
@@ -87,76 +89,81 @@ class ILCD1ToECS2UncertaintyConversion:
 
     def _get_data(self, x):
         if self._type in ('normal', 'lognormal'):
-            var = float(x["relativeStandardDeviation95In"]['#text'])
-            if hasattr(self, 'variance'):
-                self.var = float(self.variance)
-            else:
-                logging.info("\t\tLognormal with no pedigree information")
+            if "relativeStandardDeviation95In" not in x:
+                raise KeyError(f"{self._type} with no relative standard deviation")
+            var = float(x["relativeStandardDeviation95In"])
+            if not hasattr(self, 'var'): # Here because only normal and lognormal can have pedigree
+                logging.info(f"\t\t{self._type} with no pedigree information")
             self.varpedigree = var
-        elif self._type in ('triangular', 'uniform', 'undefined'):
-            self.min = float(
-                x.get('minimumValue', x.get('minimumAmount'))['#text'])
-            self.max = float(
-                x.get('maximumValue', x.get('maximumAmount'))['#text'])
-            if self._type == 'undefined':
-                self.std = float(x["relativeStandardDeviation95In"]['#text'])
+        elif self._type in ('triangular', 'uniform'):
+            try:
+                self.min = float(
+                    x.get('minimumValue', x.get('minimumAmount')))
+            except: raise KeyError(f"{self._type} with no minimum amount/value")
+            try:
+                self.max = float(
+                    x.get('maximumValue', x.get('maximumAmount')))
+            except: raise KeyError(f"{self._type} with no maximum amount/value")
 
     @classmethod
     def init_from_comment(cls, x):
-        for c in ensure_list(x.get('generalComment', {}), ensure_text=True):
+        for c in ensure_list(x.get('generalComment', {}), ensure_text=True): # Here the comment is not created in self
             if re.search('\nNot Converted: [A-z]+ distribution with parameters ', c['#text']):
                 self = cls()
+                # cm = re.split('\nNot Converted: [A-z]+ distribution with parameters ', c['#text'])[0]
+                # if cm and not cm.isspace():
+                #     self.comment = ILCD1Helper.text_add_index({'@lang': c['@lang'], '#text': cm})
                 c_ = re.search(
-                    '\nNot Converted: [A-z]+ distribution with parameters (.*)').groups()[0]
+                    '\nNot Converted: [A-z]+ distribution with parameters (.*)', c['#text']).groups()[0]
+                if '=' not in c_: # Too loose, get the 'not_converted' part functioning
+                    return None
                 for n in c_.split(','):
-                    setattr(self, 'a_'+n.split('=')
-                            [0].strip().replace(' ', '_'), n.split('=')[1].strip())
+                    setattr(self, n.split('=')[0].strip().replace(' ', '_'), n.split('=')[1].strip())
+                self._type = 'other' # for consistency with the calculate method
                 return self
         else:
             return None
 
     def calculate(self, m, f, field):
-        if hasattr(self, 'comment') and self.comment:
+        if hasattr(self, 'comment') and self.comment != []:
             field.comment = self.comment
         if hasattr(self, 'pedigree'):
-            p_index = ('a_reliability', 'a_completeness', 'a_temporalCorrelation',
-                       'a_geographicalCorrelation', 'a_furtherTechnologyCorrelation')
+            p_index = ('reliability', 'completeness', 'temporalCorrelation',
+                       'geographicalCorrelation', 'furtherTechnologyCorrelation')
             for i, factor in enumerate(self.pedigree.split(',')):
                 setattr(field.pedigreeMatrix, p_index[i], factor)
         if self._type == 'lognormal':
             var = math.log(math.sqrt(self.varpedigree))**2
             # Sometimes the m is negative :/
-            field.lognormal.a_mu = math.log(m) if m > 0 else 0
-            field.lognormal.a_meanValue = m
-            field.lognormal.a_variance = getattr(self, 'var', var)
-            field.lognormal.a_varianceWithPedigreeUncertainty = var
+            field.lognormal.mu = math.log(m) if m > 0 else 0
+            field.lognormal.meanValue = m
+            field.lognormal.variance = getattr(self, 'var', var)
+            field.lognormal.varianceWithPedigreeUncertainty = var
         elif self._type == 'normal':
             var = (self.varpedigree * f / 2) ** 2
-            field.normal.a_meanValue = m
-            field.normal.a_variance = getattr(self, 'var', var)
-            field.normal.a_varianceWithPedigreeUncertainty = var
+            field.normal.meanValue = m
+            field.normal.variance = getattr(self, 'var', var)
+            field.normal.varianceWithPedigreeUncertainty = var
         elif self._type == 'triangular':
-            field.triangular.a_minValue = self.min * f
-            field.triangular.a_mostLikelyValue = m
-            field.triangular.a_maxValue = self.max * f
+            field.triangular.minValue = self.min * f
+            field.triangular.mostLikelyValue = m
+            field.triangular.maxValue = self.max * f
         elif self._type == 'uniform':
-            field.uniform.a_minValue = self.min * f
-            field.uniform.a_maxValue = self.max * f
-        elif self._type == 'undefined':  # STD here is like an error propagation
-            std = self.std * f
-            field.undefined.a_standardDeviation95 = std
-            field.undefined.a_minValue = (self.min + self.max) * f / 2 - std
-            field.undefined.a_maxValue = (self.min + self.max) * f / 2 + std
-        else:  # Beta, Gamma and Binomial
-            if hasattr(self, 'a_n'):
-                (setattr(field.binomial, p, float(getattr(self, p)))
-                 for p in ('a_n', 'a_p'))
-            elif hasattr(self, 'a_shape'):
-                (setattr(field.gamma, p, float(getattr(self, p)))
-                 for p in ('a_shape', 'a_scale', 'a_min'))
-            elif hasattr(self, 'a_most_frequent'):
-                (setattr(field.beta, p, float(getattr(self, p)))
-                 for p in ('a_min', 'a_most_frequent', 'a_max'))
+            field.uniform.minValue = self.min * f
+            field.uniform.maxValue = self.max * f
+        else:  # Beta, Gamma and Binomial. No factor is used since the value is the same as the converted ECS2
+            if hasattr(self, 'n'):
+                for x in ('n', 'p'):
+                    setattr(field.binomial, '@'+x, float(getattr(self, x)))
+            elif hasattr(self, 'shape'):
+                for x in ('shape', 'scale', 'minValue'):
+                    setattr(field.gamma, '@'+x, float(getattr(self, x)))
+            elif hasattr(self, 'mostLikelyValue'):
+                for x in ('minValue', 'mostLikelyValue', 'maxValue'):
+                    setattr(field.beta, '@'+x, float(getattr(self, x)))
+            elif hasattr(self, 'standardDeviation95'):
+                for x in ('minValue', 'standardDeviation95', 'maxValue'):
+                    setattr(field.undefined, '@'+x, float(getattr(self, x)))
 
 
 class Amount(ABC):
@@ -164,10 +171,10 @@ class Amount(ABC):
     uncertainty_conversion = None
 
     def __init__(self, amount, unit_text, uncertainty_struct):
-        self._a = up.Quantity(amount, unit_text)
+        self._a = up.Quantity(amount, unit_text.replace('(s)', '')) # Item(s) are recognized as item * seconds
         self._f = 1
         if uncertainty_struct:
-            if uncertainty_struct.get('uncertaintyDistributionType'):
+            if uncertainty_struct.get('uncertaintyDistributionType') and uncertainty_struct['uncertaintyDistributionType'] != 'undefined':
                 self._unc = type(self).uncertainty_conversion.normal_init(
                     uncertainty_struct)
             else:
@@ -183,16 +190,16 @@ class Amount(ABC):
     @property
     def a(self): return self._a
     # Original value can be 0 (no magnitude division) and it can have different dimensionalities between original and new (no unit conversion)
-    @property
-    def f(self): return self._f
-    @property
-    def unc(self): return self._unc if hasattr(self, '_unc') else None
+    # @property
+    # def f(self): return self._f
+    # @property
+    # def unc(self): return self._unc if hasattr(self, '_unc') else None
     @property
     def dimensionality(self): return self._a.dimensionality
 
-    def to(self, unit):
-        self._a = self._a.to(unit)
-        return self
+    # def to(self, unit):
+    #     self._a = self._a.to(unit)
+    #     return self
 
     @abstractmethod
     def calculate_unc(self):
@@ -202,7 +209,7 @@ class Amount(ABC):
 class ILCD1ToECS2Amount(Amount):
 
     def calculate_unc(self, field):
-        if hasattr(self, '_unc'):
+        if hasattr(self, '_unc') and self._unc: # self._unc can be None, can be done several times
             self._unc = self._unc.calculate(
                 self._a.m, self._f, field.uncertainty)
             return self._unc
@@ -241,16 +248,16 @@ class ILCD1ToECS2VariableConversion:
             type(self)._non_conform_variables[self.name] = 'uc'+self.name
             self.name = 'uc'+self.name
         
-        self.amount = type(self).amountClass(float(x['meanValue']['#text']),
+        self.amount = type(self).amountClass(float(x['meanValue']),
                                              'dimensionless',
                                              x)
-        self.formula = x['formula']['#text'] if x.get('formula') else None
+        self.formula = x['formula'] if x.get('formula') else None
 
         self.comment = []
         for c in ensure_list(x.get('comment', {}), ensure_text=True):
             if re.search(r'\[(.*)\]', c['#text']):  # [!] Search for the unit id
                 self.unit = re.search(r'\[(.*)\]', c['#text']).groups()[0]
-                c['#text'] = re.sub(r'\[(.*)\]', '', c['#text'])
+                c['#text'] = re.sub(r'(\[.*\])', '', c['#text']).strip()
                 self.comment.append(ILCD1Helper.text_add_index(c))
             else:
                 self.comment.append(ILCD1Helper.text_add_index(c))
@@ -260,6 +267,13 @@ class ILCD1ToECS2VariableConversion:
             'used?': False, 'self': self}
 
     @classmethod
+    def change_formula(cls, instance):
+        if instance.formula:
+            for n in cls._non_conform_variables: # __ha_to_m2__ is not valid as it has to start with a letter
+                if n in instance.formula:
+                    instance.formula = instance.formula.replace(n, cls._non_conform_variables[n])
+
+    @classmethod
     def create_parameters(cls):  # It doesn't really have a unit name actualy
         vs = {k: v['self']
               for k, v in cls._available_variables.items() if not v['used?']}
@@ -267,15 +281,13 @@ class ILCD1ToECS2VariableConversion:
             par = cls.parameter_holder.get_class('parameter')()
             par.name = ILCD1Helper.text_dict_from_text(0, k)
             var.amount.calculate_unc(par)
-            par.a_parameterId = uuid_from_string(k)
-            par.a_variableName = var.name
+            par.parameterId = uuid_from_string(k)
+            par.variableName = var.name
             if var.formula:
-                for n in cls._non_conform_variables: # __ha_to_m2__ is not valid as it has to start with a letter
-                    if n in var.formula:
-                        var.formula = var.formula.replace(n, cls._non_conform_variables[n])
-                par.a_mathematicalRelation = var.formula
-                par.a_isCalculatedAmount = True
-            par.a_amount = var.amount.m
+                cls.change_formula(var)
+                par.mathematicalRelation = var.formula
+                par.isCalculatedAmount = True
+            par.amount = var.amount.m
             if hasattr(var, 'unit'):
                 par.unitName = ILCD1Helper.text_dict_from_text(0, var.unit)
             if var.comment:
@@ -285,23 +297,22 @@ class ILCD1ToECS2VariableConversion:
             
             master = cls.master_field.get_class('parameter')()
             master.name = ILCD1Helper.text_dict_from_text(0, k)
-            master.a_id = uuid_from_string(k)
-            master.a_defaultVariableName = var.name
+            master.id = uuid_from_string(k)
+            master.defaultVariableName = var.name
             setattr(cls.master_field, 'parameter', master)
 
     @classmethod
     def get_variable(cls, name):
         cls._available_variables[name]['used?'] = True
         self = cls._available_variables[name]['self']
-        if self.formula:
-            for n in cls._non_conform_variables: # __ha_to_m2__ is not valid as it has to start with a letter
-                if n in self.formula:
-                    self.formula = self.formula.replace(n, cls._non_conform_variables[n])
+        cls.change_formula(self)
         cls._available_variables[name]['self'] = self
         return cls._available_variables[name]['self']
 
 
 class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not conversible
+
+    uuid_process = None
 
     uuid_specs = None
     compartment_mapping = None
@@ -311,6 +322,8 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
     variable_conversion = None
 
     flow_holder = None
+    
+    master_field = None
 
     _reference_flows = []
     _flow_internal_refs = None
@@ -322,7 +335,9 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
 
         # Dimensionless for the time, it will have an unit in the references
         self.id_ = x['referenceToFlowDataSet']['@refObjectId']
-        self.amount = type(self).amountClass(float(x.get('resultingAmount', x.get('meanAmount'))['#text']),
+        self.__name =  ensure_list(x['referenceToFlowDataSet']['shortDescription'], ensure_text=True)[0]['#text']
+        logging.info(f'\tStarting conversion of flow {self.__name} : {self.id_}')
+        self.amount = type(self).amountClass(float(x.get('resultingAmount', x.get('meanAmount'))),
                                              'dimensionless', x)
 
         self.comment = []
@@ -331,18 +346,18 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
 
         if x.get('referenceToVariable'):
             self.variable = type(self).variable_conversion.get_variable(
-                x['referenceToVariable']['#text'])
-        self.group = x['exchangeDirection']['#text']
+                x['referenceToVariable'])
+        self.group = x['exchangeDirection']
         self.isReference = True if x['@dataSetInternalID'] in type(
             self)._reference_flows else False
 
         self.properties = {}
-        self.main_prop = None
+        self.main = None # Unit property
         if x.get('allocations'):
             self.alloc_properties = {}
-            for alloc in x['allocations'].get('allocation', []):
-                self.alloc_properties['allocation for '+type(self)._flow_internal_refs(
-                    alloc['@internalReferenceToCoProduct'])] = float(alloc['@allocatedFraction'])
+            for alloc in x['allocations'].get('allocation', []): # No @master allocation or other allocation type since it can be allocated for any of them
+                self.alloc_properties['allocation for '+type(self)._flow_internal_refs[ # Maybe consider the ecospold name here
+                    str(alloc['@internalReferenceToCoProduct'])]] = float(alloc['@allocatedFraction'])
     
     class Property:
 
@@ -358,20 +373,22 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
         def normal_init(cls, x, not_converted):
             self = cls()
             self.not_converted = not_converted
-            self.fp = fp = ilcd_to_ecs2_fp.get(
-                x["referenceToFlowPropertyDataSet"]["@refObjectId"], None)
+            self.name = x['referenceToFlowPropertyDataSet']['shortDescription']['#text']
+            self.id_ = x["referenceToFlowPropertyDataSet"]["@refObjectId"]
+            logging.info(f'Starting conversion of property {self.name} : {self.id_}')
+            self.fp = fp = ilcd_to_ecs2_fp.get(self.id_, None)
             self.isConvertible = True if fp else False
 
             if fp:
-                self.amount = type(self).amountClass(float(x['meanValue']['#text']),
+                self.amount = type(self).amountClass(float(x['meanValue']),
                                                      fp[1], x)
                 self.field = cls.property_holder.get_class('property')()
                 self.field.unitName = ILCD1Helper.text_dict_from_text(0, fp[1])
-                self.field.a_unitId = fp[0]
+                self.field.unitId = fp[0]
 
-                if fp[1] == 'heating value, gross':
+                if fp[3] == 'heating value, gross':
                     cls._energy.append('GROSS')
-                elif fp[1] == 'heating value, net':
+                elif fp[3] == 'heating value, net':
                     cls._energy.append('NET')
 
                 self.amount.calculate_unc(self.field)
@@ -379,10 +396,10 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
                     self.field.comment = ILCD1Helper.text_add_index(n)
             else:
                 logging.warning(
-                    f"Flow property {x['referenceToFlowPropertyDataSet']['shortDescription']['#text']} not a valid EcoSpold2 flow property")
+                    f"\t\tFlow property {self.name} not a valid EcoSpold2 flow property")
 
             return self
-        
+
         @classmethod
         def allocation_init(cls, name, amount, flow_master=None):
             self = cls()
@@ -395,24 +412,25 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
             self.field = cls.property_holder.get_class('property')()
             self.field.unitName = ILCD1Helper.text_dict_from_text(
                 1, 'dimensionless')
-            self.field.a_unitId = '577e242a-461f-44a7-922c-d8e1c3d2bf45'
+            self.field.unitId = '577e242a-461f-44a7-922c-d8e1c3d2bf45'
 
-            self.field.a_propertyId = uuid_from_string(name)
-            self.field.name = ILCD1Helper.text_dict_from_text(1, name)
+            self.field.propertyId = uuid_from_string(name['#text'])
+            self.field.name = ILCD1Helper.text_add_index(name, index=1)
 
-            self.field.a_amount = self.amount.m
+            self.field.amount = self.amount.m
 
             prop = flow_master.get_class('property')()
-            prop.a_amount = self.amount.m
-            prop.a_propertyId = uuid_from_string(name)
-            prop.name = name
-            prop.unitName = 'dimensionless'
-            prop.a_unitId = '577e242a-461f-44a7-922c-d8e1c3d2bf45'
+            prop.amount = self.amount.m
+            prop.propertyId = uuid_from_string(name['#text'])
+            prop.name = ILCD1Helper.text_add_index(name, index=1)
+            prop.unitName = ILCD1Helper.text_dict_from_text(
+                1, 'dimensionless')
+            prop.unitId = '577e242a-461f-44a7-922c-d8e1c3d2bf45'
             setattr(flow_master, 'property', prop)
             
             prop = type(self).master_field.get_class('property')()
-            prop.name = name
-            prop.a_id = uuid_from_string(name)
+            prop.name = ILCD1Helper.text_add_index(name, index=1)
+            prop.id = uuid_from_string(name['#text'])
             setattr(type(self).master_field, 'property', prop)
 
             return self
@@ -427,9 +445,9 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
                                                  None)  # [!] No uncertainty considered
             self.field = cls.property_holder.get_class('property')()
             self.field.unitName = ILCD1Helper.text_dict_from_text(0, 'kg')
-            self.field.a_unitId = '487df68b-4994-4027-8fdc-a4dc298257b7'
+            self.field.unitId = '487df68b-4994-4027-8fdc-a4dc298257b7'
 
-            self.field.a_propertyId = id_
+            self.field.propertyId = id_
             self.field.name = ILCD1Helper.text_dict_from_text(1, name)
 
             self.amount.calculate_unc(self.field)
@@ -437,11 +455,11 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
             return self
 
         @classmethod
-        def get_dry_and_wet_mass(cls, props, flow):
+        def convert_properties(cls, props, flow):
             if 'water content' in props:
                 if str(flow.amount.u) == 'm**3':
                     logging.warning(
-                        '\tProperties Wet mass and dry mass not converted due to a need for density values in m3/kg')
+                        '\t\tProperties Wet mass and dry mass not converted due to a need for density values in m3/kg')
                 else:
                     props['wet mass'] = cls.mass_prop_init(
                         1, 'wet mass', '67f102e2-9cb6-4d20-aa16-bf74d8a03326')
@@ -452,35 +470,38 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
 
             for k, prop in props.items():
                 if ' content' in k:
-                    if 'dry mass' in props:
-                        if props['dry mass'].amount.m != 0:
-                            prop.amount.divide(props['dry mass'].amount.a)
-                        else:
-                            prop.amount._a = up.Quantity(0, 'kg')
-                    else:  # unit correction only
-                        prop.amount.divide(up.Quantity(1, 'kg'))
-
-                    if not prop.field.get('a_propertyId'):
+                    if not prop.field.get('propertyId'):
                         mass, volume = prop.fp[4]
                         if str(flow.amount.u) == 'kg' and mass:
-                            prop.field.a_propertyId = mass[0]
+                            prop.field.unitName = ILCD1Helper.text_dict_from_text(0, 'kg/kg')
+                            prop.field.unitId = '83ecd334-1b5b-4784-8938-6a0d0a9d8954'
+                            prop.field.propertyId = mass[0]
                             prop.field.name = ILCD1Helper.text_dict_from_text(
                                 1, mass[1])
                         elif str(flow.amount.u) == 'm**3' and volume:
-                            prop.field.a_propertyId = volume[0]
+                            prop.field.unitName = ILCD1Helper.text_dict_from_text(0, 'kg/m3')
+                            prop.field.unitId = 'cacb6d36-694d-4e4f-9e79-6c9c73146839'
+                            prop.field.propertyId = volume[0]
                             prop.field.name = ILCD1Helper.text_dict_from_text(
                                 1, volume[1])
                         else:
-                            prop.field.a_propertyId = prop.fp[2]
+                            if 'dry mass' in props:
+                                if props['dry mass'].amount.m != 0:
+                                    prop.amount.divide(props['dry mass'].amount.a)
+                                else:
+                                    prop.amount._a = up.Quantity(0, 'kg')
+                            else:  # unit correction only, considered dry mass as 1
+                                prop.amount.divide(up.Quantity(1, 'kg'))
+                            prop.field.propertyId = prop.fp[2]
                             prop.field.name = ILCD1Helper.text_dict_from_text(
                                 1, prop.fp[3])
                 else:
-                    if not prop.field.get('a_propertyId'):
-                        prop.field.a_propertyId = prop.fp[2]
+                    if not prop.field.get('propertyId'):
+                        prop.field.propertyId = prop.fp[2]
                         prop.field.name = ILCD1Helper.text_dict_from_text(
                             1, prop.fp[3])
 
-                prop.field.a_amount = prop.amount.m
+                prop.field.amount = prop.amount.m
 
             return [p for p in props.values()]
 
@@ -497,25 +518,25 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
                         t['referenceToFlowPropertyDataSet']['@refObjectId'])
 
     def get_elementary_flow_info(self, n, file):
-        self.field.a_elementaryExchangeId = n["TargetFlowUUID"]
+        self.field.elementaryExchangeId = n["TargetFlowUUID"]
         self.field.name = ILCD1Helper.text_dict_from_text(
             0, n["TargetFlowName"])
 
         self.master = type(self).master_field.get_class('elementaryExchange')()
         
-        self.master.a_id = n["TargetFlowUUID"]
+        self.master.id = n["TargetFlowUUID"]
         self.mtype = 'elementaryExchange'
         c = type(self).compartment_mapping.get(n["TargetFlowContext"], None)
         if c:
             # TODO take out the subcompartmentId key from json
-            self.field.compartment.a_subcompartmentId = c['subcompartmentId']
+            self.field.compartment.subcompartmentId = c['subcompartmentId']
             self.field.compartment.compartment = ILCD1Helper.text_dict_from_text(
                 0, n['TargetFlowContext'].split('/')[0])
             self.field.compartment.subcompartment = ILCD1Helper.text_dict_from_text(
                 0, n['TargetFlowContext'].split('/')[1])
             
             comp = self.master.get_class('compartment')()
-            comp.a_subcompartmentId = c['subcompartmentId']
+            comp.subcompartmentId = c['subcompartmentId']
             comp.compartment = ILCD1Helper.text_dict_from_text(
                 0, n['TargetFlowContext'].split('/')[0])
             comp.subcompartment = ILCD1Helper.text_dict_from_text(
@@ -534,55 +555,72 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
             0, n['TargetUnit'])
         for k, v in ilcd_to_ecs2_un.items():
             if up.Quantity(1, v[1].replace(' ', '_')).dimensionality == up.Quantity(1, n['TargetUnit']).dimensionality:
-                self.field.a_unitId = v[0]
+                self.field.unitId = v[0]
                 break
         else:
             raise ValueError(f"Unit {n['TargetUnit']} not found")
+            
+        if self.info.get('CAS'):
+            self.field.casNumber = self.info['CAS']
+        if self.info.get('synonym'):
+            self.field.synonym = self.info['synonym']
+        if self.info.get('formula'):
+            self.field.formula = self.info['formula']
             
         self.master.name = ILCD1Helper.text_dict_from_text(
             0, n["TargetFlowName"])
         self.master.unitName = ILCD1Helper.text_dict_from_text(
             0, n['TargetUnit'])
-        self.master.a_unitId = v[0]
+        self.master.unitId = v[0]
 
         self.get_properties(file)
 
     def get_intermediate_flow_info(self, file):
-        self.field.a_intermediateExchangeId = uuid_from_uuid(
+        self.field.intermediateExchangeId = uuid_from_uuid(
             *(self.id_,), *type(self).uuid_specs)
-        self.field.name = ILCD1Helper.text_dict_from_text(1, self.info['name'])
-
+        self.field.name = [ILCD1Helper.text_add_index(x, index=1) for x in self.info['name']] # Only one flow name
+        
         self.get_properties(file)
 
+        if not self.main:
+            self.isConvertible = False
+            logging.warning(f"Flow {self.info['name']} : {self.id_} not converted as unit is not a valid ILCD unit")
+            return
+        
         self.amount.multiply(up.Quantity(1, self.main[1].replace(' ', '_')))
         self.amount.calculate_unc(self.field)
         self.field.unitName = ILCD1Helper.text_dict_from_text(0, self.main[1])
-        self.field.a_unitId = self.main[0]
+        self.field.unitId = self.main[0]
+        
+        if self.info.get('CAS'):
+            self.field.casNumber = self.info['CAS']
+        if self.info.get('synonym'):
+            self.field.synonym = self.info['synonym']
         
         self.master = type(self).master_field.get_class('intermediateExchange')()
 
-        self.master.a_id = uuid_from_uuid(*(self.id_,), *type(self).uuid_specs)
+        self.master.id = uuid_from_uuid(*(self.id_,), *type(self).uuid_specs)
         self.mtype = 'intermediateExchange'
-        self.master.name = ILCD1Helper.text_dict_from_text(1, self.info['name'])
+        self.master.name = [ILCD1Helper.text_add_index(x, index=1) for x in self.info['name']] # Only one flow name
         self.master.unitName = ILCD1Helper.text_dict_from_text(0, self.main[1])
-        self.master.a_unitId = self.main[0]
+        self.master.unitId = self.main[0]
         
 
     def finish_flow_info(self):
         id_ = uuid_from_string(
-            type(self).uuid_process + self.info['name'])
+            type(self).uuid_process + self.info['name'][0]['#text']) # Assumed the first name
         if id_ in type(self)._all_flow_ids:
             i = 0
             while id_ in type(self)._all_flow_ids:
                 i += 1
-                id_ = uuid_from_string(type(self).uuid_process + self.info['name'] + str(i)) # TODO See in the ILCD conv too
-            self.field.a_id = id_
+                id_ = uuid_from_string(type(self).uuid_process + self.info['name'][0]['#text'] + str(i)) # TODO See in the ILCD conv too
+            self.field.id = id_
         else:
-            self.field.a_id = id_
+            self.field.id = id_
         type(self)._all_flow_ids.add(id_)
             
         self.field.comment = self.comment
-        self.field.a_amount = self.amount.m
+        self.field.amount = self.amount.m
 
         if self.isReference:
             self.field.outputGroup = 0
@@ -592,29 +630,31 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
                     'Elementary flow': 4,
                     'Product flow': 5,
                     'Waste flow': 5,
+                    'Other flow': 5
                     }.get(self.info['type'])
             else:
                 self.field.outputGroup = {
                     'Elementary flow': 4,
                     'Product flow': 2,
-                    'Waste flow': 3
+                    'Waste flow': 3,
+                    'Other flow': 2 # This flow makes no sense, but has to be converted to the closest possible option
                     }.get(self.info['type'])
 
         if hasattr(self, 'variable'):
-            self.field.a_variableName = self.variable.name
-            self.master.a_defaultVariableName = self.variable.name
+            self.field.variableName = self.variable.name
+            self.master.defaultVariableName = self.variable.name
             if self.variable.formula:
-                self.field.a_mathematicalRelation = self.variable.formula
-                self.field.a_isCalculatedAmount = True
+                self.field.mathematicalRelation = self.variable.formula
+                self.field.isCalculatedAmount = True
 
         if hasattr(self, 'properties'):
             self.properties = {k: v for k,
                                v in self.properties.items() if v.isConvertible}
-            self.properties = self.Property.get_dry_and_wet_mass(
+            self.properties = self.Property.convert_properties(
                 self.properties, self)
             if hasattr(self, 'alloc_properties'):
                 self.properties.extend([self.Property.allocation_init(
-                    k, v, self.master) for k, v in self.alloc_properties.items()])
+                    {'@lang': 'en', '#text': k}, v, self.master) for k, v in self.alloc_properties.items()])
             for p in self.properties:
                 self.field.property = p.field
                 
@@ -626,10 +666,10 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
                 for x in ensure_list(ref.get('referenceToDataSource', {})):
                     type(self).source_ref_conversion(x, self.not_converted,
                                                      {'regular': self.field},
-                                                     {'id': 'a_sourceId',
-                                                         'first_author': 'a_sourceFirstAuthor',
-                                                         'year': 'a_sourceYear',
-                                                         'page': 'a_pageNumbers'}).get_source()  # [!] Make take the get_source and get_contact out
+                                                     {'id': 'sourceId',
+                                                         'first_author': 'sourceFirstAuthor',
+                                                         'year': 'sourceYear',
+                                                         'page': 'pageNumbers'}).get_source()  # [!] Make take the get_source and get_contact out
             if self.info['type'] == 'Elementary flow':
                 setattr(type(self).flow_holder,
                         'elementaryExchange', self.field)
@@ -651,8 +691,10 @@ class ILCD1ToECS2ReferenceConversion:
         self.not_converted = not_converted
         self.file = type(self).get_file(x, type(self).type_)
         self.isConvertible = True if self.file else False
-        self.id_ = x['@refObjectId']
-        self.shortDescription = x['shortDescription']
+        if x.get('@refObjectId'):
+            self.id_ = x['@refObjectId']
+        else: self.isConvertible = False
+        self.shortDescription = x.get('shortDescription', {})
         self.get_not_converted(x)
 
     def get_not_converted(self, x):
@@ -663,19 +705,27 @@ class ILCD1ToECS2ReferenceConversion:
         path = Path(cls._ilcd_root_path, type_)
         if path.is_dir():
             options = (x.get('@uri', '').split('/')[-1],
-                       x.get('@refObjectId', '')+'_' +
+                       x.get('@refObjectId', '')+'_'+
                        x.get('@version', '')+'.xml',
                        x.get('@refObjectId', '')+'.xml')
-            for file in path.glob('*xml'):
-                for option in options:
-                    if file.name == option:
-                        return file
+            for option in options: # Prioritize this
+                p = Path(path, option)
+                if p.exists() and p.is_file():
+                    return p
+                #for file in path.glob('*xml'):
+                #    if file.name == option:
+                #        return file
             else:
+                if x.get('@refObjectId'): # Versions could be mismatched from the process and flow
+                    for file in path.glob('*xml'):
+                        if x['@refObjectId'] in file.name:
+                            return file
+
                 logging.warning(
-                    f"\tfile of type '{type_}' and id '{x['@refObjectId']}' not found")
+                    f"\t\tfile of type '{type_}' and id '{x.get('@refObjectId', '[no ID]')}' not found")
                 return None
         else:
-            logging.warning(f"\tfolder of type '{type_}' not found")
+            logging.warning(f"\t\tfolder of type '{type_}' not found")
             return None
 
     def set_attr(self, cl, field):
@@ -698,7 +748,7 @@ class ILCD1ToECS2SourceReferenceConversion(ILCD1ToECS2ReferenceConversion):
         if short_des.startswith("Image URL from "):
             self.subtype = 'imageUrl'
         elif short_des == "Dataset Icon":
-            self.subtype = 'a_datasetIcon'
+            self.subtype = 'datasetIcon'
         elif uri_source:
             # For cases like the technology pictogramme where the source is really an imageUrl
             self.subtype = 'imageUrl'
@@ -709,24 +759,24 @@ class ILCD1ToECS2SourceReferenceConversion(ILCD1ToECS2ReferenceConversion):
     def get_master_source(self, id_, fa, yr, title, type_='0'):
         if id_ not in type(self)._all_sources:
             src = type(self).master_field.get_class('source')()
-            src.a_id = id_
-            src.a_sourceType = type_
-            src.a_firstAuthor = fa
-            src.a_year = yr
-            src.a_title = title
+            src.id = id_
+            src.sourceType = type_
+            src.firstAuthor = fa
+            src.year = yr
+            src.title = title
             setattr(type(self).master_field, 'source', src)
             type(self)._all_sources.add(id_)
 
     def get_source(self):  # Remember TTextAndImage are Unique :3
         if self.isConvertible:
             with open(self.file) as f:
-                if self.subtype in ('imageUrl', 'a_datasetIcon'):
+                if self.subtype in ('imageUrl', 'datasetIcon'):
                     map_ = {'/sourceDataSet/sourceInformation/dataSetInformation/referenceToDigitalFile/@uri':
-                            lambda x: ILCD1Helper.text_add_index({'@lang': 'en', '#text': x}) if self.subtype == 'imageUrl' else x}
+                            lambda x: ILCD1Helper.add_index({'#text': x}) if self.subtype == 'imageUrl' else x}
                     for k, t in XMLStreamIterable(f, map_):
                         setattr(self.field, self.subtype, map_[k](t))
                 else:
-                    map_ = {'/sourceDataSet/sourceInformation/dataSetInformation/sourceCitation': lambda x, t: x.__setitem__('citation', t['#text']),
+                    map_ = {'/sourceDataSet/sourceInformation/dataSetInformation/sourceCitation': lambda x, t: x.__setitem__('citation', t),
                             '/sourceDataSet/sourceInformation/dataSetInformation/shortName': lambda x, t: x.__setitem__('name', t['#text'])
                             }  # [!] classification, timestamp, dataSetVersion and permanentDataSetURI for not_converted
                     info = {}
@@ -757,7 +807,7 @@ class ILCD1ToECS2SourceReferenceConversion(ILCD1ToECS2ReferenceConversion):
                             self.field, self.attrname['first_author'], fa)
                     else:
                         logging.info(
-                            f"Year could not be converted for source {info['name']} with id {self.id_}")
+                            f"\t\tYear could not be converted for source {info['name']} with id {self.id_}")
                         fa = info['name'].strip()
                         yr = "0000"
                         setattr(
@@ -778,20 +828,26 @@ class ILCD1ToECS2ContactReferenceConversion(ILCD1ToECS2ReferenceConversion):
         super().__init__(x, not_converted)
         self.attrname = attrname
         self.field = field
+        
+        # This is done due to problems with lack of contact files (even with self.isConvertible being False)
+        if hasattr(self, 'id_'):
+            setattr(self.field, self.attrname['id'], self.id_)
+            setattr(self.field, self.attrname['name'], self.shortDescription.get('#text', ''))
+            if self.attrname.get('email'):
+                setattr(self.field, self.attrname['email'], '')
     
     def get_master_contact(self, id_, name, email=None):
         if id_ not in type(self)._all_contacts:
-            if self.attrname['name'] == 'a_companyCode':
+            if self.attrname['name'] == 'companyCode':
                 src = type(self).master_field.get_class('company')()
-                src.a_code = name
+                src.code = name
                 n = 'company'
             else:
                 src = type(self).master_field.get_class('person')()
                 n = 'person'
-                if email is not None:
-                    src.a_email = email
-                    src.a_name = name
-            src.a_id = id_
+                src.email = email or '' # mandatory
+                src.name = name
+            src.id = id_
             setattr(type(self).master_field, n, src)
             type(self)._all_contacts.add(id_)
 
@@ -800,17 +856,19 @@ class ILCD1ToECS2ContactReferenceConversion(ILCD1ToECS2ReferenceConversion):
             with open(self.file) as f:
                 map_ = {'/contactDataSet/contactInformation/dataSetInformation/name': lambda x, t: x.__setitem__('name', t['#text']),
                         '/contactDataSet/contactInformation/dataSetInformation/shortName': lambda x, t: x.__setitem__('sname', t['#text']),
-                        '/contactDataSet/contactInformation/dataSetInformation/email': lambda x, t: x.__setitem__('email', t['#text'])}
+                        '/contactDataSet/contactInformation/dataSetInformation/email': lambda x, t: x.__setitem__('email', t)}
                 info = {}
                 for path, t in XMLStreamIterable(f, map_):
                     map_[path](info, t)
 
                 id_ = uuid_from_uuid(self.id_, b'_Lavosier_ECS2_/', "to_ECS2")
                 setattr(self.field, self.attrname['id'], id_)
-                setattr(self.field, self.attrname['name'], info.get(
-                    'name', info.get('shortName')))
+                # The reference name is enough
+                #print('\n---->', info.get('sname', info.get('name')))
+                #setattr(self.field, self.attrname['name'], info.get(
+                #    'sname', info.get('name'))) # Generaly, it is used the shortname in the reference
                 if self.attrname.get('email'):
-                    setattr(self.field, self.attrname['email'], info['email'])
+                    setattr(self.field, self.attrname['email'], info.get('email', '')) # Email is not mandatory in ILCD
                     
                 self.get_master_contact(id_, info['name'], info.get('email'))
 
@@ -830,19 +888,21 @@ class ILCD1ToECS2FlowReferenceConversion(ILCD1ToECS2ReferenceConversion):
                 classifications = []
 
                 map_ = {'/flowDataSet/modellingAndValidation/LCIMethod/typeOfDataSet':
-                        lambda x, t: x.__setitem__('type', t['#text']),
+                            lambda x, t: x.__setitem__('type', t),
                         '/flowDataSet/flowInformation/dataSetInformation/name/baseName':
-                            lambda x, t: x.__setitem__('name', t['#text']),
+                            lambda x, t: x.__setitem__('name', x.get('name', []) + ensure_list(t, ensure_text=True)), # Multilang
                         '/flowDataSet/flowInformation/dataSetInformation/CASNumber':
-                            lambda x, t: x.__setitem__('CAS', t['#text']),
+                            lambda x, t: x.__setitem__('CAS', t),
                         '/flowDataSet/flowInformation/dataSetInformation/sumFormula':
-                            lambda x, t: x.__setitem__('formula', t['#text']),
+                            lambda x, t: x.__setitem__('formula', t),
                         '/flowDataSet/flowInformation/dataSetInformation/synonyms':
                             lambda x, t: x.__setitem__(
-                                'synonym', x.get('synonym', []) + [t]),
+                                'synonym', x.get('synonym', []) + [
+                                    {'@index': i, '@lang': t['@lang'] if isinstance(t, dict) else 'en', '#text': y} for i, y in enumerate(chain(
+                                        *[n['#text'].split(';') for n in ensure_list(t, ensure_text=True)]))]),
                         '/flowDataSet/flowInformation/quantitativeReference/referenceToReferenceFlowProperty':
                             lambda x, t: x.__setitem__(
-                                'reference', t['#text']),
+                                'reference', t),
                         '/flowDataSet/flowInformation/dataSetInformation/classificationInformation/classification':
                             lambda x, t: classifications.append(
                                 type(self).class_conversion(t, self.not_converted).field),
@@ -866,11 +926,11 @@ class ILCD1ToECS2FlowReferenceConversion(ILCD1ToECS2ReferenceConversion):
                         else:
                             self.flow.isConvertible = False
                             logging.warning(
-                                "Flow not converted due to lack of elementary flow correspondence in the mapping file")
+                                "\t\tFlow not converted due to lack of elementary flow correspondence in the mapping file")
                     else:
                         self.flow.isConvertible = False
                         logging.warning(
-                            "Flow not converted as the flow is not present on the elementary flow mapping file")
+                            "\t\tFlow not converted as the flow is not present on the elementary flow mapping file")
                 else:
                     self.flow.field = type(self.flow).flow_holder.get_class(
                         'intermediateExchange')()
@@ -879,9 +939,11 @@ class ILCD1ToECS2FlowReferenceConversion(ILCD1ToECS2ReferenceConversion):
 
                 if self.flow.isConvertible:
                     self.flow.finish_flow_info()
-                    if classifications:
+                    if info['type'] != 'Elementary flow' and classifications:
                         setattr(self.flow.field, 'classification', type(
                             self).class_conversion.organize(classifications, 'CPC'))
+                    else:
+                        pass # Implement not converted instance for elementary exchanges
         else:
             self.flow.isConvertible = False
         return self.flow
@@ -917,15 +979,15 @@ class ILCD1ToECS2ClassificationConversion:
             else:
                 self.value = '/'.join([x['#text']
                                       for x in ensure_list(x['class'])])
-        else:
+        else: # It can be equal {}
             self.value = '/'.join([x['#text']
-                                  for x in ensure_list(x['class'])])
+                                  for x in ensure_list(x.get('class', {}))])
 
         # Get basic fields
         self.field.classificationSystem = {
             '@index': 0, '@lang': 'en', '#text': self.name}
-        self.master.a_id = uuid_from_string(self.name)
-        self.master.a_type = 3 # TODO
+        self.master.id = uuid_from_string(self.name)
+        self.master.type = 3 # TODO
         self.master.name = {'@index': 0, '@lang': 'en', '#text': self.name}
         self.field.classificationValue = {
             '@index': 0, '@lang': 'en', '#text': self.value}
@@ -948,8 +1010,8 @@ class ILCD1ToECS2ClassificationConversion:
             id_ = uuid_from_string(self.value)
         else:
             id_ = n['classificationValueId']
-        self.field.a_classificationId = id_
-        self.clv.a_id = id_
+        self.field.classificationId = id_
+        self.clv.id = id_
 
     @classmethod
     def organize(cls, classifications, priority):
@@ -962,7 +1024,7 @@ class ILCD1ToECS2ClassificationConversion:
 
 class ILCD1ToECS2ReviewConversion:
 
-    _set_TextAndImage = None
+    # _set_TextAndImage = None
 
     contact_ref_conversion = None
 
@@ -974,29 +1036,53 @@ class ILCD1ToECS2ReviewConversion:
         self.not_converted = not_converted
         self.field = type(self).review_holder.get_class('review')()
 
+        # TODO This is just a cameo
+        self.field.reviewDate = '1900-01-01' # Default values
+        
+        if '@type' in x:
+            self.field.details.text = ILCD1Helper.text_dict_from_text(1, f'Review type: {x["@type"]}')
+        if 'scope' in x:
+            txt = 'Review done for Scopes:\n'
+            for s in ensure_list(x['scope']):
+                txt += f"\t{s.get('@name', '-')}. Validation methods:\n"
+                if 'method' in s:
+                    for m in ensure_list(s['method']):
+                        txt += f"\t\t{m.get('@name', '-')}\n"
+            self.field.details.text = ILCD1Helper.text_dict_from_text(2, txt)
+                    
+        if 'dataQualityIndicators' in x:
+            txt = 'Data Quality Indicators:\n'
+            for dq in ensure_list(x['dataQualityIndicators'].get('dataQualityIndicator', {})):
+                txt += f"\t{dq['@name']}: {dq['@value']}\n"
+            self.field.details.text = ILCD1Helper.text_dict_from_text(3, txt)
+        
         for review in ensure_list(x.get('reviewDetails', {}), ensure_text=True):
-            self.review_comment(review)
-            self.field.details = type(self)._set_TextAndImage(
-                ILCD1Helper.text_add_index(review))
+            review = self.review_comment(review)
+            self.field.details.text = ILCD1Helper.text_add_index(ILCD1Helper.text_add_index(review))
 
         for review in ensure_list(x.get('otherReviewDetails', {}), ensure_text=True):
             self.field.otherDetails = ILCD1Helper.text_add_index(review)
 
-        type(self).contact_ref_conversion(x['referenceToNameOfReviewerAndInstitution'],
+        self.ref = x.get('referenceToNameOfReviewerAndInstitution', {}) # Som as more then 1, which are combined into 1
+        self.rev_name = []
+        for ref in ensure_list(self.ref):
+            # This is really one and only one field in ECS2, but in ILCD it is 0 or more
+            self.rev_name.append(ensure_list(ref['shortDescription'], ensure_text=True)[0]['#text'])
+            type(self).contact_ref_conversion(ref,
                                           not_converted,
                                           self.field,
-                                          {'id': 'a_reviewerId', 'name': 'a_reviewerName', 'email': 'a_reviewerEmail'}).get_contact()
-
-        # TODO This is just a cameo
-        self.field.a_reviewDate = '1900-01-01'
-
+                                          {'id': 'reviewerId', 'name': 'reviewerName', 'email': 'reviewerEmail'}).get_contact()
+        
         # TODO The review version has to be revisited as it is too irregular
-        if not self.field.get('a_reviwedMajorRelease'):
+        if not self.field.get('reviewedMajorRelease'):
             v = type(self)._version
-            self.field.a_reviewedMajorRelease, self.field.a_reviewedMinorRelease = v[0], v[1]
-            self.field.a_reviewedMajorRevision, self.field.a_reviewedMinorRevision = v[
+            self.field.reviewedMajorRelease, self.field.reviewedMinorRelease = v[0], v[1]
+            self.field.reviewedMajorRevision, self.field.reviewedMinorRevision = v[
                 2], v[3]
             type(self)._version[2] += 1
+            
+        if self.field.get('reviewerName') == '/'.join(self.rev_name): # Depends on the contact info
+            self.field.reviewerId = uuid_from_string('/'.join(self.rev_name))
 
         self.get_not_converted(x)
 
@@ -1004,13 +1090,22 @@ class ILCD1ToECS2ReviewConversion:
         if re.search(r'Review Version: [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\n', x['#text']):
             v = re.search(
                 r'Review Version: ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\n', x['#text']).groups()[0].split('.')
-            self.field.a_reviewedMajorRelease, self.field.a_reviewedMinorRelease = v[0], v[1]
-            self.field.a_reviewedMajorRevision, self.field.a_reviewedMinorRevision = v[
+            x['#text'] = re.sub(r'Review Version: ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\n', '', x['#text'])
+            self.field.reviewedMajorRelease, self.field.reviewedMinorRelease = v[0], v[1]
+            self.field.reviewedMajorRevision, self.field.reviewedMinorRevision = v[
                 2], v[3]
-        if re.search(r'Date of Review: [A-z ]+\n', x['#text']):
+        if re.search(r'Date of Review: [0-9 -]+\n', x['#text']):
             date = re.search(
-                r'Date of Review: ([A-z ]+)\n', x['#text']).groups()[0]
-            self.field.a_reviewDate = date
+                r'Date of Review: ([0-9 -]+)\n', x['#text']).groups()[0]
+            self.field.reviewDate = date
+            x['#text'] = re.sub(r'Date of Review: [0-9 -]+\n', '', x['#text'])
+        return x
+
+    def set_field(self, struct, field): # Checks if there is an id, name and email for reviewer (mandatory)
+        if self.ref:
+            setattr(struct, field, self.field)
+        else:
+            pass # TODO call get_not_converted
 
     def get_not_converted(self, x):
         # scope with methods and scores
@@ -1042,7 +1137,7 @@ class ILCD1ToECS2BasicFieldMapping(FieldMapping, ABC):
 
     def set_mappings(self, ef_map, cl_map):
         self._elem_mapping = self._dict_from_file(
-            ef_map or type(self)._default_elem_mapping, 'SosurceFlowUUID')
+            ef_map or type(self)._default_elem_mapping, 'SourceFlowUUID')
         self._class_mapping = self._dict_from_file(
             cl_map or type(self)._default_class_mapping, 'SourceFlowUUID')
         # Attributions
@@ -1107,7 +1202,7 @@ class ILCD1ToECS2BasicFieldMapping(FieldMapping, ABC):
         self.ReferenceConversion._ilcd_root_path = None
         self.SourceReferenceConversion._all_sources = set()
         self.ContactReferenceConversion._all_contacts = set()
-        self.ReviewConversion.version = [1, 0, 1, 0]
+        self.ReviewConversion._version = [1, 0, 1, 0]
 
     def set_file_info(self, path, save_path):
         # Attributions
@@ -1148,48 +1243,52 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
         ref = type(self)._flow_internal_refs
         self.FlowConversion._flow_internal_refs = {
             ref[i][0]: ref[i][1] for i in range(len(ref))}
-        self.ReviewConversion._set_TextAndImage = self.set_TextAndImage
+        # self.ReviewConversion._set_TextAndImage = self.set_TextAndImage
         super().set_file_info(*args)
 
     def default(self, cl_struct):
+        from .. import __version__
         setattr(cl_struct.activityDescription.macroEconomicScenario,
-                'a_macroEconomicScenarioId', 'd9f57f0a-a01f-42eb-a57b-8f18d6635801')
+                'macroEconomicScenarioId', 'd9f57f0a-a01f-42eb-a57b-8f18d6635801')
         setattr(cl_struct.activityDescription.macroEconomicScenario,
                 'name', ILCD1Helper.text_dict_from_text(1, 'Business-as-Usual'))
         setattr(cl_struct.activityDescription.activity,
-                'a_inheritanceDepth', 0)
+                'inheritanceDepth', 0)
         setattr(cl_struct.activityDescription.timePeriod,
-                'a_isDataValidForEntirePeriod', 0)
+                'isDataValidForEntirePeriod', 1) # Default as True when no other info is presented
         setattr(cl_struct.activityDescription.activity,
-                'a_specialActivityType', 0)
+                'specialActivityType', 0)
         setattr(cl_struct.activityDescription.technology,
-                'a_technologyLevel', 3)
+                'technologyLevel', 3) # [!] Too many informations are 'assumed' beforehand
         setattr(cl_struct.administrativeInformation.fileAttributes,
-                'a_defaultLanguage', 'en')  # TODO Can be better
+                'defaultLanguage', 'en')  # TODO Can be better
         setattr(cl_struct.administrativeInformation.fileAttributes,
-                'a_fileGenerator', f"Lavoisier version {__version__}")
+                'fileGenerator', f"Lavoisier version {__version__}")
         t = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime())
         setattr(cl_struct.administrativeInformation.fileAttributes,
-                'a_lastEditTimestamp', t)
+                'lastEditTimestamp', t)
         setattr(cl_struct.administrativeInformation.fileAttributes,
-                'a_fileTimestamp', t)
+                'fileTimestamp', t)
         setattr(cl_struct.administrativeInformation.fileAttributes,
-                'a_creationTimestamp', t)
+                'creationTimestamp', t)
         setattr(cl_struct.administrativeInformation.fileAttributes,
-                'a_internalSchemaVersion', '2.0.10')
+                'internalSchemaVersion', '2.0.10')
         setattr(cl_struct.administrativeInformation.fileAttributes,
-                'a_majorRelease', 1)
+                'majorRelease', 1)
         setattr(cl_struct.administrativeInformation.fileAttributes,
-                'a_minorRelease', 0)
+                'minorRelease', 0)
         setattr(cl_struct.administrativeInformation.fileAttributes,
-                'a_majorRevision', 0)
+                'majorRevision', 0)
         setattr(cl_struct.administrativeInformation.fileAttributes,
-                'a_minorRevision', 0)
+                'minorRevision', 0)
 
         setattr(cl_struct.administrativeInformation.fileAttributes,
-                'a_contextId', "de659012-50c4-4e96-b54a-fc781bf987ab")
+                'contextId', "de659012-50c4-4e96-b54a-fc781bf987ab")
         setattr(cl_struct.administrativeInformation.fileAttributes,
                 'contextName', ILCD1Helper.text_dict_from_text(1, 'ecoinvent'))
+        
+        setattr(cl_struct.userMaster.activityIndexEntry,
+                'specialActivityType', 0)
 
     # Setting variables that help conversions that depend on more than one field
     def start_conversion(self):
@@ -1207,42 +1306,42 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
 
         # [!] This is too random, maybe think about a better way
         if self._original_model is not None:
-            setattr(self._lci_ma_holder, 'a_systemModelId',
+            setattr(self._lci_ma_holder, 'systemModelId',
                     system_model_1_.get(self._original_model))
             setattr(self._lci_ma_holder, 'systemModelName',
                     ILCD1Helper.text_dict_from_text(1, self._original_model))
-            setattr(self._master_system_model_holder.activityIndexEntry, 'a_systemModelId',
+            setattr(self._master_system_model_holder.activityIndexEntry, 'systemModelId',
                     system_model_1_.get(self._original_model))
         elif self._LCI_MA:
             c = Counter([x for x in self._LCI_MA]).most_common(1)[0][0]
-            setattr(self._lci_ma_holder, 'a_systemModelId', c[1])
+            setattr(self._lci_ma_holder, 'systemModelId', c[1])
             setattr(self._lci_ma_holder, 'systemModelName',
                     ILCD1Helper.text_dict_from_text(1, c[0]))
-            setattr(self._master_system_model_holder.activityIndexEntry, 'a_systemModelId',
+            setattr(self._master_system_model_holder.activityIndexEntry, 'systemModelId',
                     c[1])
         else:
-            setattr(self._lci_ma_holder, 'a_systemModelId',
+            setattr(self._lci_ma_holder, 'systemModelId',
                     "8b738ea0-f89e-4627-8679-433616064e82")
             setattr(self._lci_ma_holder, 'systemModelName',
                     ILCD1Helper.text_dict_from_text(1, 'Undefined'))
-            setattr(self._master_system_model_holder.activityIndexEntry, 'a_systemModelId',
+            setattr(self._master_system_model_holder.activityIndexEntry, 'systemModelId',
                            "8b738ea0-f89e-4627-8679-433616064e82")
         self._original_model = None
         self._LCI_MA = []
 
-        if not self._energy_holder.get('a_energyValues'):
+        if not self._energy_holder.get('energyValues'):
             energy = self.FlowConversion.Property._energy
             n = sum(1 if x == "NET" else 0 for x in energy)
             g = sum(1 if x == "GROSS" else 0 for x in energy)
             if n >= 3*g:
-                setattr(self._energy_holder, "a_energyValues", '1')
+                setattr(self._energy_holder, "energyValues", '1')
             elif g >= 3*n:
-                setattr(self._energy_holder, "a_energyValues", '2')
+                setattr(self._energy_holder, "energyValues", '2')
             else:
-                setattr(self._energy_holder, "a_energyValues", '0')
+                setattr(self._energy_holder, "energyValues", '0')
 
         if self._access_restricted_to:
-            setattr(self._access_restriction_holder, 'a_accessRestrictedTo',
+            setattr(self._access_restriction_holder, 'accessRestrictedTo',
                     self._access_restricted_to)
         self._access_restricted_to = None
 
@@ -1257,58 +1356,61 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
         self.reset_conversion(end=True)
         super().end_conversion()
 
-    def set_TextAndImage(self, x):
-        tai = self._tai()
-        setattr(tai, 'text', ILCD1Helper.text_add_index(x))
-        return tai
+    # def set_TextAndImage(self, x, inst):
+    #     tai = self._tai()
+    #     setattr(tai, 'text', ILCD1Helper.text_add_index(x))
+    #     return tai
 
     def general_comment(self, cl_struct, x):
         x['#text'] = ECS2Helper._get_uuid(cl_struct.activityDescription.activity,
-                                          'a_activityNameId',
+                                          'activityNameId',
                                           r'Activity Linkable Id:',
                                           x['#text'],
                                           extra=lambda x: (setattr(cl_struct.userMaster.activityIndexEntry,
-                                                                  'a_activityNameId',
+                                                                  'activityNameId',
                                                                   x),
                                                            setattr(self._master_activity_name_holder,
-                                                                   'a_id', x))
+                                                                   'id', x))
                                           )
         x['#text'] = ECS2Helper._get_str(cl_struct.activityDescription.activity,
-                                         'a_specialActivityType',
+                                         'specialActivityType',
                                          special_activity_,
                                          r'Activity Subtype:',
                                          x['#text'],
-                                         extra=lambda x: setattr(cl_struct.userMaster.activityIndexEntry,
-                                                                 'a_specialActivityType',
-                                                                 x))
+                                         extra=lambda x: (setattr(cl_struct.userMaster.activityIndexEntry,
+                                                                 'specialActivityType',
+                                                                 x),
+                                                          setattr(cl_struct.activityDescription.activity,
+                                                                  'specialActivityType',
+                                                                  x)))
         x['#text'] = ECS2Helper._get_str(cl_struct.activityDescription.activity,
-                                         'a_inheritanceDepth',
+                                         'inheritanceDepth',
                                          child_type_,
                                          r'Inheritance:',
                                          x['#text'])
         x['#text'] = ECS2Helper._get_uuid(cl_struct.activityDescription.activity,
-                                          'a_parentActivityId',
+                                          'parentActivityId',
                                           r'Parent Id:',
                                           x['#text'],
                                           extra=lambda x: (setattr(cl_struct,
                                                                    'main_activity_type',
                                                                    'childActivityDataset'),
                                                            setattr(cl_struct.activityDescription.activity,
-                                                                   'a_inheritanceDepth',
+                                                                   'inheritanceDepth',
                                                                    '-1')))
         x['#text'] = ECS2Helper._get_list_str(cl_struct.activityDescription.activity,
                                               'tag',
                                               r'Tag:',
                                               x['#text'])
-        return self.set_TextAndImage(x)
+        return ILCD1Helper.text_add_index(x)
 
     def time_comment(self, cl_struct, x):
         x['#text'] = ECS2Helper._get_str(cl_struct.activityDescription.timePeriod,
-                                         'a_isDataValidForEntirePeriod',
+                                         'isDataValidForEntirePeriod',
                                          time_period_,
                                          r'Validity:',
                                          x['#text'])
-        return self.set_TextAndImage(x)
+        return ILCD1Helper.text_add_index(x)
 
     def tech_comment(self, cl_struct, x):
         if re.search(r'Activity Start: (.*)\nActivity End: ', x['#text']):
@@ -1323,15 +1425,15 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
             x['#text'] = re.sub(
                 r'Activity End: (.*)(?:\n|;|$)', '', x['#text'])
         x['#text'] = ECS2Helper._get_str(cl_struct.activityDescription.technology,
-                                         'a_technologyLevel',
+                                         'technologyLevel',
                                          tech_,
                                          r'Technology Level:',
                                          x['#text'])
-        return self.set_TextAndImage(x)
+        return ILCD1Helper.text_add_index(x)
 
     def modelling_constants(self, cl_struct, x):
         x['#text'] = ECS2Helper._get_str(cl_struct.activityDescription.activity,
-                                         'a_energyValues',
+                                         'energyValues',
                                          energy_,
                                          r'Energy:',
                                          x['#text'])
@@ -1345,18 +1447,35 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
                 r'Original ecoinvent System Model: (.*)+?$', '', x['#text'])
         return x
 
+    def ensure_dict(self, x):
+        if isinstance(x, str):
+            return {'@lang': 'en', '#text': x}
+        else: return x
+
+    def new_geography_master(self, x, struct):
+        if type(self)._default_geographies_mapping.get(x) is None:
+            geo = struct.get_class('geography')()
+            geo.id = uuid_from_string(x)
+            geo.name = ILCD1Helper.text_dict_from_text(1, x)
+            geo.shortname = ILCD1Helper.text_dict_from_text(1, x)
+            setattr(struct, 'geography', geo)
+            setattr(struct.activityIndexEntry, 'geographyId', uuid_from_string(x)),
+        else:
+            setattr(struct.activityIndexEntry, 'geographyId', type(self)._default_geographies_mapping.get(x)),
+
     def mapping(self):
         _keys = {
             '/processDataSet/processInformation/dataSetInformation/UUID':
-                lambda cl_struct, x: (setattr(cl_struct.activityDescription.activity, 'a_id', uuid_from_uuid(*(x['#text'],), *self._uuid_conv_spec)),
-                                      setattr(self.FlowConversion, 'uuid_process', x['#text']),
-                                      setattr(cl_struct.userMaster.activityIndexEntry, 'a_id', uuid_from_uuid(*(x['#text'],), *self._uuid_conv_spec))),
+                lambda cl_struct, x: (setattr(cl_struct.activityDescription.activity, 'id', uuid_from_uuid(*(x,), *self._uuid_conv_spec)),
+                                      setattr(self.FlowConversion, 'uuid_process', x),
+                                      setattr(cl_struct.userMaster.activityIndexEntry, 'id', uuid_from_uuid(*(x,), *self._uuid_conv_spec))),
             # [!] activityNameId is created here since it is mandatory
             '/processDataSet/processInformation/dataSetInformation/name/baseName':
-                lambda cl_struct, x: (setattr(cl_struct.activityDescription.activity, 'activityName', ILCD1Helper.text_add_index(x, index=1)),
-                                      setattr(cl_struct.activityDescription.activity, 'a_activityNameId', uuid_from_string(x['#text'])),
-                                      setattr(cl_struct.userMaster.activityIndexEntry, 'a_activityNameId', uuid_from_string(x['#text'])),
-                                      setattr(self._master_activity_name_holder, 'a_id', uuid_from_string(x['#text'])),
+                lambda cl_struct, x: (logging.info(f"Conversion started for {x['#text']}"),
+                                      setattr(cl_struct.activityDescription.activity, 'activityName', ILCD1Helper.text_add_index(x, index=1)),
+                                      setattr(cl_struct.activityDescription.activity, 'activityNameId', uuid_from_string(x['#text'])),
+                                      setattr(cl_struct.userMaster.activityIndexEntry, 'activityNameId', uuid_from_string(x['#text'])),
+                                      setattr(self._master_activity_name_holder, 'id', uuid_from_string(x['#text'])),
                                       setattr(self._master_activity_name_holder, 'name', ILCD1Helper.text_add_index(x, index=1))),
             '/processDataSet/processInformation/dataSetInformation/name/treatmentStandardsRoutes':
                 lambda cl_struct, x: (setattr(
@@ -1372,8 +1491,8 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
                     setattr(self._master_activity_name_holder, 'name', ILCD1Helper.text_add_index(x, index=1))),
             '/processDataSet/processInformation/dataSetInformation/identifierOfSubDataSet':
                 lambda cl_struct, x: (setattr(self.NotConverted, 'identifierOfSubDataSet', x),
-                                      setattr(cl_struct.activityDescription.activity, 'generalComment',
-                                              self.set_TextAndImage(ILCD1Helper.text_dict_from_text(1, 'Identifier name: '+x)))),
+                                      setattr(cl_struct.activityDescription.activity.generalComment, 'text',
+                                              ILCD1Helper.text_add_index(ILCD1Helper.text_dict_from_text(1, 'Identifier name: '+x)))),
             '/processDataSet/processInformation/dataSetInformation/synonyms':
                 lambda cl_struct, x: setattr(cl_struct.activityDescription.activity, 'synonym', [ILCD1Helper.text_add_index({'@lang': 'en',
                                                                                                                             '#text': n}) for n in x['#text'].split('; ')]),
@@ -1384,12 +1503,12 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
                 lambda cl_struct, x: self._main_classifications.append(
                     self.ClassificationConversion(x, self.NotConverted).field),
             '/processDataSet/processInformation/dataSetInformation/generalComment':
-                lambda cl_struct, x: setattr(cl_struct.activityDescription.activity, 'generalComment',
+                lambda cl_struct, x: setattr(cl_struct.activityDescription.activity.generalComment, 'text',
                                              self.general_comment(cl_struct, ILCD1Helper.text_add_index(x))),
             '/processDataSet/processInformation/dataSetInformation/referenceToExternalDocumentation':
                 lambda cl_struct, x: self.SourceReferenceConversion(x, self.NotConverted,
                                                                     {'imageUrl': cl_struct.activityDescription.activity.generalComment,
-                                                                     'a_datasetIcon': cl_struct.activityDescription.activity},
+                                                                     'datasetIcon': cl_struct.activityDescription.activity},
                                                                     {}).get_source(),
             '/processDataSet/processInformation/quantitativeReference/referenceToReferenceFlow':
                 lambda cl_struct, x: self.FlowConversion._reference_flows.append(
@@ -1397,43 +1516,43 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
             '/processDataSet/processInformation/quantitativeReference/functionalUnitOrOther':
                 lambda cl_struct, x: setattr(
                     self.NotConverted, 'functionalUnitOrOther', x),
-            '/processDataSet/processInformation/quantitativeReference/a_type':
-                lambda cl_struct, x: setattr(self.NotConverted, 'a_type', x),
+            '/processDataSet/processInformation/quantitativeReference/type':
+                lambda cl_struct, x: setattr(self.NotConverted, 'type', x),
             '/processDataSet/processInformation/time/referenceYear':
                 lambda cl_struct, x: (setattr(
-                    cl_struct.activityDescription.timePeriod, 'a_startDate', x['#text']+'-01-01'),
-                    setattr(cl_struct.userMaster.activityIndexEntry, 'a_startDate', x['#text']+'-01-01')),
+                    cl_struct.activityDescription.timePeriod, 'startDate', x+'-01-01'),
+                    setattr(cl_struct.userMaster.activityIndexEntry, 'startDate', x+'-01-01')),
             '/processDataSet/processInformation/time/dataSetValidUntil':
                 lambda cl_struct, x: (setattr(
-                    cl_struct.activityDescription.timePeriod, 'a_endDate', x['#text']+'-12-31'),
-                    setattr(cl_struct.userMaster.activityIndexEntry, 'a_endDate', x['#text']+'-12-31')),
+                    cl_struct.activityDescription.timePeriod, 'endDate', x+'-12-31'),
+                    setattr(cl_struct.userMaster.activityIndexEntry, 'endDate', x+'-12-31')),
             '/processDataSet/processInformation/time/timeRepresentativenessDescription':
-                lambda cl_struct, x: setattr(cl_struct.activityDescription.timePeriod, 'comment',
+                lambda cl_struct, x: setattr(cl_struct.activityDescription.timePeriod.comment, 'text',
                                              self.time_comment(cl_struct, ILCD1Helper.text_add_index(x))),
             '/processDataSet/processInformation/geography/locationOfOperationSupplyOrProduction/descriptionOfRestrictions':
                 lambda cl_struct, x: setattr(
-                    cl_struct.activityDescription.geography, 'comment',  self.set_TextAndImage(x)),
+                    cl_struct.activityDescription.geography.comment, 'text',  ILCD1Helper.text_add_index(x)),
+            # TODO Some geographies doesn't have a proper conversion (no Id in ECS2), so the master antry has to be added and the 'not_converted' called
             '/processDataSet/processInformation/geography/locationOfOperationSupplyOrProduction/@location':
                 lambda cl_struct, x: (setattr(cl_struct.activityDescription.geography, 'shortname', ILCD1Helper.text_dict_from_text(1, x)),
-                                      setattr(cl_struct.activityDescription.geography, 'a_geographyId',
-                                              type(self)._default_geographies_mapping.get(x)),
-                                      setattr(cl_struct.userMaster.activityIndexEntry,
-                                              'a_geographyId', type(self)._default_geographies_mapping.get(x))),
+                                      logging.warning(f'\t\tGeography {x} not found in ecoinvent. Creating new UUID') if type(self)._default_geographies_mapping.get(x) is None else None,
+                                      setattr(cl_struct.activityDescription.geography, 'geographyId',
+                                              type(self)._default_geographies_mapping.get(x) or uuid_from_string(x)),
+                                      self.new_geography_master(x, cl_struct.userMaster)),
             '/processDataSet/processInformation/geography/locationOfOperationSupplyOrProduction/@latituteAndLongitude':
                 lambda cl_struct, x: setattr(
-                    self.NotConverted, 'a_latitudeAndLongitude', x),
+                    self.NotConverted, 'latitudeAndLongitude', x),
             '/processDataSet/processInformation/geography/subLocationOfOperationSupplyOrProduction':
                 lambda cl_struct, x: setattr(
                     self.NotConverted, 'subLocationOfOperationSupplyOrProduction', x),
             '/processDataSet/processInformation/technology/technologyDescriptionAndIncludedProcesses':
-                lambda cl_struct, x: setattr(cl_struct.activityDescription.technology, 'comment',
+                lambda cl_struct, x: setattr(cl_struct.activityDescription.technology.comment, 'text',
                                              self.tech_comment(cl_struct, ILCD1Helper.text_add_index(x))),
             '/processDataSet/processInformation/technology/referenceToIncludedProcesses':
                 lambda cl_struct, x: setattr(
                     self.NotConverted, 'referenceToIncludedProcesses', x),
             '/processDataSet/processInformation/technology/technologyApplicability':
-                lambda cl_struct, x: setattr(cl_struct.activityDescription.technology,
-                                             'comment', self.set_TextAndImage(ILCD1Helper.text_add_index(x))),
+                lambda cl_struct, x: setattr(cl_struct.activityDescription.technology.comment, 'text', ILCD1Helper.text_add_index(ILCD1Helper.text_add_index(x))),
             '/processDataSet/processInformation/technology/referenceToTechnologyPictogramme':
                 lambda cl_struct, x: self.SourceReferenceConversion(x, self.NotConverted,
                                                                     {'imageUrl': cl_struct.activityDescription.technology.comment},
@@ -1443,30 +1562,28 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
                                                                     {'imageUrl': cl_struct.activityDescription.technology.comment},
                                                                     {}, uri_source=True).get_source(),
             '/processDataSet/processInformation/mathematicalRelations/modelDescription':
-                lambda cl_struct, x: setattr(cl_struct.activityDescription.activity,
-                                             'generalComment', self.set_TextAndImage(ILCD1Helper.text_add_index(x))),
+                lambda cl_struct, x: setattr(cl_struct.activityDescription.activity.generalComment, 'text', ILCD1Helper.text_add_index(ILCD1Helper.text_add_index(x))),
             '/processDataSet/processInformation/mathematicalRelations/variableParameter':
                 lambda cl_struct, x: self.VariableConversion(
                     x, self.NotConverted),
             '/processDataSet/modellingAndValidation/LCIMethodAndAllocation/typeOfDataSet':
                 lambda cl_struct, x: setattr(
-                    cl_struct.activityDescription.activity, 'a_type', type_process_.get(x['#text'])),
+                    cl_struct.activityDescription.activity, 'type', type_process_.get(x)),
             # [!] Better verify this information
             '/processDataSet/modellingAndValidation/LCIMethodAndAllocation/LCIMethodPrinciple':
                 lambda cl_struct, x: setattr(
-                    self.NotConverted, 'LCIMethodPrinciple', x['#text']),
+                    self.NotConverted, 'LCIMethodPrinciple', x),
             '/processDataSet/modellingAndValidation/LCIMethodAndAllocation/deviationsFromLCIMethodPrinciple':
                 lambda cl_struct, x: setattr(cl_struct.modellingAndValidation.representativeness,
                                              'extrapolations',
                                              self.deviation_comment(ILCD1Helper.text_add_index(x,
                                                                                                prefix="Deviations from LCI Method Principles: "))) if x['#text'] != 'none' else None,
             '/processDataSet/modellingAndValidation/LCIMethodAndAllocation/LCIMethodApproaches':
-                lambda cl_struct, x: self._LCI_MA.append((system_model_2_.get(x['#text']),
-                                                          system_model_1_.get(system_model_2_.get(x['#text'])))),
+                lambda cl_struct, x: self._LCI_MA.append((system_model_2_.get(x),
+                                                          system_model_1_.get(system_model_2_.get(x)))),
             '/processDataSet/modellingAndValidation/LCIMethodAndAllocation/deviationsFromLCIMethodApproaches':
-                lambda cl_struct, x: setattr(cl_struct.activityDescription.activity,
-                                             'allocationComment',
-                                             self.set_TextAndImage(ILCD1Helper.text_add_index(x))) if x['#text'] != 'none' else None,
+                lambda cl_struct, x: setattr(cl_struct.activityDescription.activity.allocationComment, 'text',
+                                             ILCD1Helper.text_add_index(ILCD1Helper.text_add_index(x))) if self.ensure_dict(x)['#text'] != 'none' else None,
             '/processDataSet/modellingAndValidation/LCIMethodAndAllocation/modellingConstants':
                 lambda cl_struct, x: setattr(cl_struct.modellingAndValidation.representativeness,
                                              'samplingProcedure',
@@ -1503,46 +1620,45 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
                                              'extrapolations',
                                              ILCD1Helper.text_add_index(x, prefix="Deviations from Data Treatment and Extrapolations Principles: ")) if x['#text'] != 'none' else None,
             # TODO [!] The lack of a source sink is rather concerning
-            '/processDataSet/modellingAndValidation/LCIMethodAndAllocation/referenceToDataHandlingPrinciples':
+            '/processDataSet/modellingAndValidation/dataSourcesTreatmentAndRepresentativeness/referenceToDataHandlingPrinciples':
                 lambda cl_struct, x: setattr(
                     self.NotConverted, 'referenceToDataHandlingPrinciples', x),
-            '/processDataSet/modellingAndValidation/LCIMethodAndAllocation/referenceToDataSource':
+            '/processDataSet/modellingAndValidation/dataSourcesTreatmentAndRepresentativeness/referenceToDataSource':
                 lambda cl_struct, x: setattr(
                     self.NotConverted, 'referenceToDataSource', x),
-            '/processDataSet/modellingAndValidation/LCIMethodAndAllocation/percentageSupplyOrProductionCovered':
+            '/processDataSet/modellingAndValidation/dataSourcesTreatmentAndRepresentativeness/percentageSupplyOrProductionCovered':
                 lambda cl_struct, x: setattr(
-                    cl_struct.modellingAndValidation.representativeness, 'a_percent', x),
+                    cl_struct.modellingAndValidation.representativeness, 'percent', x),
             # TODO [!] Can be better
-            '/processDataSet/modellingAndValidation/LCIMethodAndAllocation/annualSupplyOrProductionVolume':
+            '/processDataSet/modellingAndValidation/dataSourcesTreatmentAndRepresentativeness/annualSupplyOrProductionVolume':
                 lambda cl_struct, x: setattr(
                     self.NotConverted, 'annualSupplyOrProductionVolume', x),
-            '/processDataSet/modellingAndValidation/LCIMethodAndAllocation/samplingProcedure':
+            '/processDataSet/modellingAndValidation/dataSourcesTreatmentAndRepresentativeness/samplingProcedure':
                 lambda cl_struct, x: setattr(cl_struct.modellingAndValidation.representativeness,
                                              'samplingProcedure',
                                              ILCD1Helper.text_add_index(x, index=0)),
-            '/processDataSet/modellingAndValidation/LCIMethodAndAllocation/dataCollectionPeriod':
+            '/processDataSet/modellingAndValidation/dataSourcesTreatmentAndRepresentativeness/dataCollectionPeriod':
                 lambda cl_struct, x: setattr(cl_struct.modellingAndValidation.representativeness,
                                              'samplingProcedure',
                                              ILCD1Helper.text_add_index(x, prefix="Data Collection Period: ")),
-            '/processDataSet/modellingAndValidation/LCIMethodAndAllocation/uncertaintyAdjustments':
+            '/processDataSet/modellingAndValidation/dataSourcesTreatmentAndRepresentativeness/uncertaintyAdjustments':
                 lambda cl_struct, x: setattr(cl_struct.modellingAndValidation.representativeness,
                                              'samplingProcedure',
                                              ILCD1Helper.text_add_index(x, prefix="Uncertainty Adjustments: ")),
-            '/processDataSet/modellingAndValidation/LCIMethodAndAllocation/useAdviceForDataSet':
+            '/processDataSet/modellingAndValidation/dataSourcesTreatmentAndRepresentativeness/useAdviceForDataSet':
                 lambda cl_struct, x: setattr(cl_struct.modellingAndValidation.representativeness,
                                              'samplingProcedure',
                                              ILCD1Helper.text_add_index(x, prefix="Use Advice for Dataset: ")),
             # TODO [!] Can be better
             '/processDataSet/modellingAndValidation/completeness':
-                lambda cl_struct, x: setattr(
-                    self.NotConverted, 'completeness', x),
+                lambda cl_struct, x: (logging.warning("\tCompleteness information could not be converted as EcoSpold 2 doesn't have matching field(s) for the information"),
+                                                      setattr(self.NotConverted, 'completeness', x)),
             '/processDataSet/modellingAndValidation/validation/review':
-                lambda cl_struct, x: setattr(cl_struct.modellingAndValidation, 'review',
-                                             self.ReviewConversion(x, self.NotConverted).field),
+                lambda cl_struct, x: self.ReviewConversion(x, self.NotConverted).set_field(cl_struct.modellingAndValidation, 'review'),
             # TODO [!] Can be better
             '/processDataSet/modellingAndValidation/complianceDeclarations/compliance':
-                lambda cl_struct, x: setattr(
-                    self.NotConverted, 'compliance', x),
+                lambda cl_struct, x: (logging.warning("\tCompliance information could not be converted as EcoSpold 2 doesn't have matching field(s) for the information"),
+                                      setattr(self.NotConverted, 'compliance', x)),
             # TODO [!] Can be better
             '/processDataSet/administrativeInformation/commissionerAndGoal':
                 lambda cl_struct, x: setattr(
@@ -1550,12 +1666,12 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
             '/processDataSet/administrativeInformation/dataGenerator/referenceToPersonOrEntityGeneratingTheDataSet':
                 lambda cl_struct, x: self.ContactReferenceConversion(x, self.NotConverted,
                                                                      cl_struct.administrativeInformation.dataGeneratorAndPublication,
-                                                                     {'id': 'a_personId',
-                                                                      'name': 'a_personName',
-                                                                      'email': 'a_personEmail'}).get_contact(),
+                                                                     {'id': 'personId',
+                                                                      'name': 'personName',
+                                                                      'email': 'personEmail'}).get_contact(),
             '/processDataSet/administrativeInformation/dataEntryBy/timeStamp':  # Done in the default
-                lambda cl_struct, x: setattr(
-                    self.NotConverted, 'timeStamp', x['#text']),
+                lambda cl_struct, x: (setattr(cl_struct.administrativeInformation.fileAttributes, 'creationTimestamp', x),
+                                      setattr(self.NotConverted, 'timeStamp', x)),
             '/processDataSet/administrativeInformation/dataEntryBy/referenceToDataSetFormat':  # TODO can be better allocated
                 lambda cl_struct, x: setattr(
                     self.NotConverted, 'referenceToDataSetFormat', x),
@@ -1565,39 +1681,40 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
             '/processDataSet/administrativeInformation/dataEntryBy/referenceToPersonOrEntityEnteringTheData':
                 lambda cl_struct, x: self.ContactReferenceConversion(x, self.NotConverted,
                                                                      cl_struct.administrativeInformation.dataEntryBy,
-                                                                     {'id': 'a_personId',
-                                                                      'name': 'a_personName',
-                                                                      'email': 'a_personEmail'}).get_contact(),
+                                                                     {'id': 'personId',
+                                                                      'name': 'personName',
+                                                                      'email': 'personEmail'}).get_contact(),
             '/processDataSet/administrativeInformation/dataEntryBy/referenceToDataSetUseApproval':
                 lambda cl_struct, x: setattr(
                     self.NotConverted, 'referenceToDataSetUseApproval', x),
             '/processDataSet/administrativeInformation/publicationAndOwnership/dateOfLastRevision':
                 lambda cl_struct, x: setattr(
-                    self.NotConverted, 'dateOfLastRevision', x['#text']),
+                    self.NotConverted, 'dateOfLastRevision', x),
             '/processDataSet/administrativeInformation/publicationAndOwnership/dataSetVersion':
-                lambda cl_struct, x: (setattr(cl_struct.administrativeInformation.fileAttributes, 'a_majorRelease', int(x['#text'].split('.')[0])),
+                lambda cl_struct, x: (setattr(cl_struct.administrativeInformation.fileAttributes, 'majorRelease', int(x.split('.')[0])),
                                       setattr(
-                                          cl_struct.administrativeInformation.fileAttributes, 'a_minorRelease', 0),
-                                      setattr(cl_struct.administrativeInformation.fileAttributes, 'a_majorRevision', int(
-                                          x['#text'].split('.')[1])),
-                                      setattr(cl_struct.administrativeInformation.fileAttributes, 'a_minorRevision', int(x['#text'].split('.')[2]))),
+                                          cl_struct.administrativeInformation.fileAttributes, 'minorRelease', 0),
+                                      setattr(cl_struct.administrativeInformation.fileAttributes, 'majorRevision', int(
+                                          x.split('.')[1])),
+                                      # Here the version can be 00.00, so there is no 'third' element in the split
+                                      setattr(cl_struct.administrativeInformation.fileAttributes, 'minorRevision', int(x.split('.')[2] if len(x.split('.'))==3 else '000'))),
             '/processDataSet/administrativeInformation/publicationAndOwnership/referenceToPrecedingDataSetVersion':
                 lambda cl_struct, x: setattr(
                     self.NotConverted, 'referenceToPrecedingDataSetVersion', x),
             # TODO [!] isn't there a better conversion
             '/processDataSet/administrativeInformation/publicationAndOwnership/permanentDataSetURI':
                 lambda cl_struct, x: setattr(
-                    self.NotConverted, 'permanentDataSetURI', x['#text']),
+                    self.NotConverted, 'permanentDataSetURI', x),
             '/processDataSet/administrativeInformation/publicationAndOwnership/workflowAndPublication':
                 lambda cl_struct, x: setattr(cl_struct.administrativeInformation.dataGeneratorAndPublication,
-                                             'a_dataPublishedIn', status_publication_.get(x['#text'])),
+                                             'dataPublishedIn', status_publication_.get(x)),
             '/processDataSet/administrativeInformation/publicationAndOwnership/referenceToUnchangedRepublication':
                 lambda cl_struct, x: self.SourceReferenceConversion(x, self.NotConverted,
                                                                     {'regular': cl_struct.administrativeInformation.dataGeneratorAndPublication},
-                                                                    {'id': 'a_publishedSourceId',
-                                                                        'first_author': 'a_publishedSourceFirstAuthor',
-                                                                        'year': 'a_publishedSourceYear',
-                                                                        'page': 'a_pageNumbers'}).get_source(),
+                                                                    {'id': 'publishedSourceId',
+                                                                        'first_author': 'publishedSourceFirstAuthor',
+                                                                        'year': 'publishedSourceYear',
+                                                                        'page': 'pageNumbers'}).get_source(),
             '/processDataSet/administrativeInformation/publicationAndOwnership/referenceToRegistrationAuthority':
                 lambda cl_struct, x: setattr(
                     self.NotConverted, 'referenceToRegistrationAuthority', x),
@@ -1609,19 +1726,20 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
                     self.NotConverted, 'referenceToOwnershipOfDataSet', x),
             '/processDataSet/administrativeInformation/publicationAndOwnership/copyright':
                 lambda cl_struct, x: setattr(cl_struct.administrativeInformation.dataGeneratorAndPublication,
-                                             'a_isCopyrightProtected', x['#text']),
+                                             'isCopyrightProtected', x),
             '/processDataSet/administrativeInformation/publicationAndOwnership/referenceToEntitiesWithExclusiveAccess':
                 lambda cl_struct, x: (self.ContactReferenceConversion(x, self.NotConverted,  # Only using the last entry
                                                                       cl_struct.administrativeInformation.dataGeneratorAndPublication,
-                                                                      {'id': 'a_companyId',
-                                                                       'name': 'a_companyCode'}).get_contact(),
+                                                                      {'id': 'companyId',
+                                                                       'name': 'companyCode'}).get_contact(),
                                       setattr(self, '_access_restricted_to', 3)),
             '/processDataSet/administrativeInformation/publicationAndOwnership/licenseType':
                 lambda cl_struct, x: setattr(
-                    self, '_access_restricted_to', restrictions_.get(x['#text'])),
+                    self, '_access_restricted_to', restrictions_.get(x)),
             '/processDataSet/administrativeInformation/publicationAndOwnership/accessRestrictions':  # TODO Licensees; Licensees
                 lambda cl_struct, x: setattr(
-                    self._access_restriction_holder, 'a_accessRestrictedTo', access_.get(x['#text'].split(';')[0])),
+                    # Considered '1' as a default
+                    self._access_restriction_holder, 'accessRestrictedTo', access_.get(x['#text'].split(';')[0])) if access_.get(x['#text'].split(';')[0]) is not None else '1', 
             '/processDataSet/exchanges/exchange':
                 lambda cl_struct, x: self.FlowReferenceConversion(x['referenceToFlowDataSet'],
                                                                   self.NotConverted,

@@ -9,11 +9,15 @@ import zipfile
 from .formats import (
     ECS2InputConfig,
     ILCD1OutputConfig,
+    OLCAILCD1OutputConfig,
     ECS2OutputConfig,
     ILCD1InputConfig,
+    OLCAILCD1InputConfig,
     ILCD1Helper
 )
-from .conversions import MappingFactory
+from .conversions import (
+    MappingFactory,
+    )
 
 class Converter(ABC):
 
@@ -31,11 +35,13 @@ class Converter(ABC):
                                    output_config.default_mapping if ef_map[1] is None else ef_map[1])
 
         self._valid_extensions = input_config.valid_extensions
-        self._ns = input_config.namespaces
 
         self.__output_data = output_config.output_data  # NOT CHANGE
         self.__output_data.hash_ = hash_
         self.__output_structure = output_config.output_structure  # NOT CHANGE
+
+        if self._names[0] == self._names[1]:
+            self.__output_data.only_elem_flows = True
 
         self._iterator = input_config.iterator  # CHANGE
         self.__general_mapping = input_config.general_dataset_info
@@ -126,7 +132,7 @@ class Converter(ABC):
                 gmp = self.__general_mapping[path]
                 if gmp[0] not in self.file_info:
                     self.file_info[gmp[0]] = gmp[1](t) if 'list' not in gmp[0] else [gmp[1](t)]
-                else:
+                elif 'list' in gmp[0]: # This verification takes into account fields that can have many languages but only 'one' data
                     self.file_info[gmp[0]].append(gmp[1](t))
         self._version = self.file_info.pop('version', None)
 
@@ -145,7 +151,8 @@ class Converter(ABC):
             self._data = self.__output_data(self.save_path, self.__output_structure)
             self._set_format()
         if not self._o_version == self._version:
-            self._field_mapping = self.mapping_factory.get_mapping(self._version)
+            ilcd_ext = file.parent.parent if self._names[0] == self._names[1] and self._names[0] in ('ILCD1', 'OLCAILCD1') else None
+            self._field_mapping = self.mapping_factory.get_mapping(self._version, ilcd_ext)
             self._set_field_mapping()
         self._field_mapping.set_output_class_defaults(self._data.struct)
         self._set_post_instance_file_information()
@@ -209,7 +216,10 @@ class SingleHierarchicalCompressedDatasetConverter(Converter):
             for i, file in enumerate(processes):
                 self.start_conversion(file, file.name)
                 self.iterate(file)
-                self.end_conversion(e_file=self._extracted_path)
+                if i < len(processes)-1:
+                    self.end_conversion(multi=True, e_file=self._extracted_path)
+                else:
+                    self.end_conversion(e_file=self._extracted_path)
                 
         except Exception as e:
             self.file.close()
@@ -303,11 +313,13 @@ class ConverterFactory:
     def get_converter(input_, output, mode, path, save_path, hash_):
         InputConfig = {
             "EcoSpold2": ECS2InputConfig,
-            "ILCD1": ILCD1InputConfig
+            "ILCD1": ILCD1InputConfig,
+            "OLCAILCD1": OLCAILCD1InputConfig
             }.get(input_[0])
         OutputConfig = {
             "ILCD1": ILCD1OutputConfig,
-            "EcoSpold2": ECS2OutputConfig
+            "EcoSpold2": ECS2OutputConfig,
+            "OLCAILCD1": OLCAILCD1OutputConfig
             }.get(output[0])
         ef = (input_[1], output[1])
         args = (path, save_path, hash_,      # Paths
@@ -319,22 +331,22 @@ class ConverterFactory:
                 if path.suffix not in InputConfig.valid_extensions:
                     raise OSError(
                         f'{path} is not a valid {input_} file path, must end with one of: {", ".join(InputConfig.valid_extensions)}')
-                if input_[0] == 'ILCD1' and output[0] == 'EcoSpold2':
+                if input_[0] in ('ILCD1', 'OLCAILCD1'):
                     ILCD1Helper.is_valid(path)
                     return SingleHierarchicalCompressedDatasetConverter(*args)
                 return SingleDatasetConverter(*args)
             elif path.is_dir():
-                if input_[0] == 'ILCD1' and output[0] == 'EcoSpold2':
+                if input_[0] in ('ILCD1', 'OLCAILCD1'):
                     return MultipleHierarchicalCompressedDatasetConverter(*args)
                 return MultipleSingleDatasetConverter(*args)
             else:
-                raise OSError(f'{path} is not a valid path for conversion')    
+                raise OSError(f'{path} is not a valid path for conversion')
         elif mode == "to database":
             if not path.is_dir():
                 raise OSError(f'{path} is not a valid directory path')
-            if input_[0] == 'EcoSpold2' and output[0] == 'ILCD1':
+            if input_[0] == 'EcoSpold2' and output[0] in ('ILCD1', 'OLCAILCD1'):
                 warnings.warn('Conversion of EcoSpold2 to ILCD1 in database mode: different sets of property values for the same flow are converted to different versions of the same flow (and named as such). This is an ILCD1 feature not easily recognized by softwares, so this type of conversion is not recommended. It is recommended to use the mode "to file" or change the Converter attribute "convert_properties" to False', UserWarning)
-            if input_[0] == 'ILCD1' and output[0] == 'EcoSpold2':
+            if input_[0] in ('ILCD1', 'OLCAILCD1'):
                 return MultipleHierarchicalCompressedDatasetConverter(*args)
             return MultipleDatasetConverter(*args)
 
@@ -342,9 +354,10 @@ class ConverterFactory:
 def get_converter(input_: tuple, output: tuple, path: str, save_path: str, mode: str, hash_ = ''):
 
     VALID = {
-        "type": {"EcoSpold2", "ILCD1"},
+        "type": {"EcoSpold2", "ILCD1", "OLCAILCD1"},
         "ef_type": {"EcoSpold2": {"ecoinvent3.7"},
-                    "ILCD1": {"EF3.0"}},
+                    "ILCD1": {"EF3.0"},
+                    "OLCAILCD1": {"EF3.0"}},
         "mode": {"to file", "to database"}
     }
 
@@ -356,13 +369,14 @@ def get_converter(input_: tuple, output: tuple, path: str, save_path: str, mode:
         if not isinstance(x, str):
             raise TypeError(
                 f"\tInvalid input type '{type(x)}'. Must be a string")
-        if x not in n:
+        if x not in n and input_[0] != output[0]:
             vv = [f"'{l}'" for l in n]
             raise AttributeError(
                 f"\tInvalid conversion input '{x}'. Must be one of {', '.join(vv)}")
 
-    if input_[0] == output[0]:
-        raise ValueError(f"Invalid conversion between equal types {input_[0]} and {output[0]}")
+    # Conversion between the same file are possible now for converting only elementary flows
+    # if input_[0] == output[0]:
+    #     raise ValueError(f"Invalid conversion between equal types {input_[0]} and {output[0]}")
 
     path = Path(path)
     if not path.exists():

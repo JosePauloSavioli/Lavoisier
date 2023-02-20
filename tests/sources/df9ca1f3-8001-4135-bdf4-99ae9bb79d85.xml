@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<sourceDataSet version="1.1" xmlns="http://lca.jrc.it/ILCD/Source" xmlns:c="http://lca.jrc.it/ILCD/Common">
+  <sourceInformation>
+    <dataSetInformation>
+      <c:UUID>df9ca1f3-8001-4135-bdf4-99ae9bb79d85</c:UUID>
+      <c:shortName xml:lang="en">1234, (9000)</c:shortName>
+      <classificationInformation>
+        <c:classification name="ILCD" classes="ILCDClassification.xml">
+          <c:class level="0">Publications and communications</c:class>
+        </c:classification>
+      </classificationInformation>
+    </dataSetInformation>
+  </sourceInformation>
+  <administrativeInformation>
+    <dataEntryBy>
+      <c:timeStamp>2023-02-13T06:57:58</c:timeStamp>
+      <c:referenceToDataSetFormat type="source data set" refObjectId="a97a0155-0234-4b87-b4ce-a45da52f2a40" version="03.00.000" uri="../sources/a97a0155-0234-4b87-b4ce-a45da52f2a40">
+        <c:shortDescription xml:lang="en">ILCD Format</c:shortDescription>
+      </c:referenceToDataSetFormat>
+    </dataEntryBy>
+    <publicationAndOwnership>
+      <c:dataSetVersion>01.00.000</c:dataSetVersion>
+    </publicationAndOwnership>
+  </administrativeInformation>
+</sourceDataSet>
