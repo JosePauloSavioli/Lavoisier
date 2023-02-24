@@ -33,7 +33,7 @@ class ECS2InputConfig(InputConfig):
     iterator = XMLStreamIterable
     general_dataset_info = {
         "/ecoSpold/activityDataset/administrativeInformation/fileAttributes/@defaultLanguage": (('mapping','_default_language'), lambda x: x),
-        "/ecoSpold/activityDataset/administrativeInformation/fileAttributes/@internalSchemaVersion": ('version', lambda x: x.split('.')),
+        "/ecoSpold/activityDataset/administrativeInformation/fileAttributes/@internalSchemaVersion": ('version', lambda x: x.split('.')), # Last is a default
         "/ecoSpold/childActivityDataset/administrativeInformation/fileAttributes/@defaultLanguage": (('mapping','_default_language'), lambda x: x),
         "/ecoSpold/childActivityDataset/administrativeInformation/fileAttributes/@internalSchemaVersion": ('version', lambda x: x.split('.'))
         }

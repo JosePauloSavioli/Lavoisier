@@ -150,7 +150,7 @@ class Converter(ABC):
         if not hasattr(self, '_data'):
             self._data = self.__output_data(self.save_path, self.__output_structure)
             self._set_format()
-        if not self._o_version == self._version:
+        if (not self._o_version == self._version) or (self._o_version is None and self._version is None):
             ilcd_ext = file.parent.parent if self._names[0] == self._names[1] and self._names[0] in ('ILCD1', 'OLCAILCD1') else None
             self._field_mapping = self.mapping_factory.get_mapping(self._version, ilcd_ext)
             self._set_field_mapping()
