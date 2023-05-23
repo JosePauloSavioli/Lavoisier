@@ -16,7 +16,6 @@ from pathlib import Path
 from Crypto.Cipher import AES
 from binascii import unhexlify, hexlify
 
-# key = b'_Lavosier_ECS2_/'
 def uuid_from_uuid(u, key, type_):
     
     iv = key[::-1]
@@ -28,12 +27,15 @@ def uuid_from_uuid(u, key, type_):
     u_ = u_[0:15]+u_[16:]
     d = unhexlify(u_)
     cipher = AES.new(key, AES.MODE_CFB, iv)
-    if type_ == "to_ILCD1":
+    if type_ == "flow_conversion_1":
         new_u = hexlify(cipher.encrypt(d)).decode()
-    elif type_ == "to_ECS2":
+    elif type_ == "flow_conversion_2":
         new_u = hexlify(cipher.decrypt(d)).decode()
     new_u = new_u[0:8]+"-"+new_u[8:12]+"-"+u12+new_u[12:15]+"-"+u16+new_u[15:18]+"-"+new_u[18:30]
     return new_u
+
+# print(uuid_from_uuid('e6cc5b9b-5efb-44e7-bb31-b239fc135928', b'\__Lav_IL1EC2__/', 'flow_conversion_1'))
+# print(uuid_from_uuid('32636a0d-885d-41d4-b0c5-c25a0591bbd9', b'\__Lav_IL1EC2__/', 'flow_conversion_2'))
 
 def uuid_from_string(text):
     
@@ -61,6 +63,13 @@ def ensure_list(x, ensure_text=False):
         if ensure_text:
             return [n for n in x if n['#text'] and n['#text'] != '']
         return x
+
+class Print:
+    quiet = None
+    @classmethod
+    def output(cls, x):
+        if not cls.quiet:
+            print(x)
 
 # Credits for Michael for the idea of that function
 # https://blogs.blumetech.com/blumetechs-tech-blog/2011/05/faster-python-file-copy.html

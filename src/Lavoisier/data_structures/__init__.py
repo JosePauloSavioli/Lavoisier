@@ -6,6 +6,7 @@ Created on Fri Oct  7 05:20:56 2022
 @author: jotape42p
 """
 
+from .abstractions import StructureTemplate
 from .main import DotDict, Validator
 from .factories import StructureFactory
 from .utils import text_to_list

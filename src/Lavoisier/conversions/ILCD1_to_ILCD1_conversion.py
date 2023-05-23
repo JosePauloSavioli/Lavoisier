@@ -18,11 +18,35 @@ import xmltodict
 from copy import deepcopy
 import warnings
 
+# TODO make it so that the output flow is respected (copy and paste every file in the folders
+
+'''
+if extracted_file:
+    if type(self).only_elem_flows:
+        for dir_ in ("", "external_docs", "sources", "contacts", "flowproperties", "unitgroups"):
+            Path(self.save_dir, dir_).mkdir(exist_ok=True)
+            
+            if Path(extracted_file, 'processes').is_dir():
+                gen = Path(extracted_file, dir_).glob('*.xml')
+            else:
+                for d in Path(extracted_file).iterdir():
+                    if Path(extracted_file, d).is_dir() and Path(extracted_file, d, 'processes').is_dir():
+                        gen = Path(extracted_file, d, dir_).glob('*.xml')
+                        break
+                else:
+                    raise Exception("No valid ILCD directory in {extracted_file}")
+            for file in gen:
+                shutil.copy(file,
+                            Path(self.save_dir, dir_))
+                
+    shutil.rmtree(extracted_file)
+'''
+
 class ILCD1ToILCD1ElementaryFlowConversion:
     
     default_files = None
     elem_flow_mapping = None
-    ilcd_extracted_dir = None
+    ilcd_extracted_dir = None # TODO now instead of receiving the file.parent.parent, it only receives the file in the _file_reference variable
     save_dir = None
     
     exc_holder = None
@@ -246,14 +270,13 @@ class ILCD1ToILCD1BasicFieldMapping(FieldMapping, ABC):
     # Configuration Defaults
     _convert_additional_fields = True
 
-    def set_mappings(self, ef_map, cl_map):
+    def set_mappings(self, ef_map):
         self._elem_mapping = self._dict_from_file(
             ef_map or type(self)._default_elem_mapping, 'SourceFlowUUID')
         self.ElementaryFlowConversion.elem_flow_mapping = self._elem_mapping
 
-    def __init__(self,
-                 ElementaryFlowConversion):
-        self.ElementaryFlowConversion = ElementaryFlowConversion
+    def __init__(self):
+        self.ElementaryFlowConversion = ILCD1ToILCD1ElementaryFlowConversion
 
     def start_conversion(self):
         self.ElementaryFlowConversion.default_files = type(self)._default_files

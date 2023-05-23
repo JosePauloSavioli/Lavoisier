@@ -7,37 +7,6 @@ Created on Sat Oct 15 12:08:41 2022
 """
 
 import os
-from dataclasses import dataclass
-from abc import ABC, abstractmethod
-
-@dataclass
-class AbstractDataclass(ABC):
-    def __new__(cls, *args, **kwargs):
-        if cls == AbstractDataclass or cls.__bases__[0] == AbstractDataclass:
-            raise TypeError("Cannot instantiate abstract class.")
-        return super().__new__(cls)
-
-class Dataset(ABC):
-    def __init__(self):
-        pass
-    @abstractmethod
-    def handle_error(self):
-        pass
-    @abstractmethod
-    def start_log(self):
-        pass
-    @abstractmethod
-    def end_log(self):
-        pass
-    @abstractmethod
-    def start_conversion(self):
-        pass
-    @abstractmethod
-    def end_conversion(self):
-        pass
-    @abstractmethod
-    def reset_conversion(self):
-        pass
 
 def zipdir(path, ziph):
 
@@ -47,10 +16,43 @@ def zipdir(path, ziph):
             filepath = os.path.join(root, file)
             ziph.write(filepath, filepath[len_path:])
 
-from collections.abc import Iterator
+from .abstractions import LogTemplate
+import logging
+import time, re
+
+class DefaultLog(LogTemplate):
+    # Make structure collect the file name
+
+    def start_log(self, log_path):
+        from .. import __version__
+        logging.basicConfig(filename=str(log_path),
+                            format="%(levelname)s - %(message)s",
+                            force=True,
+                            level=logging.DEBUG)
+        logging.info(f"\n###\nLavoisier version: {__version__}\nConversion started at: {time.strftime('%d/%m/%Y %H:%M:%S', time.localtime())}"+\
+                     "\nLavoisier, converter of LCI formats, powered by Gyro (UTFPR) and IBICT\nLicensed under GNU General Public License v3 (GPLv3)\n###\n")
+
+    def reset_log(self, finished_filename):
+        logging.info(f"\n\nConversion ended for {finished_filename}\n")
+
+    def end_log(self, log_path):
+        logging.info("\nConversion ended")
+        logging.handlers = []
+        
+        if log_path is not None:
+            with open(str(log_path), 'r') as f:
+                converted = re.findall('INFO -[\W]+Starting conversion of flow ([\S ]+?) : ([0-9a-f-]{36})\nWARNING -[\W]+Flow not converted (due to lack of elementary flow correspondence in the|as the flow is not present on the elementary flow) mapping file', f.read())
+            if len(converted) > 0:
+                with open(str(log_path)[:-4]+'_not_converted_elementary_flows.log', 'w') as f:
+                    for ef in converted:
+                        print(ef[1]+' : '+ef[0], file=f)
+        
+        # logging.shutdown()
+
+from .abstractions import BasicIterable
 import xml.etree.cElementTree as etree
 
-class XMLStreamIterable(Iterator):
+class XMLStreamIterable(BasicIterable):
 
     def __init__(self,
                  file,
@@ -119,3 +121,27 @@ class XMLStreamIterable(Iterator):
             return next(self.gen)
         except StopIteration:
             raise StopIteration
+
+import ijson
+
+class JSONStreamIterablt(BasicIterable):
+
+    def __init__(self, file, keys: dict): # 'keys' here is the mapping dictionary
+        self._file = file
+        self._keys = list(keys.keys())
+        self.gen = self.gen_return()
+
+    def __iter__(self):
+        return self
+    
+    def gen_return(self):
+        try:
+            for key in self._keys:
+                res = list(ijson.items(self._file, key))
+                yield (key, (res[0] if len(res) == 1 else res))
+                self._file.seek(0) # Returns the pointer to 0 for a new query
+        except StopIteration:
+            pass
+
+    def __next__(self):
+        return next(self.gen)

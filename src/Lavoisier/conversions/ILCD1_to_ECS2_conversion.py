@@ -6,17 +6,20 @@ Created on Tue Nov  1 00:32:43 2022
 @author: jotape42p
 """
 
+import openturns as ot
 from abc import ABC, abstractmethod
 from pathlib import Path
 from copy import copy
-from collections import Counter
+from collections import Counter, defaultdict
 from itertools import chain
+import os
 
 from .utils import (
     uuid_from_uuid,
     uuid_from_string,
     ensure_list,
-    FieldMapping
+    FieldMapping,
+    Print
 )
 from .units import (
     ilcd_to_ecs2_un,
@@ -38,13 +41,14 @@ from .data import (
 )
 
 from ..formats import ILCD1Helper, ECS2Helper, XMLStreamIterable
+from ..data_structures import ILCD1ToECS2DataNotConverted
 
 import logging
 import time
 import re
 import math
 import pint
-up = pint.UnitRegistry()
+up = pint.UnitRegistry(Path(Path(__file__).parent, 'units.txt'))
 up.define('@alias hour = h')
 up.define('item = [item] = _ = Item = Items')
 up.define('EUR2005 = [currency] = EUR_default')
@@ -139,11 +143,13 @@ class ILCD1ToECS2UncertaintyConversion:
             field.lognormal.meanValue = m
             field.lognormal.variance = getattr(self, 'var', var)
             field.lognormal.varianceWithPedigreeUncertainty = var
+            self._var = var
         elif self._type == 'normal':
             var = (self.varpedigree * f / 2) ** 2
             field.normal.meanValue = m
             field.normal.variance = getattr(self, 'var', var)
             field.normal.varianceWithPedigreeUncertainty = var
+            self._var = var
         elif self._type == 'triangular':
             field.triangular.minValue = self.min * f
             field.triangular.mostLikelyValue = m
@@ -164,7 +170,26 @@ class ILCD1ToECS2UncertaintyConversion:
             elif hasattr(self, 'standardDeviation95'):
                 for x in ('minValue', 'standardDeviation95', 'maxValue'):
                     setattr(field.undefined, '@'+x, float(getattr(self, x)))
+        return self
 
+    def _get_distribution(self, amount):
+        self._unc = {
+            'lognormal': (ot.LogNormal, lambda: [math.log(abs(amount.m)), math.sqrt(self._var)]),
+            'normal': (ot.Normal, lambda: [amount.m, math.sqrt(self._var)])
+        }.get(self._type)
+        return self._unc[0](*self._unc[1]())
+
+    def _change_data(self, amount, other_unc, operation, field):
+        logging.info(
+            f"\t\tUncertainty: Distribution operation {operation} between two {self._type} distributions")
+        unc = self._get_distribution(amount)
+        if operation == 'add':
+            new = (unc + other_unc)
+        if self._type == 'normal':
+            self._var = new.getStandardDeviation()[0] ** 2
+            field.normal.meanValue = new.getMean()[0]
+            field.normal.variance = self._var
+            field.normal.varianceWithPedigreeUncertainty = self._var
 
 class Amount(ABC):
 
@@ -214,6 +239,17 @@ class ILCD1ToECS2Amount(Amount):
                 self._a.m, self._f, field.uncertainty)
             return self._unc
         return None
+
+    def sum_(self, other, field):
+        if isinstance(other, ILCD1ToECS2Amount):
+            if hasattr(self, '_unc') and hasattr(other, '_unc'):
+                if self._unc._type == other._unc._type == 'normal':
+                    self._unc._change_data(self, other._unc._get_distribution(other), 'add', field.uncertainty)
+                else:
+                    del self._unc  # If there is a division and it is not two lognormal uncertainties, desconsider uncertainty
+        self._a = self._a + (other.a if isinstance(other,
+                             ILCD1ToECS2Amount) else other)
+        self._f += other.m
 
     def multiply(self, other):
         self._a = self._a * other
@@ -327,16 +363,19 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
 
     _reference_flows = []
     _flow_internal_refs = None
-    _all_flows = set()
+    _all_em_flows = set()
     _all_flow_ids = set() # Used to avoid duplicates on the field 'id'
 
+    _use_md_prop = None
+    property_master_data = None
+        
     def __init__(self, x, not_converted):
         self.not_converted = not_converted
 
         # Dimensionless for the time, it will have an unit in the references
         self.id_ = x['referenceToFlowDataSet']['@refObjectId']
-        self.__name =  ensure_list(x['referenceToFlowDataSet']['shortDescription'], ensure_text=True)[0]['#text']
-        logging.info(f'\tStarting conversion of flow {self.__name} : {self.id_}')
+        self._name =  ensure_list(x['referenceToFlowDataSet']['shortDescription'], ensure_text=True)[0]['#text']
+        logging.info(f'\tStarting conversion of flow {self._name} : {self.id_}')
         self.amount = type(self).amountClass(float(x.get('resultingAmount', x.get('meanAmount'))),
                                              'dimensionless', x)
 
@@ -368,6 +407,24 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
         master_field = None
 
         _energy = []
+    
+        @classmethod
+        def master_data(cls, id_, d, not_converted):
+            self = cls()
+            self.not_converted = not_converted
+            self.name = d['name']
+            self.id_ = id_
+            logging.info(f'Starting conversion of master property {self.name} : {self.id_}')
+            self.isConvertible = True
+            self.amount = type(self).amountClass(float(d['amount'].replace(',','.')), d['unitName'], None)
+            self.field = cls.property_holder.get_class('property')()
+            self.field.unitName = ILCD1Helper.text_dict_from_text(0, d['unitName'])
+            self.field.unitId = [x[0] for x in ilcd_to_ecs2_un.values() if x[1] == d['unitName']][0]
+            self.field.isDefiningValue = True if d['isDefiningValue'] == "VERDADEIRO" else False
+            self.amount.calculate_unc(self.field)
+            if d['comment'] != '':
+                self.field.comment = ILCD1Helper.text_dict_from_text(0, d['comment'])
+            return self
 
         @classmethod
         def normal_init(cls, x, not_converted):
@@ -455,53 +512,59 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
             return self
 
         @classmethod
-        def convert_properties(cls, props, flow):
-            if 'water content' in props:
-                if str(flow.amount.u) == 'm**3':
-                    logging.warning(
-                        '\t\tProperties Wet mass and dry mass not converted due to a need for density values in m3/kg')
-                else:
-                    props['wet mass'] = cls.mass_prop_init(
-                        1, 'wet mass', '67f102e2-9cb6-4d20-aa16-bf74d8a03326')
-                    props['dry mass'] = cls.mass_prop_init(
-                        1-props['water content'].amount.m, 'dry mass', '3a0af1d6-04c3-41c6-a3da-92c4f61e0eaa')
-                    props['water in wet mass'] = cls.mass_prop_init(
-                        props['water content'].amount.m, 'water in wet mass', '6d9e1462-80e3-4f10-b3f4-71febd6f1168')
-
-            for k, prop in props.items():
-                if ' content' in k:
-                    if not prop.field.get('propertyId'):
-                        mass, volume = prop.fp[4]
-                        if str(flow.amount.u) == 'kg' and mass:
-                            prop.field.unitName = ILCD1Helper.text_dict_from_text(0, 'kg/kg')
-                            prop.field.unitId = '83ecd334-1b5b-4784-8938-6a0d0a9d8954'
-                            prop.field.propertyId = mass[0]
-                            prop.field.name = ILCD1Helper.text_dict_from_text(
-                                1, mass[1])
-                        elif str(flow.amount.u) == 'm**3' and volume:
-                            prop.field.unitName = ILCD1Helper.text_dict_from_text(0, 'kg/m3')
-                            prop.field.unitId = 'cacb6d36-694d-4e4f-9e79-6c9c73146839'
-                            prop.field.propertyId = volume[0]
-                            prop.field.name = ILCD1Helper.text_dict_from_text(
-                                1, volume[1])
-                        else:
-                            if 'dry mass' in props:
-                                if props['dry mass'].amount.m != 0:
-                                    prop.amount.divide(props['dry mass'].amount.a)
-                                else:
-                                    prop.amount._a = up.Quantity(0, 'kg')
-                            else:  # unit correction only, considered dry mass as 1
-                                prop.amount.divide(up.Quantity(1, 'kg'))
+        def convert_properties(cls, props, flow, master_data):
+            if master_data:
+                for k, prop in props.items():
+                    prop.field.propertyId = prop.id_
+                    prop.field.name = ILCD1Helper.text_dict_from_text(1, prop.name)
+                    prop.field.amount = prop.amount.m
+            else:
+                if 'water content' in props:
+                    if str(flow.amount.u) == 'm**3':
+                        logging.warning(
+                            '\t\tProperties Wet mass and dry mass not converted due to a need for density values in m3/kg')
+                    else:
+                        props['wet mass'] = cls.mass_prop_init(
+                            1, 'wet mass', '67f102e2-9cb6-4d20-aa16-bf74d8a03326')
+                        props['dry mass'] = cls.mass_prop_init(
+                            1-props['water content'].amount.m, 'dry mass', '3a0af1d6-04c3-41c6-a3da-92c4f61e0eaa')
+                        props['water in wet mass'] = cls.mass_prop_init(
+                            props['water content'].amount.m, 'water in wet mass', '6d9e1462-80e3-4f10-b3f4-71febd6f1168')
+    
+                for k, prop in props.items():
+                    if ' content' in k:
+                        if not prop.field.get('propertyId'):
+                            mass, volume = prop.fp[4]
+                            if str(flow.amount.u) == 'kg' and mass:
+                                prop.field.unitName = ILCD1Helper.text_dict_from_text(0, 'kg/kg')
+                                prop.field.unitId = '83ecd334-1b5b-4784-8938-6a0d0a9d8954'
+                                prop.field.propertyId = mass[0]
+                                prop.field.name = ILCD1Helper.text_dict_from_text(
+                                    1, mass[1])
+                            elif str(flow.amount.u) == 'm**3' and volume:
+                                prop.field.unitName = ILCD1Helper.text_dict_from_text(0, 'kg/m3')
+                                prop.field.unitId = 'cacb6d36-694d-4e4f-9e79-6c9c73146839'
+                                prop.field.propertyId = volume[0]
+                                prop.field.name = ILCD1Helper.text_dict_from_text(
+                                    1, volume[1])
+                            else:
+                                if 'dry mass' in props:
+                                    if props['dry mass'].amount.m != 0:
+                                        prop.amount.divide(props['dry mass'].amount.a)
+                                    else:
+                                        prop.amount._a = up.Quantity(0, 'kg')
+                                else:  # unit correction only, considered dry mass as 1
+                                    prop.amount.divide(up.Quantity(1, 'kg'))
+                                prop.field.propertyId = prop.fp[2]
+                                prop.field.name = ILCD1Helper.text_dict_from_text(
+                                    1, prop.fp[3])
+                    else:
+                        if not prop.field.get('propertyId'):
                             prop.field.propertyId = prop.fp[2]
                             prop.field.name = ILCD1Helper.text_dict_from_text(
                                 1, prop.fp[3])
-                else:
-                    if not prop.field.get('propertyId'):
-                        prop.field.propertyId = prop.fp[2]
-                        prop.field.name = ILCD1Helper.text_dict_from_text(
-                            1, prop.fp[3])
-
-                prop.field.amount = prop.amount.m
+    
+                    prop.field.amount = prop.amount.m
 
             return [p for p in props.values()]
 
@@ -516,6 +579,10 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
                 else:
                     self.main = ilcd_to_ecs2_un.get(
                         t['referenceToFlowPropertyDataSet']['@refObjectId'])
+    
+    def get_master_data_properties(self, id_):
+        for propid, prop in type(self).property_master_data.get(id_, {}).items():
+            self.properties[prop['name']] = self.Property.master_data(propid, prop, self.not_converted)
 
     def get_elementary_flow_info(self, n, file):
         self.field.elementaryExchangeId = n["TargetFlowUUID"]
@@ -573,7 +640,11 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
             0, n['TargetUnit'])
         self.master.unitId = v[0]
 
-        self.get_properties(file)
+        if type(self)._use_md_prop:
+            self.get_master_data_properties(n["TargetFlowUUID"])
+        else:
+            self.get_properties(file)
+        type(self)._all_em_flows.add(self)
 
     def get_intermediate_flow_info(self, file):
         self.field.intermediateExchangeId = uuid_from_uuid(
@@ -606,7 +677,7 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
         self.master.unitId = self.main[0]
         
 
-    def finish_flow_info(self):
+    def finish_flow_info(self, final = False):
         id_ = uuid_from_string(
             type(self).uuid_process + self.info['name'][0]['#text']) # Assumed the first name
         if id_ in type(self)._all_flow_ids:
@@ -651,14 +722,15 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
             self.properties = {k: v for k,
                                v in self.properties.items() if v.isConvertible}
             self.properties = self.Property.convert_properties(
-                self.properties, self)
+                self.properties, self, type(self)._use_md_prop)
             if hasattr(self, 'alloc_properties'):
                 self.properties.extend([self.Property.allocation_init(
                     {'@lang': 'en', '#text': k}, v, self.master) for k, v in self.alloc_properties.items()])
             for p in self.properties:
                 self.field.property = p.field
-                
-        setattr(type(self).master_field, self.mtype, self.master)
+        
+        if not final:
+            setattr(type(self).master_field, self.mtype, self.master)
     
     def set_field(self, ref):
         if self.isConvertible:
@@ -717,15 +789,17 @@ class ILCD1ToECS2ReferenceConversion:
                 #        return file
             else:
                 if x.get('@refObjectId'): # Versions could be mismatched from the process and flow
-                    for file in path.glob('*xml'):
-                        if x['@refObjectId'] in file.name:
-                            return file
+                    for file in os.listdir(path): # path.glob('*xml'):
+                        if x['@refObjectId'] in file: # .name:
+                            return Path(path, file)
 
                 logging.warning(
                     f"\t\tfile of type '{type_}' and id '{x.get('@refObjectId', '[no ID]')}' not found")
+                Print.output(f"\tfile of type '{type_}' and id '{x.get('@refObjectId', '[no ID]')}' not found")
                 return None
         else:
             logging.warning(f"\t\tfolder of type '{type_}' not found")
+            Print.output(f"\tfolder of type '{type_}' not found")
             return None
 
     def set_attr(self, cl, field):
@@ -783,7 +857,7 @@ class ILCD1ToECS2SourceReferenceConversion(ILCD1ToECS2ReferenceConversion):
                     for path, t in XMLStreamIterable(f, map_):
                         map_[path](info, t)
 
-                    id_ = uuid_from_uuid(self.id_, b'_Lavosier_ECS2_/', "to_ECS2")
+                    id_ = uuid_from_uuid(self.id_, b'\__Lav_IL1EC2__/', "flow_conversion_2")
                     setattr(self.field, self.attrname['id'], id_)
                     if re.search(r'[ \(\[,](\d{4})[\)\]] p\. (.*)$', info.get('citation', info['name'])):
                         n = re.search(
@@ -861,7 +935,7 @@ class ILCD1ToECS2ContactReferenceConversion(ILCD1ToECS2ReferenceConversion):
                 for path, t in XMLStreamIterable(f, map_):
                     map_[path](info, t)
 
-                id_ = uuid_from_uuid(self.id_, b'_Lavosier_ECS2_/', "to_ECS2")
+                id_ = uuid_from_uuid(self.id_, b'\__Lav_IL1EC2__/', "flow_conversion_2")
                 setattr(self.field, self.attrname['id'], id_)
                 # The reference name is enough
                 #print('\n---->', info.get('sname', info.get('name')))
@@ -885,7 +959,7 @@ class ILCD1ToECS2FlowReferenceConversion(ILCD1ToECS2ReferenceConversion):
         if self.isConvertible:
             with open(self.file) as f:
 
-                classifications = []
+                # classifications = []
 
                 map_ = {'/flowDataSet/modellingAndValidation/LCIMethod/typeOfDataSet':
                             lambda x, t: x.__setitem__('type', t),
@@ -895,17 +969,18 @@ class ILCD1ToECS2FlowReferenceConversion(ILCD1ToECS2ReferenceConversion):
                             lambda x, t: x.__setitem__('CAS', t),
                         '/flowDataSet/flowInformation/dataSetInformation/sumFormula':
                             lambda x, t: x.__setitem__('formula', t),
-                        '/flowDataSet/flowInformation/dataSetInformation/synonyms':
-                            lambda x, t: x.__setitem__(
-                                'synonym', x.get('synonym', []) + [
-                                    {'@index': i, '@lang': t['@lang'] if isinstance(t, dict) else 'en', '#text': y} for i, y in enumerate(chain(
-                                        *[n['#text'].split(';') for n in ensure_list(t, ensure_text=True)]))]),
+                        # '/flowDataSet/flowInformation/dataSetInformation/synonyms':
+                        #     lambda x, t: x.__setitem__(
+                        #         'synonym', x.get('synonym', []) + [
+                        #             {'@index': i, '@lang': t['@lang'] if isinstance(t, dict) else 'en', '#text': y} for i, y in enumerate(chain(
+                        #                 *[n['#text'].split(';') for n in ensure_list(t, ensure_text=True)]))]),
                         '/flowDataSet/flowInformation/quantitativeReference/referenceToReferenceFlowProperty':
                             lambda x, t: x.__setitem__(
                                 'reference', t),
-                        '/flowDataSet/flowInformation/dataSetInformation/classificationInformation/classification':
-                            lambda x, t: classifications.append(
-                                type(self).class_conversion(t, self.not_converted).field),
+                        # TODO
+                        # '/flowDataSet/flowInformation/dataSetInformation/classificationInformation/classification':
+                        #     lambda x, t: classifications.append(
+                        #         type(self).class_conversion(t, self.not_converted).field),
                         # General comment of flow not converted as it is a duplication
                         }
                 info = {}
@@ -927,10 +1002,12 @@ class ILCD1ToECS2FlowReferenceConversion(ILCD1ToECS2ReferenceConversion):
                             self.flow.isConvertible = False
                             logging.warning(
                                 "\t\tFlow not converted due to lack of elementary flow correspondence in the mapping file")
+                            Print.output(f"\tFlow '{self.flow._name}' not converted due to lack of elementary flow correspondence in the mapping file")
                     else:
                         self.flow.isConvertible = False
                         logging.warning(
                             "\t\tFlow not converted as the flow is not present on the elementary flow mapping file")
+                        Print.output(f"\tFlow '{self.flow._name}' not converted as the flow is not present on the elementary flow mapping file")
                 else:
                     self.flow.field = type(self.flow).flow_holder.get_class(
                         'intermediateExchange')()
@@ -939,11 +1016,12 @@ class ILCD1ToECS2FlowReferenceConversion(ILCD1ToECS2ReferenceConversion):
 
                 if self.flow.isConvertible:
                     self.flow.finish_flow_info()
-                    if info['type'] != 'Elementary flow' and classifications:
-                        setattr(self.flow.field, 'classification', type(
-                            self).class_conversion.organize(classifications, 'CPC'))
-                    else:
-                        pass # Implement not converted instance for elementary exchanges
+                    # TODO
+                    # if info['type'] != 'Elementary flow' and classifications:
+                    #     setattr(self.flow.field, 'classification', type(
+                    #         self).class_conversion.organize(classifications, 'CPC'))
+                    # else:
+                    #     pass # Implement not converted instance for elementary exchanges
         else:
             self.flow.isConvertible = False
         return self.flow
@@ -965,53 +1043,57 @@ class ILCD1ToECS2ClassificationConversion:
     master_field = None
     
     def __init__(self, x, not_converted):
-        # Set instances
-        self.field = self.class_holder.get_class('classification')()
-        self.not_converted = not_converted
-        self.master = type(self).master_field.get_class('classificationSystem')()
-        self.clv = self.master.get_class('classificationValue')()
-
-        # Used variables
-        self.name = "ILCD" if not x.get("@name") else x["@name"]
-        if self.name in type(self)._defaults.keys():
-            if self.name != 'EcoSpold01Categories':
-                self.value = ensure_list(x['class'])[-1]["#text"]
-            else:
-                self.value = '/'.join([x['#text']
-                                      for x in ensure_list(x['class'])])
-        else: # It can be equal {}
-            self.value = '/'.join([x['#text']
-                                  for x in ensure_list(x.get('class', {}))])
-
-        # Get basic fields
-        self.field.classificationSystem = {
-            '@index': 0, '@lang': 'en', '#text': self.name}
-        self.master.id = uuid_from_string(self.name)
-        self.master.type = 3 # TODO
-        self.master.name = {'@index': 0, '@lang': 'en', '#text': self.name}
-        self.field.classificationValue = {
-            '@index': 0, '@lang': 'en', '#text': self.value}
-        self.clv.name = {'@index': 0, '@lang': 'en', '#text': self.value}
-    
-        # Get class fields
-        self.get_classification()
-        setattr(self.master, 'classificationValue', self.clv)
-        setattr(type(self).master_field, 'classificationSystem', self.master)
+        return # This is deprecated as the mapping is bad
         
-        # Get not converted
-        self.get_not_converted(x)
+        # # Set instances
+        # self.field = self.class_holder.get_class('classification')()
+        # self.not_converted = not_converted
+        # self.master = type(self).master_field.get_class('classificationSystem')()
+        # self.clv = self.master.get_class('classificationValue')()
+
+        # # Used variables
+        # self.name = "ILCD" if not x.get("@name") else x["@name"]
+        # if self.name in type(self)._defaults.keys():
+        #     if self.name != 'EcoSpold01Categories':
+        #         self.value = ensure_list(x['class'])[-1]["#text"]
+        #     else:
+        #         self.value = '/'.join([x['#text']
+        #                               for x in ensure_list(x['class'])])
+        # else: # It can be equal {}
+        #     self.value = '/'.join([x['#text']
+        #                           for x in ensure_list(x.get('class', {}))])
+
+        # # Get basic fields
+        # self.field.classificationSystem = {
+        #     '@index': 0, '@lang': 'en', '#text': self.name}
+        # self.master.id = uuid_from_string(self.name)
+        # self.master.type = 3 # TODO
+        # self.master.name = {'@index': 0, '@lang': 'en', '#text': self.name}
+        # self.field.classificationValue = {
+        #     '@index': 0, '@lang': 'en', '#text': self.value}
+        # self.clv.name = {'@index': 0, '@lang': 'en', '#text': self.value}
+    
+        # # Get class fields
+        # self.get_classification()
+        # setattr(self.master, 'classificationValue', self.clv)
+        # setattr(type(self).master_field, 'classificationSystem', self.master)
+        
+        # # Get not converted
+        # self.get_not_converted(x)
 
     def get_not_converted(self, x):
         pass
 
     def get_classification(self):
-        n = type(self).class_mapping.get(self.name+'/'+self.value)
-        if n is None:
-            id_ = uuid_from_string(self.value)
-        else:
-            id_ = n['classificationValueId']
-        self.field.classificationId = id_
-        self.clv.id = id_
+        return # This is deprecated as the mapping is bad
+    
+        # n = type(self).class_mapping.get(self.name+'/'+self.value)
+        # if n is None:
+        #     id_ = uuid_from_string(self.name)
+        # else:
+        #     id_ = n['classificationValueId']
+        # self.field.classificationId = id_
+        # self.clv.id = id_
 
     @classmethod
     def organize(cls, classifications, priority):
@@ -1120,61 +1202,60 @@ class ILCD1ToECS2ReviewConversion:
 class ILCD1ToECS2BasicFieldMapping(FieldMapping, ABC):
 
     # Conversion Defaults
-    _uuid_conv_spec = (b'_Lavosier_ECS2_/', 'to_ECS2')
+    _uuid_conv_spec = (b'\__Lav_IL1EC2__/', 'flow_conversion_2')
     _default_language = 'en'
     _default_compartment_mapping = FieldMapping._dict_from_file(
         Path("Mappings/ilcd1_to_ecs2_compartments.json"))
     _default_geographies_mapping = FieldMapping._dict_from_file(
         Path("Mappings/ilcd1_to_ecs2_geographies.json"))
+    _default_master_data_property = FieldMapping._dict_from_file(
+        Path("Mappings/ecs2_master_data_properties.json"))
 
     # Converter/Factory Defaults
     _default_files = None
     _default_elem_mapping = None
-    _default_class_mapping = Path("Mappings/ilcd1_to_ecs2_classes.json")
+    # _default_class_mapping = Path("Mappings/ilcd1_to_ecs2_classes.json")
 
     # Configuration Defaults
     _convert_additional_fields = True
+    
+    # Additional Options
+    convert_user_data = None
+    use_master_data_properties = None
+    sum_same_elementary_amounts = None
 
-    def set_mappings(self, ef_map, cl_map):
+    def set_mappings(self, ef_map):
         self._elem_mapping = self._dict_from_file(
             ef_map or type(self)._default_elem_mapping, 'SourceFlowUUID')
-        self._class_mapping = self._dict_from_file(
-            cl_map or type(self)._default_class_mapping, 'SourceFlowUUID')
+        # self._class_mapping = self._dict_from_file(
+        #     type(self)._default_class_mapping, 'SourceFlowUUID')
         # Attributions
         self.ReferenceConversion.elem_flow_mapping = self._elem_mapping
         self.ClassificationConversion.class_mapping = self._class_mapping
         self.FlowConversion.compartment_mapping = type(
             self)._default_compartment_mapping
+        self.FlowConversion.property_master_data = type(
+            self)._default_master_data_property
 
-    def __init__(self,
-                 Amount,
-                 UncertaintyConversion,
-                 SourceReferenceConversion,
-                 ContactReferenceConversion,
-                 FlowReferenceConversion,
-                 ReferenceConversion,
-                 FlowConversion,
-                 VariableConversion,
-                 ClassificationConversion,
-                 ReviewConversion,
-                 NotConverted):
+    def __init__(self):
 
-        self.Amount = Amount
-        self.UncertaintyConversion = UncertaintyConversion
-        self.SourceReferenceConversion = SourceReferenceConversion
-        self.ContactReferenceConversion = ContactReferenceConversion
-        self.FlowReferenceConversion = FlowReferenceConversion
-        self.ReferenceConversion = ReferenceConversion
-        self.FlowConversion = FlowConversion
-        self.VariableConversion = VariableConversion
-        self.ClassificationConversion = ClassificationConversion
-        self.ReviewConversion = ReviewConversion
-        self.NotConverted = NotConverted()
+        self.Amount = ILCD1ToECS2Amount
+        self.UncertaintyConversion = ILCD1ToECS2UncertaintyConversion
+        self.SourceReferenceConversion = ILCD1ToECS2SourceReferenceConversion
+        self.ContactReferenceConversion = ILCD1ToECS2ContactReferenceConversion
+        self.FlowReferenceConversion = ILCD1ToECS2FlowReferenceConversion
+        self.ReferenceConversion = ILCD1ToECS2ReferenceConversion
+        self.FlowConversion = ILCD1ToECS2FlowConversion
+        self.VariableConversion = ILCD1ToECS2VariableConversion
+        self.ClassificationConversion = ILCD1ToECS2ClassificationConversion
+        self.ReviewConversion = ILCD1ToECS2ReviewConversion
+        self.NotConverted = ILCD1ToECS2DataNotConverted()
 
     def start_conversion(self):
         ILCD1Helper.default_language = type(self)._default_language
         self.ReferenceConversion.uuid_specs = type(self)._uuid_conv_spec
         self.FlowConversion.uuid_specs = type(self)._uuid_conv_spec
+        self.FlowConversion._use_md_prop = type(self).use_master_data_properties
 
         self.Amount.uncertainty_conversion = self.UncertaintyConversion
         self.ReferenceConversion.class_conversion = self.ClassificationConversion
@@ -1196,7 +1277,7 @@ class ILCD1ToECS2BasicFieldMapping(FieldMapping, ABC):
         self.VariableConversion._non_conform_variables = {}
         self.FlowConversion._reference_flows = []
         self.FlowConversion._flow_internal_refs = None
-        self.FlowConversion._all_flows = set()
+        self.FlowConversion._all_em_flows = set()
         self.FlowConversion._all_flow_ids = set()
         self.FlowConversion.Property._energy = []
         self.ReferenceConversion._ilcd_root_path = None
@@ -1209,6 +1290,7 @@ class ILCD1ToECS2BasicFieldMapping(FieldMapping, ABC):
         self.ReferenceConversion._ilcd_root_path = path
 
     def set_output_class_defaults(self, cl_struct):
+        
         self._class_holder = cl_struct.activityDescription
         self._energy_holder = cl_struct.activityDescription.activity
         self._lci_ma_holder = cl_struct.modellingAndValidation.representativeness
@@ -1247,6 +1329,9 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
         super().set_file_info(*args)
 
     def default(self, cl_struct):
+        # mapping_options that influence the structure can't be done set_output_class_defaults
+        type(cl_struct).convert_user_data = type(self).convert_user_data
+        
         from .. import __version__
         setattr(cl_struct.activityDescription.macroEconomicScenario,
                 'macroEconomicScenarioId', 'd9f57f0a-a01f-42eb-a57b-8f18d6635801')
@@ -1292,17 +1377,17 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
 
     # Setting variables that help conversions that depend on more than one field
     def start_conversion(self):
-        self._main_classifications = []
+        # self._main_classifications = []
         self._LCI_MA = []
         self._original_model = None
         self._access_restricted_to = None
         super().start_conversion()
 
     def reset_conversion(self, end=False):
-        setattr(self._class_holder, 'classification',
-                self.ClassificationConversion.organize(self._main_classifications,
-                                                       'ISIC rev.4 ecoinvent'))
-        self._main_classifications = []
+        # setattr(self._class_holder, 'classification',
+        #         self.ClassificationConversion.organize(self._main_classifications,
+        #                                                'ISIC rev.4 ecoinvent'))
+        # self._main_classifications = []
 
         # [!] This is too random, maybe think about a better way
         if self._original_model is not None:
@@ -1348,6 +1433,39 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
         self.VariableConversion.create_parameters()
         
         setattr(self._master_system_model_holder, 'activityName', self._master_activity_name_holder) # TODO
+        
+        if type(self).sum_same_elementary_amounts:
+            double_el_flow = defaultdict(list)
+            for flow in self.FlowConversion._all_em_flows:
+                double_el_flow[(flow.field.get('elementaryExchangeId'), flow.group)].append(flow)
+            df = [x for k, x in double_el_flow.items() if len(x) > 1]
+            
+            for flow in df: # Allocation, Uncertainty and overall comments and properties of previous data are not converted
+                
+                for f in flow[1:]:
+                    flow[0].amount.sum_(f.amount, flow[0].field)
+                
+                # if not type(self).use_master_data_properties:
+                del flow[0].properties
+                if hasattr(flow[0], 'variable'):
+                    del flow[0].variable
+                flow[0].finish_flow_info(final=True)
+                
+                n = self.FlowConversion.master_field.get('elementaryExchange')
+                for f in flow:
+                    n.pop(self.FlowConversion.master_field.get('elementaryExchange').index(f.master))
+                del self.FlowConversion.master_field['elementaryExchange']
+                for x in n:
+                    self.FlowConversion.master_field.elementaryExchange = x
+                
+                setattr(self.FlowConversion.master_field, flow[0].mtype, flow[0].master)
+                
+                n = self.FlowConversion.flow_holder.get('elementaryExchange')
+                for f in flow[1:]:
+                    n.pop(self.FlowConversion.flow_holder.get('elementaryExchange').index(f.field))
+                del self.FlowConversion.flow_holder['elementaryExchange']
+                for x in n:
+                    self.FlowConversion.flow_holder.elementaryExchange = x
 
         if not end:
             super().reset_conversion()
@@ -1499,9 +1617,9 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
             '/processDataSet/processInformation/dataSetInformation/complementingProcesses':
                 lambda cl_struct, x: setattr(
                     self.NotConverted, 'complementingProcesses', x),
-            '/processDataSet/processInformation/dataSetInformation/classificationInformation/classification':
-                lambda cl_struct, x: self._main_classifications.append(
-                    self.ClassificationConversion(x, self.NotConverted).field),
+            '/processDataSet/processInformation/dataSetInformation/classificationInformation/classification': # TODO
+                lambda cl_struct, x: None, # self._main_classifications.append(
+                    # self.ClassificationConversion(x, self.NotConverted).field),
             '/processDataSet/processInformation/dataSetInformation/generalComment':
                 lambda cl_struct, x: setattr(cl_struct.activityDescription.activity.generalComment, 'text',
                                              self.general_comment(cl_struct, ILCD1Helper.text_add_index(x))),
@@ -1535,7 +1653,8 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
             # TODO Some geographies doesn't have a proper conversion (no Id in ECS2), so the master antry has to be added and the 'not_converted' called
             '/processDataSet/processInformation/geography/locationOfOperationSupplyOrProduction/@location':
                 lambda cl_struct, x: (setattr(cl_struct.activityDescription.geography, 'shortname', ILCD1Helper.text_dict_from_text(1, x)),
-                                      logging.warning(f'\t\tGeography {x} not found in ecoinvent. Creating new UUID') if type(self)._default_geographies_mapping.get(x) is None else None,
+                                      logging.warning(f'\tGeography {x} not found in ecoinvent. Creating new UUID') if type(self)._default_geographies_mapping.get(x) is None else None,
+                                      Print.output(f'\t\tGeography {x} not found in ecoinvent. Creating new UUID') if type(self)._default_geographies_mapping.get(x) is None else None,
                                       setattr(cl_struct.activityDescription.geography, 'geographyId',
                                               type(self)._default_geographies_mapping.get(x) or uuid_from_string(x)),
                                       self.new_geography_master(x, cl_struct.userMaster)),
@@ -1652,12 +1771,14 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
             # TODO [!] Can be better
             '/processDataSet/modellingAndValidation/completeness':
                 lambda cl_struct, x: (logging.warning("\tCompleteness information could not be converted as EcoSpold 2 doesn't have matching field(s) for the information"),
+                                      Print.output("\tCompleteness information could not be converted as EcoSpold 2 doesn't have matching field(s) for the information"),
                                                       setattr(self.NotConverted, 'completeness', x)),
             '/processDataSet/modellingAndValidation/validation/review':
                 lambda cl_struct, x: self.ReviewConversion(x, self.NotConverted).set_field(cl_struct.modellingAndValidation, 'review'),
             # TODO [!] Can be better
             '/processDataSet/modellingAndValidation/complianceDeclarations/compliance':
                 lambda cl_struct, x: (logging.warning("\tCompliance information could not be converted as EcoSpold 2 doesn't have matching field(s) for the information"),
+                                      Print.output("\tCompliance information could not be converted as EcoSpold 2 doesn't have matching field(s) for the information"),
                                       setattr(self.NotConverted, 'compliance', x)),
             # TODO [!] Can be better
             '/processDataSet/administrativeInformation/commissionerAndGoal':
