@@ -1,5 +1,6 @@
 <img src="https://github.com/JosePauloSavioli/IBICT-converter/blob/master/Logos/Lavoisier.png" alt="Logo Lavoisier" width="170" length="200" />
 
+
 Python library for conversions between Life Cycle Assessment (LCA) inventory formats. Currently, it does both ways of conversion between EcoSpold 2 and ILCD 1 formats. Other versions and other dataset types are to be included due time as Lavoisier is a work in progress.
 
 Lavoisier's objective is to make possible a cohesive conversion with lower loss of information between LCA inventory formats. This objective is in line with the efforts in the LCA community for a higher interoperability within data formats, in a way having a dataset of one inventory format does not limit its usability with other inventory formats.
