@@ -595,8 +595,9 @@ class ECS2ToILCD1ParameterConversion(ECS2ToILCD1QuantitativeObject):
     def __init__(self, x, not_converted):
         # No source, converted as variable, no unit constraint, uses var_comment to place a variable comment
         
+        _name = ILCD1Helper.return_text(x["name"])
         logging.info(
-            f'Started conversion of Parameter: {x["name"]["#text"] if isinstance(x["name"], dict) else x["name"][0]["#text"]} : {x["@parameterId"]}')
+            f'Started conversion of Parameter: {_name} : {x["@parameterId"]}')
         # Initializate QuantitativeObject
         super().__init__(x["@parameterId"], 'parameter')
 
@@ -669,8 +670,9 @@ class ECS2ToILCD1FlowConversion(ECS2ToILCD1QuantitativeObject):
         def __init__(self, x, ref_field, flow_not_converted):
             # Two booleans, unit is optional, constrained to available ilcd properties
             
+            _name = ILCD1Helper.return_text(x["name"])
             logging.info(
-                f'\tStarted conversion of Property: {x["name"]["#text"] if isinstance(x["name"], dict) else x["name"][0]["#text"]} : {x["@propertyId"]}')
+                f'\tStarted conversion of Property: {_name} : {x["@propertyId"]}')
             # Initializate QuantitativeObject
             super().__init__(x['@propertyId'], 'flow')
 
@@ -705,8 +707,10 @@ class ECS2ToILCD1FlowConversion(ECS2ToILCD1QuantitativeObject):
                     ref_field.referenceToExternalDocumentation = source
 
             if self.uuid is None: # Get comment on 'not_converted'
+            
+                _name = ILCD1Helper.return_text(x['name'])
                 logging.warning(
-                    f"\t\tproperty '{x['name']['#text'] if isinstance(x['name'], dict) else x['name'][0]['#text']}' not a valid ILCD property")
+                    f"\t\tproperty '{_name}' not a valid ILCD property")
                 self.not_converted.amount = x['@amount']
                 if (x.get('@unitId') and x.get('unitName')):
                     self.not_converted.unitId = x['@unitId']
@@ -714,8 +718,10 @@ class ECS2ToILCD1FlowConversion(ECS2ToILCD1QuantitativeObject):
                     self.is_considered = False
                 self.has_ilcd_equivalent = False
             elif not (x.get('@unitId') and x.get('unitName')):
+                
+                _name = ILCD1Helper.return_text(x['name'])
                 logging.warning(
-                    f"\t\tproperty '{x['name']['#text'] if isinstance(x['name'], dict) else x['name'][0]['#text']}' doesn't have an unit")
+                    f"\t\tproperty '{_name}' doesn't have an unit")
                 self.not_converted.amount = x['@amount']
                 self.is_considered = False
                 self.has_ilcd_equivalent = False
@@ -1026,12 +1032,14 @@ class ECS2ToILCD1FlowConversion(ECS2ToILCD1QuantitativeObject):
                               self.field if elem_not_converted_ref_field is None else elem_not_converted_ref_field,
                               self.not_converted)
             if hasattr(self, 'allocation_property') and prop['@propertyId'] == self.allocation_property:
+                
                 logging.info(
-                    f"\tAllocated flow by property {prop['name']['#text']}")
+                    f"\tAllocated flow by property {ILCD1Helper.return_text(prop['name'])}")
                 ECS2ToILCD1FlowConversion._allocation_properties.update(
                     {self.id_: p.amount.o.m * self.amount.o.m})
             if p.is_considered:
-                self.properties[prop['name']["#text"]] = p
+                
+                self.properties[ILCD1Helper.return_text(prop['name'])] = p
         self.properties = self.Property.get_ilcd_equivalent(
             self.properties, self)
         self.remaining_properties = []
@@ -1043,7 +1051,7 @@ class ECS2ToILCD1FlowConversion(ECS2ToILCD1QuantitativeObject):
         self.not_converted.id = self.id_
         self.not_converted.fId = self.fid
         for t in ensure_list(x.get('tag', {})):
-            self.not_converted.tag = t['#text'] if isinstance(t, dict) else t
+            self.not_converted.tag = ILCD1Helper.return_text(t)
         if x.get('@unitContextId'):
             self.not_converted.unitContextId = x['@unitContextId']
         if x.get('@isCalculatedAmount'):
@@ -1110,7 +1118,8 @@ class ECS2ToILCD1IntermediateFlowConversion(ECS2ToILCD1FlowConversion):
             for n in ensure_list(x.get('productionVolumeComment', {})):
                 flow.field.generalComment = ILCD1Helper.text_add_index(
                     n, prefix='Production Volume Comment: ')
-            text = f"Production volume for {x['name']['#text']} is {self.amount.m} {self.amount.u}" + unc_text
+            
+            text = f"Production volume for {ILCD1Helper.return_text(x['name'])} is {self.amount.m} {self.amount.u}" + unc_text
             setattr(type(self).prod_v_holder, 'annualSupplyOrProductionVolume',
                     ILCD1Helper.text_dict_from_text(type(self)._prod_v_number, text))
             type(self)._prod_v_number += 1
@@ -1131,8 +1140,9 @@ class ECS2ToILCD1IntermediateFlowConversion(ECS2ToILCD1FlowConversion):
 
     def __init__(self, x, not_converted):
         
+        _name = ILCD1Helper.return_text(x["name"])
         logging.info(
-            f'Started conversion of Intermediate Flow: {x["name"]["#text"] if isinstance(x["name"], dict) else x["name"][0]["#text"]} : {x["@id"]}')
+            f'Started conversion of Intermediate Flow: {_name} : {x["@id"]}')
         # Set instances
         self.not_converted = not_converted.Flow()
         # Used variables
@@ -1227,9 +1237,12 @@ class ECS2ToILCD1IntermediateFlowConversion(ECS2ToILCD1FlowConversion):
         if x.get('classification'):
             self.classification = []
             for c in ensure_list(x['classification']):
-                if c['classificationSystem']['#text'] == "By-product classification" and c["classificationValue"] is not None:
-                    self._by_prod_class = c["classificationValue"]["#text"]
-                if c['classificationSystem']['#text'] in ('ISIC rev.4 ecoinvent', 'CPC'):
+                
+                t = ILCD1Helper.return_text(c['classificationSystem'])
+                if t == "By-product classification" and c["classificationValue"] is not None:
+                    
+                    self._by_prod_class = ILCD1Helper.return_text(c["classificationValue"])
+                if t in ('ISIC rev.4 ecoinvent', 'CPC'):
                     self.classification.append(self.class_conversion(
                         c, self.not_converted).field)
             if self.classification != []:
@@ -1247,14 +1260,16 @@ class ECS2ToILCD1ElementaryFlowConversion(ECS2ToILCD1FlowConversion):
     statistics = 0
 
     def __init__(self, x, not_converted):
+        
+        _name = ILCD1Helper.return_text(x["name"])
         logging.info(
-            f'\tStarting conversion of flow {x["name"]["#text"] if isinstance(x["name"], dict) else x["name"][0]["#text"]} : {x["@id"]}')
+            f'\tStarting conversion of flow {_name} : {x["@id"]}')
         # Set instances
         self.not_converted = not_converted.Flow()
 
         # Used variables
         self.fid = x["@elementaryExchangeId"]
-        self._name = x["name"]["#text"] if isinstance(x["name"], dict) else x["name"][0]["#text"]
+        self._name = _name
         
         # Get elementary flow fields
         self.get_elementary_info(x)
@@ -1644,8 +1659,9 @@ class ECS2ToILCD1ClassificationConversion:
         self.not_converted = not_converted
 
         # Used variables
-        self.system = x["classificationSystem"]["#text"]
-        self.value = x["classificationValue"]["#text"]
+        
+        self.system = ILCD1Helper.return_text(x["classificationSystem"])
+        self.value = ILCD1Helper.return_text(x["classificationValue"])
         self.id_ = x["@classificationId"]
 
         # Get basic fields
@@ -2121,6 +2137,14 @@ class ECS2ToILCD1FieldMapping(ECS2ToILCD1BasicFieldMapping):
     def add_stat(self, name):
         setattr(type(self), name, getattr(type(self), name) + 1)
 
+    def get_time_object(self, data):
+        for format_ in ('%Y-%m-%d', '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%dT%H:%M:%S.%fZ'):
+            try:
+                return time.strptime(data, format_)
+            except ValueError:
+                pass
+        raise ValueError('no valid date format found')
+
     # [!] Maybe make the ECS2 types and use them to convert to ILCD the fields like flow comments and such (all direct or indirect)
     def mapping(self):
         _keys = {
@@ -2202,7 +2226,7 @@ class ECS2ToILCD1FieldMapping(ECS2ToILCD1BasicFieldMapping):
                                   setattr(type(self), '__prefix_repeating_tag', False)),
             "/ecoSpold/activityDataset/activityDescription/classification": # OK 1
             lambda cl_struct, x: (self.add_stat('cls_stat'),
-                                  self._main_classifications.append(self.ClassificationConversion(x, self.NotConverted).field) if x['classificationSystem']['#text'] in ('ISIC rev.4 ecoinvent', 'CPC') else None
+                                  self._main_classifications.append(self.ClassificationConversion(x, self.NotConverted).field) if ILCD1Helper.return_text(x['classificationSystem']) in ('ISIC rev.4 ecoinvent', 'CPC') else None
                                   ),
             "/ecoSpold/activityDataset/activityDescription/geography/@geographyId": 
             lambda cl_struct, x: setattr(self.NotConverted, 'geographyId', x),
@@ -2211,9 +2235,9 @@ class ECS2ToILCD1FieldMapping(ECS2ToILCD1BasicFieldMapping):
                 self.NotConverted, 'geographyContextId', x),
             "/ecoSpold/activityDataset/activityDescription/geography/shortname": # OK 1
             lambda cl_struct, x: (setattr(cl_struct.geography.locationOfOperationSupplyOrProduction,
-                                         'location', x["#text"]),
+                                         'location', ILCD1Helper.return_text(x)), # TODO check all instances for text and class it out as a "TEXTMAYBE" class with identification as text to call
                                   setattr(cl_struct.dataSetInformation.name,
-                                          'mixAndLocationTypes', ILCD1Helper.text_add_index(x['#text']))),  # ECS2 can have more than one shortname in geography
+                                          'mixAndLocationTypes', ILCD1Helper.text_add_index(ILCD1Helper.return_text(x)))),  # ECS2 can have more than one shortname in geography
             "/ecoSpold/activityDataset/activityDescription/geography/comment": # OK 1
             lambda cl_struct, x: self.ECS2TTextAndImage(x, 'geography').ILCDProcess().verify_and_set_text(
                 cl_struct.geography.locationOfOperationSupplyOrProduction, 'descriptionOfRestrictions'),
@@ -2226,10 +2250,10 @@ class ECS2ToILCD1FieldMapping(ECS2ToILCD1BasicFieldMapping):
                 cl_struct.technology, 'technologyDescriptionAndIncludedProcesses'),
             "/ecoSpold/activityDataset/activityDescription/timePeriod/@startDate": # OK 1
             lambda cl_struct, x: setattr(cl_struct.time, 'referenceYear', str(
-                time.strptime(x, '%Y-%m-%d').tm_year)),
+                self.get_time_object(x).tm_year)),
             "/ecoSpold/activityDataset/activityDescription/timePeriod/@endDate": # OK 1
             lambda cl_struct, x: setattr(
-                cl_struct.time, 'dataSetValidUntil', ILCD1Helper.time_get_end(x)),
+                cl_struct.time, 'dataSetValidUntil', self.get_time_object(x).tm_year),
             "/ecoSpold/activityDataset/activityDescription/timePeriod/@isDataValidForEntirePeriod": # OK 1
             lambda cl_struct, x: (setattr(self.NotConverted, "isDataValidForEntirePeriod", x),
                                   setattr(cl_struct.time, 'timeRepresentativenessDescription',
@@ -2244,7 +2268,7 @@ class ECS2ToILCD1FieldMapping(ECS2ToILCD1BasicFieldMapping):
             lambda cl_struct, x: setattr(
                 self.NotConverted, 'macroEconomicScenarioContextId', x),
             "/ecoSpold/activityDataset/activityDescription/macroEconomicScenario/name": # OK 1
-            lambda cl_struct, x: (setattr(self.NotConverted, 'macroEconomicScenario_name', x['#text']),
+            lambda cl_struct, x: (setattr(self.NotConverted, 'macroEconomicScenario_name', ILCD1Helper.return_text(x)),
                                   setattr(cl_struct.dataSetInformation, 'generalComment',
                                           ILCD1Helper.text_add_index(x, prefix='Macroeconomic Scenario: ', index=-5))),
             "/ecoSpold/activityDataset/activityDescription/macroEconomicScenario/comment":\
@@ -2305,10 +2329,10 @@ class ECS2ToILCD1FieldMapping(ECS2ToILCD1BasicFieldMapping):
             lambda cl_struct, x: setattr(
                 self.NotConverted, "systemModelContextId", x),
             "/ecoSpold/activityDataset/modellingAndValidation/representativeness/systemModelName":\
-            lambda cl_struct, x: (setattr(cl_struct.modellingAndValidation.LCIMethodAndAllocation, "LCIMethodPrinciple", system_model.get(x["#text"])),
+            lambda cl_struct, x: (setattr(cl_struct.modellingAndValidation.LCIMethodAndAllocation, "LCIMethodPrinciple", system_model.get(ILCD1Helper.return_text(x))),
                                   setattr(cl_struct.modellingAndValidation.LCIMethodAndAllocation, "deviationsFromLCIMethodPrinciple",
                                           ILCD1Helper.text_add_index(x, prefix='Original ecoinvent System Model: ', index=1)),
-                                  setattr(cl_struct.modellingAndValidation.LCIMethodAndAllocation, "LCIMethodApproaches", system_model_2.get(x["#text"]))),  # Remove Data
+                                  setattr(cl_struct.modellingAndValidation.LCIMethodAndAllocation, "LCIMethodApproaches", system_model_2.get(ILCD1Helper.return_text(x)))),  # Remove Data
             "/ecoSpold/activityDataset/modellingAndValidation/representativeness/samplingProcedure":\
             lambda cl_struct, x: setattr(cl_struct.modellingAndValidation.dataSourcesTreatmentAndRepresentativeness,
                                          "samplingProcedure", ILCD1Helper.text_add_index(x, index=1)),

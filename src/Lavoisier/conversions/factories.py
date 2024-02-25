@@ -35,9 +35,11 @@ class MappingFactory:
         }
     
     # The best here is to change the value in the file. Ex: version 2.0
+    # TODO internalSchemaVersion can be 1.0 with ecoinvent 2.0 (Dont Know Why)
     default_mappings = {
         ('EcoSpold2', 'ILCD1'): {
             None: ECS2ToILCD1FieldMapping,
+            ('1', '0'): ECS2ToILCD1FieldMapping,
             ('2', '0'): ECS2ToILCD1FieldMapping
             },
         ('ILCD1', 'EcoSpold2'): {

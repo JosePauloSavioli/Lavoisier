@@ -1,0 +1,12 @@
+# Main
+
+openturns
+pathlib
+pint
+xmltodict
+pycryptodome
+ijson
+fastapi
+uvicorn
+python-multipart
+

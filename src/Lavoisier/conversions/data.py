@@ -70,6 +70,7 @@ outputGroup_type = {'0':'Reference Product',
                     '5':'Stock Additions'}
 
 system_model = {'Undefined':'Not applicable',
+                'Allocation, ecoinvent default':'Attributional',
                 'Allocation, manually linked':'Attributional',
                 'Allocation by dry mass':'Attributional',
                 'Allocation at the point of substitution':'Attributional',
@@ -81,6 +82,7 @@ system_model = {'Undefined':'Not applicable',
                 'Substitution, constrained by-products':'Consequential'}
 
 system_model_2 = {'Undefined':'Not applicable',
+                'Allocation, ecoinvent default':'Substitution - average, market price correction',
                 'Allocation, manually linked':'Allocation - other explicit assignment',
                 'Allocation by dry mass':'Allocation - mass',
                 'Allocation at the point of substitution':'Substitution - average, market price correction',
@@ -91,7 +93,8 @@ system_model_2 = {'Undefined':'Not applicable',
                 'Substitution, consequential, long-term':'Substitution - specific',
                 'Substitution, constrained by-products':'Substitution - specific'}
 
-system_model_1_ = {
+system_model_1_ = { # Late inclusion of Allocation, ecoinvent default
+    "Allocation, ecoinvent default": "06590a66-662a-4885-8494-ad0cf410f956",
     "Allocation, manually linked": "ba1ff5c1-9a0b-41ce-a5f8-fc2ff3163405",
     "Allocation by dry mass": "a253b4b8-5257-4c53-be06-d5b4d78ea407",
     "Allocation at the point of substitution": "06590a66-662a-4885-8494-ad0cf410f956",

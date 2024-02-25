@@ -74,6 +74,16 @@ class ILCD1Helper:
         else:
             return "Source"
 
+    @staticmethod # TODO make this at the parsing? How to make the parsing do this?
+    def return_text(x):
+        if isinstance(x, str):
+            return x
+        elif isinstance(x, dict):
+            return x['#text']
+        elif isinstance(x, list): # case for the '_name' variables
+            return x[0]['#text']
+        raise ValueError("Invalid value")
+
 
 
 class ECS2Helper:

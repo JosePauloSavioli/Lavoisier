@@ -56,7 +56,7 @@ class ECS2InputConfig(InputConfig):
     iterator = XMLStreamIterable
     input_manager = ECS2Input
     initial_info = {
-        "/ecoSpold/activityDataset/activityDescription/activity/activityName": ('filename', lambda x: x['#text']),
+        "/ecoSpold/activityDataset/activityDescription/activity/activityName": ('filename', lambda x: x['#text'] if not isinstance(x, str) else x),
         "/ecoSpold/childActivityDataset/activityDescription/activity/activityName": ('filename', lambda x: x['#text']),
         "/ecoSpold/activityDataset/administrativeInformation/fileAttributes/@defaultLanguage": (('mapping','_default_language'), lambda x: x),
         "/ecoSpold/activityDataset/administrativeInformation/fileAttributes/@internalSchemaVersion": ('version', lambda x: tuple(x.split('.'))[:2]), # Last is a default
