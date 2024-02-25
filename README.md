@@ -76,4 +76,4 @@ This project was developed in the Center for Life Cycle Sustainability Assessmen
 
 Code developed by José Paulo Pereira das Dores Savioli. Logo created by Larissa Ugaya Mazza.
 
-<img src=https://github.com/JosePauloSavioli/IBICT-converter/blob/master/static/logo%20gyro_email%20padr%C3%A3o.png alt="Logo GYRO" width="80" length="200" /><img src=https://github.com/JosePauloSavioli/IBICT-converter/blob/static/Logos/utfpr.png alt="Logo UTFPR" width="200" length="200" /><img src="https://github.com/JosePauloSavioli/IBICT-converter/blob/static/Logos/IBICT.png" alt="Logo IBICT" width="170" length="200" />
+<img src=https://github.com/JosePauloSavioli/IBICT-converter/blob/master/static/logo%20gyro_email%20padr%C3%A3o.png alt="Logo GYRO" width="80" length="200" /><img src=https://github.com/JosePauloSavioli/IBICT-converter/blob/master/static/utfpr.png alt="Logo UTFPR" width="200" length="200" /><img src="https://github.com/JosePauloSavioli/IBICT-converter/blob/master/static/IBICT.png" alt="Logo IBICT" width="170" length="200" />
