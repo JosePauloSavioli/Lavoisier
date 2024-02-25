@@ -7,6 +7,7 @@ Created on Fri Oct  7 05:29:17 2022
 """
 
 from .main import DotDict
+from .abstractions import StructureTemplate
 from .validators.enumerations import (
     GlobalReferenceTypeValues,
     UncertaintyDistributionTypeValues,
@@ -439,12 +440,12 @@ class Exchange(DotDict):
         'functionType': {'type': return_enum(ExchangeFunctionTypeValues), 'mandatory': False, 'order': 3, 'unique': True},
         'exchangeDirection': {'type': return_enum(ExchangeDirectionValues), 'mandatory': False, 'order': 4, 'unique': True},
         'referenceToVariable': {'type': Str, 'mandatory': False, 'order': 5, 'unique': True},
-        'meanAmount': {'type': Real, 'mandatory': True, 'order': 6, 'unique': True},
-        'resultingAmount': {'type': Real, 'mandatory': False, 'order': 7, 'unique': True},
-        'minimumAmount': {'type': Real, 'mandatory': False, 'order': 8, 'unique': True},
-        'maximumAmount': {'type': Real, 'mandatory': False, 'order': 9, 'unique': True},
-        'uncertaintyDistributionType': {'type': return_enum(UncertaintyDistributionTypeValues), 'mandatory': False, 'order': 10, 'unique': True},
-        'relativeStandardDeviation95In': {'type': Real, 'mandatory': False, 'order': 11, 'unique': True},
+        'meanAmount': {'type': Real, 'mandatory': True, 'order': 6}, # DOUBLE
+        'resultingAmount': {'type': Real, 'mandatory': False, 'order': 7}, # DOUBLE
+        'minimumAmount': {'type': Real, 'mandatory': False, 'order': 8}, # DOUBLE
+        'maximumAmount': {'type': Real, 'mandatory': False, 'order': 9}, # DOUBLE
+        'uncertaintyDistributionType': {'type': return_enum(UncertaintyDistributionTypeValues), 'mandatory': False, 'order': 10}, # DOUBLE
+        'relativeStandardDeviation95In': {'type': Real, 'mandatory': False, 'order': 11}, # DOUBLE
         'allocations': {'type': Allocations, 'mandatory': False, 'order': 12, 'unique': True},
         'dataSourceType': {'type': return_enum(DataSourceTypeValues), 'mandatory': False, 'order': 13, 'unique': True},
         'dataDerivationTypeStatus': {'type': return_enum(DataDerivationTypeStatusValues), 'mandatory': False, 'order': 14, 'unique': True},
@@ -480,41 +481,40 @@ class OLCAExchanges(DotDict):
     
 ##########################
 
-class ILCD1Structure:
+class ILCD1Structure(StructureTemplate):
     
     # [!] LCIAResults are not considered here
     # [!] The processDataSet @version will have to be specified in future
     
-    DataSetInformation = DataSetInformation
-    QuantitativeReference = QuantitativeReference
-    Time = Time
-    Geography = Geography
-    Technology = Technology
-    MathematicalRelations = MathematicalRelations
-    ModellingAndValidation = ModellingAndValidation
-    AdministrativeInformation = AdministrativeInformation
-    Exchanges = Exchanges
-    
     def __init__(self):
-        self.dataSetInformation = self.DataSetInformation()
-        self.quantitativeReference = self.QuantitativeReference()
-        self.time = self.Time()
-        self.technology = self.Technology()
-        self.geography = self.Geography()
-        self.modellingAndValidation = self.ModellingAndValidation()
-        self.administrativeInformation = self.AdministrativeInformation()
-        self.mathematicalRelations = self.MathematicalRelations()
-        self.exchanges = self.Exchanges()
+        self.dataSetInformation = DataSetInformation()
+        self.quantitativeReference = QuantitativeReference()
+        self.time = Time()
+        self.technology = Technology()
+        self.geography = Geography()
+        self.modellingAndValidation = ModellingAndValidation()
+        self.administrativeInformation = AdministrativeInformation()
+        self.mathematicalRelations = MathematicalRelations()
+        self.exchanges = Exchanges()
         
         self.flow_property = ILCD1FlowProperty
         self.classification = ILCD1Classification
         self.reference = ILCD1Reference
         
+    def get_filename(self, hash_):
+        base_name = self.dataSetInformation['name'].get('baseName')
+        geo = self.geography['locationOfOperationSupplyOrProduction']
+        name = f"{base_name[0]['#text'] if isinstance(base_name, list) else base_name['#text']}, "+\
+            f"{geo.get('location')}, "+\
+            f"{self.time.get('referenceYear')} - {self.time.get('dataSetValidUntil')}"+\
+            f"{hash_}"
+        return name.replace('/', ' per ')
+        
     def get_dict(self):
         return {
             'processDataSet': {
                 '@xmlns': 'http://lca.jrc.it/ILCD/Process',
-                '@xmlns:c': 'http://lca.jrc.it/ILCD/Common',
+                '@xmlns:common': 'http://lca.jrc.it/ILCD/Common',
                 '@version': '1.1', 
                 '@locations': '../ILCDLocations.xml',
                 '@metaDataOnly': "false",
@@ -535,9 +535,11 @@ class ILCD1Structure:
 class OLCAILCD1Structure(ILCD1Structure):
     # https://www.javatips.net/api/olca-modules-master/olca-ilcd/src/main/java/org/openlca/ilcd/util/ProcessInfoExtension.java
     # ilcd/util/filesThatEndWithExtension
-    Exchanges = OLCAExchanges
-    MathematicalRelations = OLCAMathematicalRelations
-    Time = OLCATime
+    
+    def __init__(self):
+        self.Exchanges = OLCAExchanges()
+        self.MathematicalRelations = OLCAMathematicalRelations()
+        self.Time = OLCATime()
     
     def get_dict(self):
         p = super().get_dict()

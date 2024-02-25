@@ -6,82 +6,59 @@ Created on Sat Oct 15 11:30:02 2022
 @author: jotape42p
 """
 
-import time
 import shutil
-import logging
 import xmltodict
 import zipfile
 from pathlib import Path
-from .utils import zipdir, Dataset
+from .utils import zipdir
+from .abstractions import InputTemplate, OutputTemplate
+import tempfile
 
-class ILCD1Helper:
+class ILCD1Input(InputTemplate):
     
-    @staticmethod
-    def is_valid(path):
-        f = zipfile.ZipFile(path, 'r')
-        b = any((x.startswith("processes/") or x.find("/processes/") != -1) and x.endswith(".xml") for x in f.namelist())
-        if not b:
-            raise Exception("ILCD 'process' folder not found or empty inside compressed file. File not considered as a valid ILCD file")
-
-    number = 1000
-    @classmethod
-    def add(cls):
-        cls.number += 1
-        return cls.number
+    _valid_extensions = (".zip",".ZIP",".xml")
     
-    default_language = None
-
-    @staticmethod
-    def add_prefix(x, prefix):
-        return prefix + x['#text']
-
-    @classmethod
-    def add_index(cls, x, index = None, prefix = ''):
-        if index is None: index = cls.add()
-        return {'@index': index, '#text': cls.add_prefix(x, prefix)}
-
-    @classmethod
-    def text_add_index(cls, x, prefix="", index=None):
-        if index is None:
-            index = cls.number
-            cls.number += 1
-        if isinstance(x, str): # specific not well-formed texts
-            x = {'@lang': 'en', '#text': x}
-        return {'@index': index, '@lang': x.get('@lang', cls.default_language), '#text': prefix+x['#text']}
-
-    @staticmethod
-    def text_dict_from_text(index, text):
-        return {'@index': index,
-                '@lang': 'en',
-                '#text': text}
-
-    @staticmethod
-    def time_get_end(x):
-        if time.strptime(x, '%Y-%m-%d').tm_mon < 6:
-            return str(time.strptime(x, '%Y-%m-%d').tm_year)
-        else:
-            return str(time.strptime(x, '%Y-%m-%d').tm_year + 1)
+    # Includes path correction to the process folder
+    def _extract(self, file):
+        self.file = zipfile.ZipFile(file)
+        for x in self.file.namelist():
+            if (x.startswith("processes/") or x.find("/processes/") != -1) and x.endswith(".xml"):
+                name = '.'.join(str(self.path).split('.')[:-1]).split('/')[-1]
+                self._tempdir = tempfile.TemporaryDirectory() # Has to be closed after
+                self._extracted_path = Path(self._tempdir.name, name)
+                _path = Path(self._extracted_path, x.split("processes/")[0])
+                self._input_file = _path
+                self._extracted_path.mkdir(exist_ok=True)
+                self.file.extractall(str(self._extracted_path))
+                break
+        return _path
+    
+    def _single_file_input(self): # This covers the case where there are multiple processes
+        path = self._extract(self.path)
+        yield from self._yield_files(list(self._get_files_of_extension(Path(path, 'processes'),
+                                                                       self._valid_extensions[2:])))
+        self._tempdir.cleanup()
+    
+    def _multiple_file_input(self):
+        for i, zip_file in enumerate(self._get_files_of_extension(self.path,
+                                                                  self._valid_extensions[:2])):
+            path = self._extract(zip_file)
+            yield from self._yield_files(list(self._get_files_of_extension(Path(path, 'processes'),
+                                                                           self._valid_extensions[2:])))
+            self._tempdir.cleanup()
         
-    @staticmethod
-    def source_short_ref(first_author, source_year, page=None):
-        if first_author is not None:
-            if source_year is not None:
-                if page is not None:
-                    return first_author+', ('+source_year+') p. '+page
-                return first_author+', ('+source_year+')'
-            else:
-                return first_author
-        else:
-            return "Source"
+    def handle_error(self):
+        self._tempdir.cleanup()
 
-class ILCD(Dataset):
-
+    
+class ILCD1Output(OutputTemplate):
+    
     _additional_files = {
         ('Lavoisier_Default_Files/Lavoisier_Classifications', ''):
-            ("classification_ISIC rev.4 ecoinvent.xml",
-             "classification_EcoSpold01Categories.xml",
-             "classification_By-product classification.xml",
-             "classification_CPC.xml",
+            (#"classification_ISIC rev.4 ecoinvent.xml",
+             #"classification_EcoSpold01Categories.xml",
+             #"classification_By-product classification.xml",
+             #"classification_CPC.xml",
              "ILCDLocations.xml",
              "ILCDFlowCategorization.xml",
              "ILCDClassification.xml"),
@@ -99,114 +76,44 @@ class ILCD(Dataset):
             ("ILCD_Compliance_Rules_Draft_88d4f8d9-60f9-43d1-9ea3-329c10d7d727.pdf", # For the default sources
              "ILCD-Data-Network_Compliance-Entry-level_Version1.1_Jan2012.pdf")
     }
+    
+    def start_conversion(self):
+        self._tempdir = tempfile.TemporaryDirectory() # Has to be closed after
+        self._output_file = self._tempdir.name
 
-    hash_ = ''
-    only_elem_flows = False
-
-    def __init__(self,
-                 save_path,
-                 structure):
-        self.__args = (save_path, structure)
-        self.save_path = save_path.resolve()
-        self.save_dir = Path(self.save_path, "ILCD-algorithm")
-        self.struct = structure()
-
-    def handle_error(self):
-        if self.save_dir.is_dir():
-            shutil.rmtree(self.save_dir)
-                
-        self.end_log()
-
-    def start_conversion(self, filename):
-        if self.save_dir.is_dir():
-            shutil.rmtree(self.save_dir)
-
-        for dir_ in ("", "processes", "external_docs", "sources", "contacts"):
-            p = Path(self.save_dir, dir_)
+        for dir_ in ("", "processes", "external_docs", "sources", "contacts", "flowproperties", "unitgroups"):
+            p = Path(self._tempdir.name, dir_)
             p.mkdir(exist_ok=True)
             
         for (orig_dir, to_save_dir), files in self._additional_files.items():
             for file in files:
                 shutil.copy(Path(Path(__file__).parent.parent.resolve(), orig_dir, file),
-                            Path(self.save_dir, to_save_dir))
+                            Path(self._tempdir.name, to_save_dir))
 
-        self.start_log()
-
-    def start_log(self):
-        from .. import __version__
-        logging.basicConfig(filename=str(Path(self.save_dir, "lavoisier.log")),
-                            format="%(levelname)s - %(message)s",
-                            force=True,
-                            level=logging.DEBUG)
-        logging.info(f"\n###\nLavoisier version: {__version__}\nConversion started at: {time.strftime('%d/%m/%Y %H:%M:%S', time.localtime())}"+\
-                     "\nLavoisier, converter of LCI formats, powered by Gyro (UTFPR) and IBICT\nLicensed under GNU General Public License v3 (GPLv3)\n###\n")
-
-    def end_log(self):
-        logging.info("\nConversion ended")
-        logging.shutdown()
-
-    def _write_process(self):
+        self.log_path = Path(self._tempdir.name, "lavoisier.log")
+        self.log.start_log(self.log_path)
+    
+    def write_process(self):
         process_dict = self.struct.get_dict()
         dsi = self.struct.dataSetInformation
         self.process_path = Path(
-            self.save_dir, 'processes', dsi.get('c_UUID', dsi.get('UUID'))+'.xml')
+            self._tempdir.name, 'processes', dsi.get('c_UUID', dsi.get('UUID'))+'.xml')
         with open(self.process_path, 'w') as c:
             c.write(xmltodict.unparse(process_dict,
                     pretty=True, newl='\n', indent="  "))
-
-    def get_process_name(self):
-        bn = self.struct.dataSetInformation['name'].get('baseName')
-        geo = self.struct.geography['locationOfOperationSupplyOrProduction']
-        time = self.struct.time
-        name = f"{bn[0]['#text'] if isinstance(bn, list) else bn['#text']}, "+\
-            f"{geo.get('location')}, "+\
-            f"{time.get('referenceYear')} - {time.get('dataSetValidUntil')}"+\
-            f"{self.hash_}"
-        return name.replace('/', ' per ')
-
-    def end_conversion(self, multi=False, extracted_file=None):
-        name = name_ = 'ILCD'+self.hash_ if multi else self.get_process_name()
-        self.reset_conversion()
+    
+    def end_conversion(self):
+        name = 'ILCD'+self._hash if self.multi_files else self.struct.get_filename(self._hash)
+        self.end_single_output_file()
+        name = self.check_name_for_existence(name, '.zip')
         
-        if Path(self.save_path, name_+'.zip').is_file():
-            i = 1
-            while Path(self.save_path, name_+'.zip').is_file():
-                name_ = name + ' (' + str(i) + ')'
-                i += 1
-        
-        if extracted_file:
-            if type(self).only_elem_flows:
-                for dir_ in ("", "external_docs", "sources", "contacts", "flowproperties", "unitgroups"):
-                    Path(self.save_dir, dir_).mkdir(exist_ok=True)
-                    
-                    if Path(extracted_file, 'processes').is_dir():
-                        gen = Path(extracted_file, dir_).glob('*.xml')
-                    else:
-                        for d in Path(extracted_file).iterdir():
-                            if Path(extracted_file, d).is_dir() and Path(extracted_file, d, 'processes').is_dir():
-                                gen = Path(extracted_file, d, dir_).glob('*.xml')
-                                break
-                        else:
-                            raise Exception("No valid ILCD directory in {extracted_file}")
-                    for file in gen:
-                        shutil.copy(file,
-                                    Path(self.save_dir, dir_))
-                        
-            shutil.rmtree(extracted_file)
-        
-        self.zipfile_path = Path(
-            self.save_path, name_+'.zip')
-        ilcd_zipfile = zipfile.ZipFile(self.zipfile_path, 'w')
-        zipdir(self.save_dir, ilcd_zipfile)
+        self.log.end_log(self.log_path)
+        ilcd_zipfile = zipfile.ZipFile(Path(self.path, name+'.zip'), 'w')
+        zipdir(self._tempdir.name, ilcd_zipfile)
         ilcd_zipfile.close()
-        
-        shutil.rmtree(self.save_dir)
-
-        self.end_log()
-
-    def reset_conversion(self):
-        self._write_process()
-        bn = self.struct.dataSetInformation['name'].get('baseName')
-        logging.info(
-            f"\n\nConversion ended for {bn[0]['#text'] if isinstance(bn, list) else bn['#text']}\n")
-        self.__init__(*self.__args)
+        self._tempdir.cleanup()
+            
+    def handle_error(self):
+        super().handle_error()
+        if hasattr(self, '_tempdir'):
+            self._tempdir.cleanup()

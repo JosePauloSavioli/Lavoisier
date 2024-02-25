@@ -102,9 +102,9 @@ class DotDict(dict):
                 raise AttributeError(f'class {self.__class__.__name__} missing mandatory attribute {key}')
             
         def get_name(k, valid):
-            pr = {'attribute': '@', 'nms:common': 'c:', 'text': '#'}
+            pr = {'attribute': '@', 'nms:common': 'common:', 'text': '#'}
             k = k if 'xml_nms' not in valid else valid['xml_nms']+':'+k
-            return k if 'xml_type' not in valid else pr[valid['xml_type']]+k
+            return k if 'xml_type' not in valid else pr.get(valid['xml_type'], valid['xml_type'].replace('nms:', '')+':')+k
         
         def get_value(valid, v):
             if isinstance(v, dict):
@@ -115,7 +115,7 @@ class DotDict(dict):
                 return v.end()
                 
         # Ordering
-        new = {get_name(k,self.VALID[k]):v for k,v in sorted({k:get_value(self.VALID[k],v) for k,v in self.items()}.items(), key=lambda n:self.VALID[n[0]]['order'])}
+        new = {get_name(k,self.VALID[k]):(v if self.VALID[k].get('xml_type')!='text' else str(v)) for k,v in sorted({k:get_value(self.VALID[k],v) for k,v in self.items()}.items(), key=lambda n:self.VALID[n[0]]['order'])}
         
         return new
 

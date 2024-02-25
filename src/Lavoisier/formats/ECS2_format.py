@@ -6,123 +6,38 @@ Created on Sat Oct 15 11:37:05 2022
 @author: jotape42p
 """
 
-import re
-import uuid
-import random
-import time
-import logging
-import shutil
 import xmltodict
-rdn = random.Random()
 
 from pathlib import Path
-from .utils import Dataset
+from .abstractions import InputTemplate, OutputTemplate
 
-class ECS2Helper:
+class ECS2Input(InputTemplate):
     
-    @staticmethod
-    def _get_str(cl, cl_f, keys, pattern, text, extra=lambda x:None):
-        if re.search(pattern+r' (.*)+?(?:\n|$)', text):
-            g = re.search(pattern+r' (.*)+?(?:\n|$)', text).groups()[0]
-            setattr(cl, cl_f, keys.get(g))
-            extra(keys.get(g))
-            return re.sub(pattern+r' (.*)+?(?:\n|$)', '', text)
-        return text
-            
-    @staticmethod
-    def _get_list_str(cl, cl_f, pattern, text):
-        if re.search(pattern+r' (.*)+?\n', text):
-            rt = text
-            for t in re.search(pattern+r' (.*)+?\n', text).groups()[0].split('; '):
-                setattr(cl, cl_f, t)
-                rt = re.sub(pattern+r' (.*)+?\n', '', rt)
-            return rt
-        return text
+    _valid_extensions = (".spold", ".SPOLD")
     
-    @staticmethod
-    def _get_uuid(cl, cl_f, pattern, text, extra=lambda x:None):
-        if re.search(pattern+r' [a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\n', text):
-            id_ = re.search(pattern+r' ([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\n', text).groups()[0]
-            setattr(cl, cl_f, id_)
-            extra(id_)
-            return re.sub(pattern+r' [a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\n', '', text)
-        return text
+    def _single_file_input(self):
+        yield (self.path, True)
     
-    @staticmethod
-    def get_text_uuid(field):
-        if re.search('[A-z0-9]{8}-[A-z0-9]{4}-[A-z0-9]{4}-[A-z0-9]{4}-[A-z0-9]{12}', field):
-            return re.search('[A-z0-9]{8}-[A-z0-9]{4}-[A-z0-9]{4}-[A-z0-9]{4}-[A-z0-9]{12}', field).group(0)
-        else:
-            rdn.seed(int(''.join([str(ord(c)) for c in field])))
-            return str(uuid.UUID(int=rdn.getrandbits(128), version=4))
+    def _multiple_file_input(self):
+        yield from self._yield_files(list(self._get_files_of_extension(self.path,
+                                                                       self._valid_extensions)))
 
-class ECS2(Dataset):
+class ECS2Output(OutputTemplate):
 
-    hash_ = ''
-    only_elem_flows = False
-    
-    filename = {}
+    def start_conversion(self):
+        self.log_path = Path(self.path, f"{self.filename.replace('/', '_per_')}.log")
+        self.log.start_log(self.log_path)
 
-    def __init__(self,
-                 save_path,
-                 structure):
-        self.__args = (save_path, structure)
-        self.save_path = save_path.resolve()
-        self.struct = structure()
-
-    def handle_error(self, extracted_file):
-        self.end_log()
-        if extracted_file.is_dir():
-            shutil.rmtree(extracted_file)
-
-    def start_conversion(self, filename):
-        self.filename = (self.filename.get('#text', '') + '_' + filename.replace('.xml', '')).replace('/', '_per_')
-        self.start_log()
-
-    def start_log(self):
-        from .. import __version__
-        logging.basicConfig(filename=str(Path(self.save_path, f"lavoisier_{self.filename}.log")),
-                            format="%(levelname)s - %(message)s",
-                            force=True,
-                            level=logging.DEBUG)
-        logging.info(f"\n###\nLavoisier version: {__version__}\nConversion started at: {time.strftime('%d/%m/%Y %H:%M:%S', time.localtime())}"+\
-                     "\nLavoisier, converter of LCI formats, powered by Gyro (UTFPR) and IBICT\nLicensed under GNU General Public License v3 (GPLv3)\n###\n")
-
-    def end_log(self):
-        logging.info("\nConversion ended")
-        logging.shutdown()
-
-    def _write_process(self):
+    def write_process(self):
         process_dict = self.struct.get_dict()
-        name = name_ = self.get_process_name()
+        name = self.struct.get_filename(self._hash)
+        name = self.check_name_for_existence(name, '.spold')
         
-        if Path(self.save_path, name_+'.spold').is_file():
-            i = 1
-            while Path(self.save_path, name_+'.spold').is_file():
-                name_ = name + ' (' + str(i) + ')'
-                i += 1
-        
-        path = Path(self.save_path, name_+'.spold')
-        
-        with open(path, 'w') as c:
+        with open(Path(self.path, name+'.spold'), 'w') as c:
             c.write(xmltodict.unparse(process_dict,
                     pretty=True, newl='\n', indent="  "))
 
-    def get_process_name(self):
-        name = f"{self.struct.activityDescription.activity.get('activityName')['#text']}, "+\
-            f"{self.struct.activityDescription.geography.get('shortname')[0]['#text']}, "+\
-            f"{self.struct.activityDescription.timePeriod.get('startDate')[:4]} - {self.struct.activityDescription.timePeriod.get('endDate')[:4]}"+\
-            f"{self.hash_}"
-        return name.replace('/', ' per ')
-
-    def end_conversion(self, multi=False, extracted_file=None):
-        self.reset_conversion()
-        if extracted_file.is_dir() and not multi:
-            shutil.rmtree(extracted_file)
-        self.end_log()
-
-    def reset_conversion(self):
-        self._write_process()
-        logging.info(
-            f"\n\nConversion ended for {self.struct.activityDescription.activity.get('activityName')['#text']}\n")
-        self.__init__(*self.__args)
+    def end_conversion(self):
+        self.end_single_output_file()
+        self.log.end_log(self.log_path)
+        

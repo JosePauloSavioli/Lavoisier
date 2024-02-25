@@ -7,6 +7,7 @@ Created on Mon Oct 31 19:20:32 2022
 """
 
 from .main import DotDict
+from .abstractions import StructureTemplate
 from .validators.general_validators import (
     Validator,
     Real,
@@ -77,9 +78,9 @@ class Lognormal(DotDict):
 class Normal(DotDict):
     
     VALID = {
-        'meanValue': {'xml_type': 'attribute', 'type': Real, 'mandatory': True, 'order': 0, 'unique': True},
-        'variance': {'xml_type': 'attribute', 'type': Real, 'mandatory': False, 'order': 0, 'unique': True},
-        'varianceWithPedigreeUncertainty': {'xml_type': 'attribute', 'type': Real, 'mandatory': True, 'order': 0, 'unique': True}
+        'meanValue': {'xml_type': 'attribute', 'type': Real, 'mandatory': True, 'order': 0},
+        'variance': {'xml_type': 'attribute', 'type': Real, 'mandatory': False, 'order': 0},
+        'varianceWithPedigreeUncertainty': {'xml_type': 'attribute', 'type': Real, 'mandatory': True, 'order': 0}
         }
 
 class Triangular(DotDict):
@@ -170,7 +171,7 @@ class ECS2Source(DotDict):
 class ECS2QuantitativeReference(DotDict):
     
     VALID_NO_SOURCE = {
-        'amount': {'xml_type': 'attribute', 'type': Real, 'mandatory': True, 'order': 0, 'unique': True},
+        'amount': {'xml_type': 'attribute', 'type': Real, 'mandatory': True, 'order': 0},
         'mathematicalRelation': {'xml_type': 'attribute', 'type': BaseString32000, 'mandatory': False, 'order': 0, 'unique': True},
         'isCalculatedAmount': {'xml_type': 'attribute', 'type': Bool, 'mandatory': False, 'order': 0, 'unique': True},
         'comment': {'type': String32000, 'mandatory': False, 'order': 4, 'unique': False},
@@ -178,7 +179,7 @@ class ECS2QuantitativeReference(DotDict):
         }
     
     VALID = ECS2Source.VALID | {
-        'amount': {'xml_type': 'attribute', 'type': Real, 'mandatory': True, 'order': 0, 'unique': True},
+        'amount': {'xml_type': 'attribute', 'type': Real, 'mandatory': True, 'order': 0},
         'mathematicalRelation': {'xml_type': 'attribute', 'type': BaseString32000, 'mandatory': False, 'order': 0, 'unique': True},
         'isCalculatedAmount': {'xml_type': 'attribute', 'type': Bool, 'mandatory': False, 'order': 0, 'unique': True},
         'comment': {'type': String32000, 'mandatory': False, 'order': 3, 'unique': False},
@@ -186,7 +187,7 @@ class ECS2QuantitativeReference(DotDict):
         }
     
     VALID_PROP = ECS2Source.VALID | {
-        'amount': {'xml_type': 'attribute', 'type': Real, 'mandatory': True, 'order': 0, 'unique': True},
+        'amount': {'xml_type': 'attribute', 'type': Real, 'mandatory': True, 'order': 0},
         'mathematicalRelation': {'xml_type': 'attribute', 'type': BaseString32000, 'mandatory': False, 'order': 0, 'unique': True},
         'isCalculatedAmount': {'xml_type': 'attribute', 'type': Bool, 'mandatory': False, 'order': 0, 'unique': True},
         'comment': {'type': String32000, 'mandatory': False, 'order': 4, 'unique': False},
@@ -508,7 +509,7 @@ class ActivityIndexEntryMaster(DotDict):
         'geographyId': {'xml_type': 'attribute', 'type': UUID, 'mandatory': True, 'order': 0, 'unique': True}, # OK
         'startDate': {'xml_type': 'attribute', 'type': Date, 'mandatory': True, 'order': 0, 'unique': True},
         'endDate': {'xml_type': 'attribute', 'type': Date, 'mandatory': True, 'order': 0, 'unique': True},
-        'specialActivityType': {'xml_type': 'attribute', 'type': SpecialActivityTypeINT, 'mandatory': True, 'order': 0, 'unique': True},
+        'specialActivityType': {'xml_type': 'attribute', 'type': SpecialActivityTypeINT, 'mandatory': True, 'order': 0}, # DOUBLE
         'systemModelId': {'xml_type': 'attribute', 'type': UUID, 'mandatory': True, 'order': 0, 'unique': True}
         }
 
@@ -550,7 +551,7 @@ class CETransferCoefficient(DotDict):
 class ECS2CustomExchange(DotDict):
     
     VALID = ECS2QuantitativeReferenceWithUnit.VALID | {
-        'id': {'xml_type': 'attribute', 'type': UUID, 'mandatory': True, 'order': 0, 'unique': True},
+        'id': {'xml_type': 'attribute', 'type': UUID, 'mandatory': True, 'order': 0},
         'casNumber': {'xml_type': 'attribute', 'type': CASNumber, 'mandatory': False, 'order': 0, 'unique': True},
         'pageNumbers': {'xml_type': 'attribute', 'type': BaseString30, 'mandatory': False, 'order': 0, 'unique': True},
         'specificAllocationPropertyId': {'xml_type': 'attribute', 'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
@@ -764,7 +765,7 @@ class IntermediateExchange(ECS2CustomExchange, DotDict):
         'productionVolumeUncertainty': {'type': ECS2Uncertainty, 'mandatory': False, 'order': 10, 'unique': True},
         'classification': {'type': ECS2Classification, 'mandatory': False, 'order': 11, 'unique': False},
         'inputGroup': {'type': InputGroupIntermediateINT, 'mandatory': False, 'order': 12, 'unique': True},
-        'outputGroup': {'type': OutputGroupIntermediateINT, 'mandatory': False, 'order': 13, 'unique': True},
+        'outputGroup': {'type': OutputGroupIntermediateINT, 'mandatory': False, 'order': 13},
         }
 
 class Compartment(DotDict):
@@ -783,8 +784,8 @@ class ElementaryExchange(DotDict):
         'elementaryExchangeContextId': {'xml_type': 'attribute', 'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
         'formula': {'xml_type': 'attribute', 'type': BaseString40, 'mandatory': False, 'order': 0, 'unique': True},
         'compartment': {'type': Compartment, 'mandatory': True, 'order': 9, 'unique': True},
-        'inputGroup': {'type': InputGroupElementaryINT, 'mandatory': False, 'order': 10, 'unique': True},
-        'outputGroup': {'type': OutputGroupElementaryINT, 'mandatory': False, 'order': 11, 'unique': True}
+        'inputGroup': {'type': InputGroupElementaryINT, 'mandatory': False, 'order': 10},
+        'outputGroup': {'type': OutputGroupElementaryINT, 'mandatory': False, 'order': 11}
         }
                 
 class Parameter(DotDict):
@@ -821,7 +822,9 @@ class FlowData(DotDict):
 
 ##########################
 
-class ECS2Structure:
+class ECS2Structure(StructureTemplate):
+    
+    convert_user_data = True
     
     def __init__(self):
         self.activityDescription = ActivityDescription()
@@ -863,8 +866,15 @@ class ECS2Structure:
         
         self.main_activity_type = 'activityDataset'
         
+    def get_filename(self, hash_):
+        ads = self.activityDescription
+        name = f"{ads.activity.get('activityName')['#text']}, "+\
+            f"{ads.geography.get('shortname')[0]['#text']}, "+\
+            f"{ads.timePeriod.get('startDate')[:4]} - {ads.timePeriod.get('endDate')[:4]}"+\
+            f"{hash_}"
+        return name.replace('/', ' per ')
+        
     def get_dict(self):
-        # print('\n\n', self.userMaster.get_dict())
         return {
             'ecoSpold': {
                 '@xmlns': 'http://www.EcoInvent.org/EcoSpold02',
@@ -874,10 +884,10 @@ class ECS2Structure:
                     'modellingAndValidation': self.modellingAndValidation.get_dict(),
                     'administrativeInformation': self.administrativeInformation.get_dict()
                     },
-                'usedUserMasterData': {
+                **({'usedUserMasterData': {
                     '@xmlns': 'http://www.EcoInvent.org/UsedUserMasterData',
                     **self.userMaster.get_dict()
-                    }
+                    }} if type(self).convert_user_data else {})
                 }
             }
 

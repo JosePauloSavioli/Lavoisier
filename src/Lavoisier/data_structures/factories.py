@@ -11,14 +11,23 @@ from .ECS2_structure import ECS2Structure
 
 class StructureFactory:
     
+    _mapping = {
+        'ILCD1': {
+            None: ILCD1Structure,
+            ('1', '1'): ILCD1Structure
+            },
+        'ECS2': {
+            None: ECS2Structure,
+            ('2', '0'): ECS2Structure
+            }
+        }
+    
     def __init__(self, output_name):
-        self.output = output_name
+        self.map_struct = self._mapping.get(output_name, None)
         
-    def get_structure(self, version):
-        if self.output == 'ILCD1':
-            if version is None or (version[0] == '1' and version[1] == '1'): # Default is v1.1
-                return ILCD1Structure
-        elif self.output == 'ECS2':
-            if version is None or (version[0] == '2' and version[1] == '0'): # Default is v2.0
-                return ECS2Structure
+    def get_structure(self, struct, version):
+        if struct is None:
+            return self.map_struct[version]
+        else:
+            return struct[version] # Structures are bound to versions
             

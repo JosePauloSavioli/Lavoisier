@@ -9,118 +9,64 @@ Created on Sat Oct 15 12:36:09 2022
 from pathlib import Path
 
 from .ILCD1_to_ILCD1_conversion import (
-    ILCD1ToILCD1ElementaryFlowConversion,
     ILCD1ToILCD1FieldMapping
     )
 from .ECS2_to_ILCD1_conversion import (
-    ECS2ToILCD1Amount,
-    ECS2ToILCD1FieldMapping,
-    ECS2ToILCD1UncertaintyConversion,
-    ECS2ToILCD1VariableConversion,
-    ECS2ToILCD1FlowConversion,
-    ECS2ToILCD1IntermediateFlowConversion,
-    ECS2ToILCD1QuantitativeObject,
-    ECS2ToILCD1ElementaryFlowConversion,
-    ECS2ToILCD1ParameterConversion,
-    ECS2ToILCD1ReferenceConversion,
-    ECS2ToILCD1ReviewConversion,
-    ECS2ToILCD1ClassificationConversion
+    ECS2ToILCD1FieldMapping
 )
 from .ILCD1_to_ECS2_conversion import (
-    ILCD1ToECS2FieldMapping,
-    ILCD1ToECS2ClassificationConversion,
-    ILCD1ToECS2ReferenceConversion,
-    ILCD1ToECS2SourceReferenceConversion,
-    ILCD1ToECS2ContactReferenceConversion,
-    ILCD1ToECS2FlowReferenceConversion,
-    ILCD1ToECS2Amount,
-    ILCD1ToECS2UncertaintyConversion,
-    ILCD1ToECS2FlowConversion,
-    ILCD1ToECS2VariableConversion,
-    ILCD1ToECS2ReviewConversion
-)
-from ..data_structures import (
-    ECS2ToILCD1DataNotConverted,
-    ILCD1ToECS2DataNotConverted
+    ILCD1ToECS2FieldMapping
 )
 
 class MappingFactory:
     
-    def __init__(self, input_name, output_name, input_ef_version, output_ef_version):
-        self.input_, self.input_ef = input_name, input_ef_version
-        self.output, self.output_ef = output_name, output_ef_version
+    ef_mapping = {
+        ('ecoinvent3.7', 'EF3.0'): Path("Mappings/ecs2_to_ilcd1_elementary_flows.json"),
+        ('EF3.0', 'ecoinvent3.7'): Path("Mappings/ilcd1_to_ecs2_elementary_flows.json")
+        }
     
-    def get_mapping(self, version, ilcd_extracted_dir=None):
-        if self.input_ == 'EcoSpold2':
-            if self.output == 'ILCD1':
-                if version is None or (version[0] == '2' and version[1] == '0'): # Default is v2.0
-                    ef_mapping = {
-                        ('ecoinvent3.7', 'EF3.0'): Path("Mappings/ecs2_to_ilcd1_elementary_flows.json")
-                        }.get((self.input_ef, self.output_ef))
-                    df_file = {
-                        'EF3.0': {
-                            'flow property': "Lavoisier_Default_Files/ILCD_EF30_FlowProperties",
-                            'unit group': "Lavoisier_Default_Files/ILCD_EF30_UnitGroups",
-                            'elementary flow': "Lavoisier_Default_Files/ILCD_EF30_ElementaryFlows"
-                            }
-                        }.get(self.output_ef)
-                    fm = ECS2ToILCD1FieldMapping(
-                        ECS2ToILCD1Amount,
-                        ECS2ToILCD1UncertaintyConversion,
-                        ECS2ToILCD1VariableConversion,
-                        ECS2ToILCD1FlowConversion,
-                        ECS2ToILCD1IntermediateFlowConversion,
-                        ECS2ToILCD1QuantitativeObject,
-                        ECS2ToILCD1ElementaryFlowConversion,
-                        ECS2ToILCD1ParameterConversion,
-                        ECS2ToILCD1ReferenceConversion,
-                        ECS2ToILCD1ReviewConversion,
-                        ECS2ToILCD1ClassificationConversion,
-                        ECS2ToILCD1DataNotConverted)
-                    type(fm)._default_elem_mapping = ef_mapping
-                    type(fm)._default_files = df_file
-                    return fm
-        elif self.input_ == 'ILCD1':
-            if self.output == 'EcoSpold2':
-                if version is None or (version[0] == '1' and version[1] == '1'): # Default is v1.1
-                    ef_mapping = {
-                        ('EF3.0', 'ecoinvent3.7'): Path("Mappings/ilcd1_to_ecs2_elementary_flows.json") # TODO
-                        }.get((self.input_ef, self.output_ef))
-                    df_file = {
-                        'ecoinvent3.7': {}
-                        }.get(self.input_ef)
-                    fm = ILCD1ToECS2FieldMapping(
-                        ILCD1ToECS2Amount,
-                        ILCD1ToECS2UncertaintyConversion,
-                        ILCD1ToECS2SourceReferenceConversion,
-                        ILCD1ToECS2ContactReferenceConversion,
-                        ILCD1ToECS2FlowReferenceConversion,
-                        ILCD1ToECS2ReferenceConversion,
-                        ILCD1ToECS2FlowConversion,
-                        ILCD1ToECS2VariableConversion,
-                        ILCD1ToECS2ClassificationConversion,
-                        ILCD1ToECS2ReviewConversion,
-                        ILCD1ToECS2DataNotConverted)
-                    type(fm)._default_elem_mapping = ef_mapping
-                    type(fm)._default_files = df_file
-                    return fm
-        elif self.input_ == 'OLCAILCD1':
-            if self.output == 'OLCAILCD1':
-                if version is None or (version[0] == '1' and version[1] == '1'):
-                    ef_mapping = {
-                        ('ecoinvent3.7', 'EF3.0'): Path("Mappings/ecs2_to_ilcd1_elementary_flows.json")
-                        }.get((self.input_ef, self.output_ef))
-                    df_file = {
-                        'EF3.0': {
-                            'flow property': "Lavoisier_Default_Files/ILCD_EF30_FlowProperties",
-                            'unit group': "Lavoisier_Default_Files/ILCD_EF30_UnitGroups",
-                            'elementary flow': "Lavoisier_Default_Files/ILCD_EF30_ElementaryFlows"
-                            }
-                        }.get(self.output_ef)
-                    fm = ILCD1ToILCD1FieldMapping(
-                        ILCD1ToILCD1ElementaryFlowConversion)
-                    type(fm)._default_elem_mapping = ef_mapping
-                    type(fm)._default_files = df_file
-                    type(fm)._ilcd_extracted_dir = ilcd_extracted_dir
-                    return fm
-                
+    ef_default_files = {
+        'EF3.0': {
+            'flow property': "Lavoisier_Default_Files/ILCD_EF30_FlowProperties",
+            'unit group': "Lavoisier_Default_Files/ILCD_EF30_UnitGroups",
+            'elementary flow': "Lavoisier_Default_Files/ILCD_EF30_ElementaryFlows"
+            },
+        'ecoinvent3.7': {}
+        }
+    
+    # The best here is to change the value in the file. Ex: version 2.0
+    default_mappings = {
+        ('EcoSpold2', 'ILCD1'): {
+            None: ECS2ToILCD1FieldMapping,
+            ('2', '0'): ECS2ToILCD1FieldMapping
+            },
+        ('ILCD1', 'EcoSpold2'): {
+            None: ILCD1ToECS2FieldMapping,
+            ('1', '1'): ILCD1ToECS2FieldMapping
+            },
+        ('OLCAILCD1', 'OLCAILCD1'): {
+            None: ILCD1ToILCD1FieldMapping,
+            ('1', '1'): ILCD1ToILCD1FieldMapping
+            }
+        }
+    
+    def __init__(self, names, efs): # It is only for the default option, so 'get' is used
+        self.__names = names
+        self._ef_mapping = self.ef_mapping.get(efs, None) # output
+        self._ef_file_defaults = self.ef_default_files.get(efs[1], None)
+        self._mapping_dict = self.default_mappings.get(names, None)
+        
+    def get_mapping(self, config, version):
+        if config.mapping_class is None:
+            if self._mapping_dict is None:
+                raise ValueError(f"Default mapping does not exist for {self.__names[0]} to {self.__names[1]} conversion")
+            self._mapping = self._mapping_dict[version]()
+        else:
+            self._mapping = config.mapping_class()
+        
+        if config.transfer_defaults:
+            type(self._mapping)._default_elem_mapping = self._ef_mapping
+            type(self._mapping)._default_files = self._ef_file_defaults
+        
+        return self._mapping
+    

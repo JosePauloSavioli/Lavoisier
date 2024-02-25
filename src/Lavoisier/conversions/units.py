@@ -407,7 +407,8 @@ ilcd_to_ecs2_un = {
     'e07b4169-bd86-4337-8fa6-1f76916475bf': ('8266bd67-ebd3-4d31-b972-eee3cf0da36f','m*year'),
     'f170abd3-f010-45f4-8e7c-9871a5c0421b': ('ca2f7f9a-ae4e-3c80-9388-b7bc26a8bf4d','mol'),
     '371b6515-6488-399b-9364-b9125dcf5ef2': ('ff8ed45d-bbfb-4531-8c7b-9b95e52bd41d','m3*km'),
-    #'48af5f71-8255-32f8-a25d-cc668c7126e5': ('ef6ecb4d-863b-4cee-adb4-95076bded0a1','dimensionless'), # Dimensionless properties will not have an specific property
+    # Necessery for unitId recognition in master data properties
+    'specific_dimensionless': ('ef6ecb4d-863b-4cee-adb4-95076bded0a1','dimensionless'), # Dimensionless properties will not have an specific property
     '67b63204-ef91-44b2-a927-2f4ead1fae17': ('7b75baf0-cbee-45e6-bf66-af119da06553','EUR2005'),
     'b3f0f892-c5a3-4c66-a432-c09e3d1e9bd6': ('241450a3-3497-4648-8c68-e44d04f64ac7','kg*day'),
     '93a60a56-a3c8-13da-a746-0800200c9a66': ('de5b3c87-0e35-4fb0-9765-4f3ba34c99e5','m3'), # Normal Volume
