@@ -12,6 +12,8 @@ from .ECS2_format import ECS2Helper
 from .configurations import (
     ECS2InputConfig,
     ILCD1InputConfig,
+    OLCAILCD1InputConfig,
     ECS2OutputConfig,
-    ILCD1OutputConfig
+    ILCD1OutputConfig,
+    OLCAILCD1OutputConfig
 )

@@ -14,6 +14,10 @@ from .utils import (
     copy_file,
     FieldMapping
 )
+from .ILCD1_to_ILCD1_conversion import (
+    ILCD1ToILCD1ElementaryFlowConversion,
+    ILCD1ToILCD1FieldMapping
+    )
 from .ECS2_to_ILCD1_conversion import (
     ECS2ToILCD1Amount,
     ECS2ToILCD1UncertaintyConversion,

@@ -24,13 +24,29 @@ class ILCD1Helper:
             raise Exception("ILCD 'process' folder not found or empty inside compressed file. File not considered as a valid ILCD file")
 
     number = 1000
+    @classmethod
+    def add(cls):
+        cls.number += 1
+        return cls.number
+    
     default_language = None
+
+    @staticmethod
+    def add_prefix(x, prefix):
+        return prefix + x['#text']
+
+    @classmethod
+    def add_index(cls, x, index = None, prefix = ''):
+        if index is None: index = cls.add()
+        return {'@index': index, '#text': cls.add_prefix(x, prefix)}
 
     @classmethod
     def text_add_index(cls, x, prefix="", index=None):
         if index is None:
             index = cls.number
             cls.number += 1
+        if isinstance(x, str): # specific not well-formed texts
+            x = {'@lang': 'en', '#text': x}
         return {'@index': index, '@lang': x.get('@lang', cls.default_language), '#text': prefix+x['#text']}
 
     @staticmethod
@@ -85,6 +101,7 @@ class ILCD(Dataset):
     }
 
     hash_ = ''
+    only_elem_flows = False
 
     def __init__(self,
                  save_path,
@@ -107,7 +124,7 @@ class ILCD(Dataset):
         for dir_ in ("", "processes", "external_docs", "sources", "contacts"):
             p = Path(self.save_dir, dir_)
             p.mkdir(exist_ok=True)
-
+            
         for (orig_dir, to_save_dir), files in self._additional_files.items():
             for file in files:
                 shutil.copy(Path(Path(__file__).parent.parent.resolve(), orig_dir, file),
@@ -122,7 +139,7 @@ class ILCD(Dataset):
                             force=True,
                             level=logging.DEBUG)
         logging.info(f"\n###\nLavoisier version: {__version__}\nConversion started at: {time.strftime('%d/%m/%Y %H:%M:%S', time.localtime())}"+\
-                     "\nLavoisier, converter from Ecospold2 to ILCD, powered by Gyro (UTFPR) and IBICT\nLicensed under GNU General Public License v3 (GPLv3)\n###\n")
+                     "\nLavoisier, converter of LCI formats, powered by Gyro (UTFPR) and IBICT\nLicensed under GNU General Public License v3 (GPLv3)\n###\n")
 
     def end_log(self):
         logging.info("\nConversion ended")
@@ -130,40 +147,66 @@ class ILCD(Dataset):
 
     def _write_process(self):
         process_dict = self.struct.get_dict()
+        dsi = self.struct.dataSetInformation
         self.process_path = Path(
-            self.save_dir, 'processes', self.struct.dataSetInformation.get('c_UUID')+'.xml')
+            self.save_dir, 'processes', dsi.get('c_UUID', dsi.get('UUID'))+'.xml')
         with open(self.process_path, 'w') as c:
             c.write(xmltodict.unparse(process_dict,
                     pretty=True, newl='\n', indent="  "))
 
     def get_process_name(self):
-        name = f"{self.struct.dataSetInformation.name.get('baseName')[0]['#text']}, "+\
-            f"{self.struct.geography.locationOfOperationSupplyOrProduction.get('a_location')}, "+\
-            f"{self.struct.time.get('c_referenceYear')} - {self.struct.time.get('c_dataSetValidUntil')}"+\
+        bn = self.struct.dataSetInformation['name'].get('baseName')
+        geo = self.struct.geography['locationOfOperationSupplyOrProduction']
+        time = self.struct.time
+        name = f"{bn[0]['#text'] if isinstance(bn, list) else bn['#text']}, "+\
+            f"{geo.get('location')}, "+\
+            f"{time.get('referenceYear')} - {time.get('dataSetValidUntil')}"+\
             f"{self.hash_}"
         return name.replace('/', ' per ')
 
     def end_conversion(self, multi=False, extracted_file=None):
-        name = 'ILCD'+self.hash_ if multi else self.get_process_name()
+        name = name_ = 'ILCD'+self.hash_ if multi else self.get_process_name()
         self.reset_conversion()
         
-        if Path(self.save_path, name+'.zip').is_file():
+        if Path(self.save_path, name_+'.zip').is_file():
             i = 1
-            while Path(self.save_path, name+'.zip').is_file():
-                name = name + ' (' + str(i) + ')'
+            while Path(self.save_path, name_+'.zip').is_file():
+                name_ = name + ' (' + str(i) + ')'
                 i += 1
         
+        if extracted_file:
+            if type(self).only_elem_flows:
+                for dir_ in ("", "external_docs", "sources", "contacts", "flowproperties", "unitgroups"):
+                    Path(self.save_dir, dir_).mkdir(exist_ok=True)
+                    
+                    if Path(extracted_file, 'processes').is_dir():
+                        gen = Path(extracted_file, dir_).glob('*.xml')
+                    else:
+                        for d in Path(extracted_file).iterdir():
+                            if Path(extracted_file, d).is_dir() and Path(extracted_file, d, 'processes').is_dir():
+                                gen = Path(extracted_file, d, dir_).glob('*.xml')
+                                break
+                        else:
+                            raise Exception("No valid ILCD directory in {extracted_file}")
+                    for file in gen:
+                        shutil.copy(file,
+                                    Path(self.save_dir, dir_))
+                        
+            shutil.rmtree(extracted_file)
+        
         self.zipfile_path = Path(
-            self.save_path, name+'.zip')
+            self.save_path, name_+'.zip')
         ilcd_zipfile = zipfile.ZipFile(self.zipfile_path, 'w')
         zipdir(self.save_dir, ilcd_zipfile)
         ilcd_zipfile.close()
+        
         shutil.rmtree(self.save_dir)
 
         self.end_log()
 
     def reset_conversion(self):
         self._write_process()
+        bn = self.struct.dataSetInformation['name'].get('baseName')
         logging.info(
-            f"\n\nConversion ended for {self.struct.dataSetInformation.name.get('baseName')[0]['#text']}\n")
+            f"\n\nConversion ended for {bn[0]['#text'] if isinstance(bn, list) else bn['#text']}\n")
         self.__init__(*self.__args)

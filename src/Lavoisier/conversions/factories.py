@@ -8,6 +8,10 @@ Created on Sat Oct 15 12:36:09 2022
 
 from pathlib import Path
 
+from .ILCD1_to_ILCD1_conversion import (
+    ILCD1ToILCD1ElementaryFlowConversion,
+    ILCD1ToILCD1FieldMapping
+    )
 from .ECS2_to_ILCD1_conversion import (
     ECS2ToILCD1Amount,
     ECS2ToILCD1FieldMapping,
@@ -46,7 +50,7 @@ class MappingFactory:
         self.input_, self.input_ef = input_name, input_ef_version
         self.output, self.output_ef = output_name, output_ef_version
     
-    def get_mapping(self, version):
+    def get_mapping(self, version, ilcd_extracted_dir=None):
         if self.input_ == 'EcoSpold2':
             if self.output == 'ILCD1':
                 if version is None or (version[0] == '2' and version[1] == '0'): # Default is v2.0
@@ -100,3 +104,23 @@ class MappingFactory:
                     type(fm)._default_elem_mapping = ef_mapping
                     type(fm)._default_files = df_file
                     return fm
+        elif self.input_ == 'OLCAILCD1':
+            if self.output == 'OLCAILCD1':
+                if version is None or (version[0] == '1' and version[1] == '1'):
+                    ef_mapping = {
+                        ('ecoinvent3.7', 'EF3.0'): Path("Mappings/ecs2_to_ilcd1_elementary_flows.json")
+                        }.get((self.input_ef, self.output_ef))
+                    df_file = {
+                        'EF3.0': {
+                            'flow property': "Lavoisier_Default_Files/ILCD_EF30_FlowProperties",
+                            'unit group': "Lavoisier_Default_Files/ILCD_EF30_UnitGroups",
+                            'elementary flow': "Lavoisier_Default_Files/ILCD_EF30_ElementaryFlows"
+                            }
+                        }.get(self.output_ef)
+                    fm = ILCD1ToILCD1FieldMapping(
+                        ILCD1ToILCD1ElementaryFlowConversion)
+                    type(fm)._default_elem_mapping = ef_mapping
+                    type(fm)._default_files = df_file
+                    type(fm)._ilcd_extracted_dir = ilcd_extracted_dir
+                    return fm
+                

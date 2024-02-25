@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<flowDataSet version="1.1" xmlns="http://lca.jrc.it/ILCD/Flow" xmlns:c="http://lca.jrc.it/ILCD/Common">
+  <flowInformation>
+    <dataSetInformation>
+      <c:UUID>4f3622dd-ce6f-435e-9e4b-9cb1ef3f5656</c:UUID>
+      <name>
+        <baseName xml:lang="en">1,1-dimethylcyclopentane</baseName>
+      </name>
+      <c:synonyms></c:synonyms>
+      <classificationInformation>
+        <c:classification name="CPC" classes="../classification_CPC.xml">
+          <c:class level="0" classId="">3: Other transportable goods, except metal products, machinery and equipment</c:class>
+          <c:class level="1" classId="3">34: Basic chemicals</c:class>
+          <c:class level="2" classId="3.4">341: Basic organic chemicals</c:class>
+        </c:classification>
+        <c:classification name="By-product classification" classes="../classification_By-product classification.xml">
+          <c:class level="0" classId="1">allocatable product</c:class>
+        </c:classification>
+      </classificationInformation>
+      <c:generalComment>Ecospold 2 exchange, IntermediateExchangeID = 41bae23f-237d-4ba6-9b1d-73d5f4baee55</c:generalComment>
+    </dataSetInformation>
+    <quantitativeReference>
+      <referenceToReferenceFlowProperty>0</referenceToReferenceFlowProperty>
+    </quantitativeReference>
+  </flowInformation>
+  <modellingAndValidation>
+    <LCIMethod>
+      <typeOfDataSet>Waste flow</typeOfDataSet>
+    </LCIMethod>
+  </modellingAndValidation>
+  <administrativeInformation>
+    <dataEntryBy>
+      <c:timeStamp>2022-11-14T23:44:14</c:timeStamp>
+      <c:referenceToDataSetFormat type="source data set" refObjectId="a97a0155-0234-4b87-b4ce-a45da52f2a40" version="03.00.000" uri="../sources/a97a0155-0234-4b87-b4ce-a45da52f2a40">
+        <c:shortDescription xml:lang="en">ILCD Format</c:shortDescription>
+      </c:referenceToDataSetFormat>
+    </dataEntryBy>
+    <publicationAndOwnership>
+      <c:dataSetVersion>01.00.001</c:dataSetVersion>
+    </publicationAndOwnership>
+  </administrativeInformation>
+  <flowProperties>
+    <flowProperty dataSetInternalID="0">
+      <referenceToFlowPropertyDataSet type="flow property data set" refObjectId="93a60a56-a3c8-11da-a746-0800200b9a66" version="03.00.003" uri="../flowproperties/93a60a56-a3c8-11da-a746-0800200b9a66">
+        <c:shortDescription xml:lang="en">Mass</c:shortDescription>
+      </referenceToFlowPropertyDataSet>
+      <meanValue>1.0</meanValue>
+      <generalComment xml:lang="en">Main flow unit</generalComment>
+    </flowProperty>
+    <flowProperty dataSetInternalID="2">
+      <referenceToFlowPropertyDataSet type="flow property data set" refObjectId="64b8e725-b0ba-4837-abb9-62dc0e7b9f6f" version="03.00.003" uri="../flowproperties/64b8e725-b0ba-4837-abb9-62dc0e7b9f6f">
+        <c:shortDescription xml:lang="en">carbon content, fossil</c:shortDescription>
+      </referenceToFlowPropertyDataSet>
+      <meanValue>0.857142857142857</meanValue>
+      <minimumValue>0.84</minimumValue>
+      <maximumValue>0.86</maximumValue>
+      <uncertaintyDistributionType>log-normal</uncertaintyDistributionType>
+      <relativeStandardDeviation95In>1.2438037719598962</relativeStandardDeviation95In>
+    </flowProperty>
+    <flowProperty dataSetInternalID="3">
+      <referenceToFlowPropertyDataSet type="flow property data set" refObjectId="7ec8d70e-4ffc-4024-86b7-6141cc0a2bf5" version="03.00.003" uri="../flowproperties/7ec8d70e-4ffc-4024-86b7-6141cc0a2bf5">
+        <c:shortDescription xml:lang="en">water content</c:shortDescription>
+      </referenceToFlowPropertyDataSet>
+      <meanValue>0.0</meanValue>
+    </flowProperty>
+    <flowProperty dataSetInternalID="4">
+      <referenceToFlowPropertyDataSet type="flow property data set" refObjectId="62e503ce-544a-4599-b2ad-bcea15a7bf20" version="03.00.003" uri="../flowproperties/62e503ce-544a-4599-b2ad-bcea15a7bf20">
+        <c:shortDescription xml:lang="en">carbon content, non-fossil</c:shortDescription>
+      </referenceToFlowPropertyDataSet>
+      <meanValue>0.0</meanValue>
+    </flowProperty>
+    <flowProperty dataSetInternalID="5">
+      <referenceToFlowPropertyDataSet type="flow property data set" refObjectId="fec15e58-109a-4775-bc6f-72ca0b9b3cee" version="03.00.003" uri="../flowproperties/fec15e58-109a-4775-bc6f-72ca0b9b3cee">
+        <c:shortDescription xml:lang="en">carbon content</c:shortDescription>
+      </referenceToFlowPropertyDataSet>
+      <meanValue>0.857142857142857</meanValue>
+      <generalComment xml:lang="en">carbon content on a dry matter basis (reserved; not for manual entry)</generalComment>
+    </flowProperty>
+  </flowProperties>
+</flowDataSet>

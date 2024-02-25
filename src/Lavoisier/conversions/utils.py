@@ -52,9 +52,14 @@ def ensure_list(x, ensure_text=False):
             return [x]
         else:
             return []
-    else:
+    elif isinstance(x, str):
+        if x != '':
+            return [{'@lang': 'en', '#text': x}]
+        else: return []
+    else: # [!] Unnecessary string verification because the formatation is off
+        x = [n if isinstance(n, dict) and n != {} else {'@lang': 'en', '#text': n} for n in x]
         if ensure_text:
-            return [n for n in x if n.get('#text')]
+            return [n for n in x if n['#text'] and n['#text'] != '']
         return x
 
 # Credits for Michael for the idea of that function

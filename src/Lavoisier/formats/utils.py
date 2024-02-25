@@ -82,6 +82,9 @@ class XMLStreamIterable(Iterator):
             else:
                 result[n] = self.elem2dict(t)
 
+        if list(result) == ['#text']: # If its only a text, make it return only the text
+            result = result['#text']
+
         return result
 
     def gen_return(self):

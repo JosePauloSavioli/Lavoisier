@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<contactDataSet version="1.1" xmlns="http://lca.jrc.it/ILCD/Contact" xmlns:c="http://lca.jrc.it/ILCD/Common">
+  <contactInformation>
+    <dataSetInformation>
+      <c:UUID>3b0db486-77eb-46a0-9fea-34b069410e71</c:UUID>
+      <c:name xml:lang="en">Someone</c:name>
+      <classificationInformation>
+        <c:classification name="ILCD" classes="ILCDClassification.xml">
+          <c:class level="0">Persons</c:class>
+        </c:classification>
+      </classificationInformation>
+      <email>someone@ecoinvent.org</email>
+    </dataSetInformation>
+  </contactInformation>
+  <administrativeInformation>
+    <dataEntryBy>
+      <c:timeStamp>2022-12-03T23:24:56</c:timeStamp>
+      <c:referenceToDataSetFormat type="source data set" refObjectId="a97a0155-0234-4b87-b4ce-a45da52f2a40" version="03.00.000" uri="../sources/a97a0155-0234-4b87-b4ce-a45da52f2a40">
+        <c:shortDescription xml:lang="en">ILCD Format</c:shortDescription>
+      </c:referenceToDataSetFormat>
+    </dataEntryBy>
+    <publicationAndOwnership>
+      <c:dataSetVersion>01.00.000</c:dataSetVersion>
+    </publicationAndOwnership>
+  </administrativeInformation>
+</contactDataSet>

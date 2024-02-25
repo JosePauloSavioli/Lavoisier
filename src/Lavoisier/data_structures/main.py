@@ -6,23 +6,8 @@ Created on Fri Oct  7 04:29:27 2022
 @author: jotape42p
 """
 
-from abc import ABC, abstractmethod
+from .validators.general_validators import Validator
 from copy import copy
-
-### ABSTRACTIONS
-
-class Validator(ABC):
-    @abstractmethod
-    def _validate(self, x):
-        pass
-    def _end_validate(self):
-        pass
-    def add(self, o):
-        self._x = self._validate(o)
-        return self
-    def end(self):
-        self._end_validate()
-        return self._x
 
 ### MAIN STRUCTURE CLASS
 
@@ -51,6 +36,8 @@ class DotDict(dict):
             raise TypeError('Expected dict')
 
     def __setitem__(self, key, value):
+        
+        key = key[1:] if key[0] in ('@', '#') else key
         
         if key in self.VALID:
             
@@ -114,11 +101,10 @@ class DotDict(dict):
             if key not in self:
                 raise AttributeError(f'class {self.__class__.__name__} missing mandatory attribute {key}')
             
-        def get_name(k):
-            pr = {'a_': '@', 'c_': 'c:', 'e_': '', 't_': '#text'}
-            def kf(x): return x.split('_')[0]+'_'
-            def kj(x): return '_'.join(x.split('_')[1:])
-            return pr[kf(k)]+kj(k) if kf(k) in pr else k
+        def get_name(k, valid):
+            pr = {'attribute': '@', 'nms:common': 'c:', 'text': '#'}
+            k = k if 'xml_nms' not in valid else valid['xml_nms']+':'+k
+            return k if 'xml_type' not in valid else pr[valid['xml_type']]+k
         
         def get_value(valid, v):
             if isinstance(v, dict):
@@ -129,7 +115,7 @@ class DotDict(dict):
                 return v.end()
                 
         # Ordering
-        new = {get_name(k):v for k,v in sorted({k:get_value(self.VALID[k],v) for k,v in self.items()}.items(), key=lambda n:self.VALID[n[0]]['order'])}
+        new = {get_name(k,self.VALID[k]):v for k,v in sorted({k:get_value(self.VALID[k],v) for k,v in self.items()}.items(), key=lambda n:self.VALID[n[0]]['order'])}
         
         return new
 

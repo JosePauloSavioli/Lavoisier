@@ -59,6 +59,9 @@ class ECS2Helper:
 class ECS2(Dataset):
 
     hash_ = ''
+    only_elem_flows = False
+    
+    filename = {}
 
     def __init__(self,
                  save_path,
@@ -73,7 +76,7 @@ class ECS2(Dataset):
             shutil.rmtree(extracted_file)
 
     def start_conversion(self, filename):
-        self.filename = filename
+        self.filename = (self.filename.get('#text', '') + '_' + filename.replace('.xml', '')).replace('/', '_per_')
         self.start_log()
 
     def start_log(self):
@@ -83,7 +86,7 @@ class ECS2(Dataset):
                             force=True,
                             level=logging.DEBUG)
         logging.info(f"\n###\nLavoisier version: {__version__}\nConversion started at: {time.strftime('%d/%m/%Y %H:%M:%S', time.localtime())}"+\
-                     "\nLavoisier, converter from Ecospold2 to ILCD, powered by Gyro (UTFPR) and IBICT\nLicensed under GNU General Public License v3 (GPLv3)\n###\n")
+                     "\nLavoisier, converter of LCI formats, powered by Gyro (UTFPR) and IBICT\nLicensed under GNU General Public License v3 (GPLv3)\n###\n")
 
     def end_log(self):
         logging.info("\nConversion ended")
@@ -91,26 +94,35 @@ class ECS2(Dataset):
 
     def _write_process(self):
         process_dict = self.struct.get_dict()
-        path = Path(self.save_path, self.get_process_name()+'.spold')
+        name = name_ = self.get_process_name()
+        
+        if Path(self.save_path, name_+'.spold').is_file():
+            i = 1
+            while Path(self.save_path, name_+'.spold').is_file():
+                name_ = name + ' (' + str(i) + ')'
+                i += 1
+        
+        path = Path(self.save_path, name_+'.spold')
+        
         with open(path, 'w') as c:
             c.write(xmltodict.unparse(process_dict,
                     pretty=True, newl='\n', indent="  "))
 
     def get_process_name(self):
-        name = f"{self.struct.activityDescription.activity.get('activityName')[0]['#text']}, "+\
+        name = f"{self.struct.activityDescription.activity.get('activityName')['#text']}, "+\
             f"{self.struct.activityDescription.geography.get('shortname')[0]['#text']}, "+\
-            f"{self.struct.activityDescription.timePeriod.get('a_startDate')[:4]} - {self.struct.activityDescription.timePeriod.get('a_endDate')[:4]}"+\
+            f"{self.struct.activityDescription.timePeriod.get('startDate')[:4]} - {self.struct.activityDescription.timePeriod.get('endDate')[:4]}"+\
             f"{self.hash_}"
         return name.replace('/', ' per ')
 
-    def end_conversion(self, multi=None, extracted_file=None):
+    def end_conversion(self, multi=False, extracted_file=None):
         self.reset_conversion()
-        if extracted_file.is_dir():
+        if extracted_file.is_dir() and not multi:
             shutil.rmtree(extracted_file)
         self.end_log()
 
     def reset_conversion(self):
         self._write_process()
         logging.info(
-            f"\n\nConversion ended for {self.struct.activityDescription.activity.get('activityName')[0]['#text']}\n")
+            f"\n\nConversion ended for {self.struct.activityDescription.activity.get('activityName')['#text']}\n")
         self.__init__(*self.__args)
