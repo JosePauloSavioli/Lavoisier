@@ -106,5 +106,5 @@ class ECS2OutputConfig(OutputConfig):
 
 class OLCAILCD1OutputConfig(ILCD1OutputConfig):
     name = 'OLCAILCD1'
-    output_structure = OLCAILCD1Structure
+    output_structure = {None: OLCAILCD1Structure, ('1', '1'): OLCAILCD1Structure}
     

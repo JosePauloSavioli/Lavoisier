@@ -6,7 +6,7 @@ Created on Sat Oct 15 12:38:35 2022
 @author: jotape42p
 """
 
-from .ILCD1_structure import ILCD1Structure
+from .ILCD1_structure import ILCD1Structure, OLCAILCD1Structure
 from .ECS2_structure import ECS2Structure
 
 class StructureFactory:
@@ -15,6 +15,10 @@ class StructureFactory:
         'ILCD1': {
             None: ILCD1Structure,
             ('1', '1'): ILCD1Structure
+            },
+        'OLCAILCD1': {
+            None: OLCAILCD1Structure,
+            ('1', '1'): OLCAILCD1Structure
             },
         'ECS2': {
             None: ECS2Structure,

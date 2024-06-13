@@ -570,6 +570,7 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
 
     def get_properties(self, file):
         with open(file) as f:  # It is exhausted in the first iteration so it has to be opened again
+
             map_ = {'/flowDataSet/flowProperties/flowProperty':
                     lambda t: self.properties.__setitem__(t['referenceToFlowPropertyDataSet']['shortDescription']['#text'],
                                                           self.Property.normal_init(t, self.not_converted))}
@@ -579,6 +580,7 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
                 else:
                     self.main = ilcd_to_ecs2_un.get(
                         t['referenceToFlowPropertyDataSet']['@refObjectId'])
+
     
     def get_master_data_properties(self, id_):
         for propid, prop in type(self).property_master_data.get(id_, {}).items():
@@ -694,6 +696,8 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
         self.field.amount = self.amount.m
 
         if self.isReference:
+            print(type(self)._reference_flows)
+            print(self.id_, self._name)
             self.field.outputGroup = 0
         else:
             if self.group == 'Input':
@@ -844,6 +848,7 @@ class ILCD1ToECS2SourceReferenceConversion(ILCD1ToECS2ReferenceConversion):
     def get_source(self):  # Remember TTextAndImage are Unique :3
         if self.isConvertible:
             with open(self.file) as f:
+
                 if self.subtype in ('imageUrl', 'datasetIcon'):
                     map_ = {'/sourceDataSet/sourceInformation/dataSetInformation/referenceToDigitalFile/@uri':
                             lambda x: ILCD1Helper.add_index({'#text': x}) if self.subtype == 'imageUrl' else x}
@@ -927,10 +932,11 @@ class ILCD1ToECS2ContactReferenceConversion(ILCD1ToECS2ReferenceConversion):
 
     def get_contact(self):
         if self.isConvertible:
-            with open(self.file) as f:
+            with open(self.file) as f: # TODO Errors here can reflect in file persistence in the Docker | x.__setitem__('email', t) is an example when an contact has an empty email entry
+
                 map_ = {'/contactDataSet/contactInformation/dataSetInformation/name': lambda x, t: x.__setitem__('name', t['#text']),
                         '/contactDataSet/contactInformation/dataSetInformation/shortName': lambda x, t: x.__setitem__('sname', t['#text']),
-                        '/contactDataSet/contactInformation/dataSetInformation/email': lambda x, t: x.__setitem__('email', t)}
+                        '/contactDataSet/contactInformation/dataSetInformation/email': lambda x, t: x.__setitem__('email', t if not isinstance(t, dict) else '')}
                 info = {}
                 for path, t in XMLStreamIterable(f, map_):
                     map_[path](info, t)
@@ -1022,6 +1028,7 @@ class ILCD1ToECS2FlowReferenceConversion(ILCD1ToECS2ReferenceConversion):
                     #         self).class_conversion.organize(classifications, 'CPC'))
                     # else:
                     #     pass # Implement not converted instance for elementary exchanges
+
         else:
             self.flow.isConvertible = False
         return self.flow
@@ -1224,6 +1231,24 @@ class ILCD1ToECS2BasicFieldMapping(FieldMapping, ABC):
     use_master_data_properties = None
     sum_same_elementary_amounts = None
 
+    def delete(self):
+        type(self)._uuid_conv_spec = (b'\__Lav_IL1EC2__/', 'flow_conversion_2')
+        type(self)._default_language = 'en'
+        type(self)._default_compartment_mapping = FieldMapping._dict_from_file(
+            Path("Mappings/ilcd1_to_ecs2_compartments.json"))
+        type(self)._default_geographies_mapping = FieldMapping._dict_from_file(
+            Path("Mappings/ilcd1_to_ecs2_geographies.json"))
+        type(self)._default_master_data_property = FieldMapping._dict_from_file(
+            Path("Mappings/ecs2_master_data_properties.json"))
+        type(self)._default_files = None
+        type(self)._default_elem_mapping = None
+        type(self)._convert_additional_fields = True
+        type(self).convert_user_data = None
+        type(self).use_master_data_properties = None
+        type(self).sum_same_elementary_amounts = None
+        self.reset_conversion()
+        
+
     def set_mappings(self, ef_map):
         self._elem_mapping = self._dict_from_file(
             ef_map or type(self)._default_elem_mapping, 'SourceFlowUUID')
@@ -1266,6 +1291,9 @@ class ILCD1ToECS2BasicFieldMapping(FieldMapping, ABC):
         self.VariableConversion.amountClass = self.Amount
         self.FlowConversion.amountClass = self.Amount
         self.FlowConversion.Property.amountClass = self.Amount
+        
+        # self.reset_conversion()
+        print('->', self.FlowConversion._reference_flows)
 
     def end_conversion(self):
         ILCD1ToECS2BasicFieldMapping.reset_conversion(self)
@@ -1317,6 +1345,10 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
 
     # File pre-mapping attribute
     _flow_internal_refs = None
+
+    def delete(self):
+        type(self)._flow_internal_refs = None
+        super().delete()
 
     def get_statistics(self):
         pass

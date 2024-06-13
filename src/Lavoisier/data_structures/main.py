@@ -11,6 +11,30 @@ from copy import copy
 
 ### MAIN STRUCTURE CLASS
 
+'''
+
+TYPES of DATA
+    Validator, DotDict (unique = True) and List of DotDicts (unique = False)
+
+Validator 'key': can't return itself as a Validator class
+    GETTER: get(key) [returns the Validator.end()]
+    SETTER: .key = [direct attribution]
+        
+DotDict 'key':
+    GETTER: get(key) [gets DotDict unique instance], .key [gets DotDict unique instance]
+    SETTER: 
+        key_instance = .key
+        key_instance.other_key = value
+        
+List of DotDict 'key': No dot chain as it is ambiguous, two methods for this entry
+    GETTER: get(key) [gets value], get_class(key) [gets an empty instance of the DotDict of the members] 
+    SETTER: 
+        key_instance = .get_class(key)()
+        key_instance.other_key = value
+        .key = key_instance [adds the instance to the list]
+
+'''
+
 # Credits for Curt Hagenlocher for core implementing such an elegant class
 # https://stackoverflow.com/questions/3031219/recursively-access-dict-via-attributes-as-well-as-index-access
 

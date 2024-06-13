@@ -272,6 +272,7 @@ class Converter:
                     inst.handle_error()
                     del inst
             if hasattr(self, '_field_mapping'):
+                self._field_mapping.delete()
                 del self._field_mapping
             raise e
             

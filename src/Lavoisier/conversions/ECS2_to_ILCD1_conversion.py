@@ -63,6 +63,8 @@ for u in units_def.values():
 
 class ECS2ToILCD1UncertaintyConversion:  # Not intrusive. Doesn't modify the uncertainty data entered
 
+    # Indexes: Uncertainty: 800 to 900 / Generic: >= 1000
+
     statistics = 0
 
     def __init__(self, unc):
@@ -1456,7 +1458,7 @@ class ECS2ToILCD1ReferenceConversion:
             filename = self.uuid + ('_'+self.version if self.output_name_with_version else '') 
             with open(str(Path(self._folder_path, filename+".xml")), 'w') as f:
                 f.write(xmltodict.unparse(self.structure,
-                        pretty=True, newl='\n', indent="  "))
+                                          pretty=True, newl='\n', indent="  "))
 
     class SourceDataSet(AdditionalDataset):
 
@@ -1820,6 +1822,21 @@ class ECS2ToILCD1BasicFieldMapping(FieldMapping, ABC):
     convert_system_review = None
     sum_same_elementary_amounts = None
     
+    def delete(self):
+        type(self)._uuid_conv_spec = (b'\__Lav_IL1EC2__/', 'flow_conversion_1')
+        type(self)._default_language = 'en'
+        type(self)._default_files = None
+        type(self)._default_elem_mapping = None
+        type(self)._default_class_mapping = Path("Mappings/ecs2_to_ilcd1_classes.json")
+        type(self)._convert_additional_fields = True
+        type(self).convert_properties = None
+        type(self).convert_parameterization = None
+        type(self).convert_system_review = None
+        type(self).sum_same_elementary_amounts = None
+        self.reset_conversion()
+        self.end_conversion()
+        
+    
     def set_mappings(self, ef_map):
         self._elem_mapping = self._dict_from_file(
             ef_map or type(self)._default_elem_mapping, 'SourceFlowUUID')
@@ -1865,6 +1882,8 @@ class ECS2ToILCD1BasicFieldMapping(FieldMapping, ABC):
         self.FlowConversion.amountClass = self.Amount
         self.FlowConversion.Property.amountClass = self.Amount
         self.IntermediateFlowConversion.ProductionVolume.amountClass = self.Amount
+        
+        # self.reset_conversion()
         
     def end_conversion(self):
         ECS2ToILCD1BasicFieldMapping.reset_conversion(self)
@@ -1977,6 +1996,9 @@ class ECS2ToILCD1FieldMapping(ECS2ToILCD1BasicFieldMapping):
             f"Review: {self.ReviewConversion.statistics}/{type(self).rev_stat}")
         logging.info(
             f"Classification: {self.ClassificationConversion.statistics}/{type(self).cls_stat}")
+
+    def delete(self):
+        super().delete()
 
     def set_file_info(self, *args):
         super().set_file_info(*args)

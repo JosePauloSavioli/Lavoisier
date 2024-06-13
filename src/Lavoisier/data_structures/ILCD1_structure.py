@@ -536,10 +536,19 @@ class OLCAILCD1Structure(ILCD1Structure):
     # https://www.javatips.net/api/olca-modules-master/olca-ilcd/src/main/java/org/openlca/ilcd/util/ProcessInfoExtension.java
     # ilcd/util/filesThatEndWithExtension
     
+    DataSetInformation = DataSetInformation
+    QuantitativeReference = QuantitativeReference
+    Time = OLCATime
+    Technology = Technology
+    Geography = Geography
+    ModellingAndValidation = ModellingAndValidation
+    AdministrativeInformation = AdministrativeInformation
+    
     def __init__(self):
-        self.Exchanges = OLCAExchanges()
-        self.MathematicalRelations = OLCAMathematicalRelations()
-        self.Time = OLCATime()
+        super().__init__()
+        self.exchanges = OLCAExchanges()
+        self.mathematicalRelations = OLCAMathematicalRelations()
+        self.time = OLCATime()
     
     def get_dict(self):
         p = super().get_dict()

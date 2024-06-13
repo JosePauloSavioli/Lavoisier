@@ -51,13 +51,14 @@ class ILCD1ToILCD1ElementaryFlowConversion:
     
     exc_holder = None
     math_holder = None
-    math_rel = None
+    math_rel = []
     
     # [!] Fluxo no OpenLCA sempre está de acordo com a unidade padrão no unitgroups
     # [!] Fluxo do OpenLCA é sempre convertido para a unidade/propriedade padrão do ILCD
     # Há o caso de que a unidade foi modificada e não é a esperada, mas pode estar no flowProperties
     def __init__(self, x):
         n = type(self).elem_flow_mapping.get(x['referenceToFlowDataSet']['@refObjectId'], None)
+        print(x['referenceToFlowDataSet']['@refObjectId'], type(n))
         self.get_uri(x) # Old uri   
         self.nx = deepcopy(x)
         if n is not None:
@@ -77,7 +78,7 @@ class ILCD1ToILCD1ElementaryFlowConversion:
                 iunit = n['SourceUnit']
                 nunit = n['TargetUnit']
 
-                print(ounit, iunit, nunit)
+                # print(ounit, iunit, nunit)
 
                 # 1ª Conversão de unidades [OLCA to MainILCD (kJ to MJ for CO2)]
                 if 'olca' in list(ounit):
@@ -125,11 +126,13 @@ class ILCD1ToILCD1ElementaryFlowConversion:
                 else:
                     self.get_uri(x)
                     self.save_file()
+                    print("Flow not converted due to lack of unit correspondence")
                     logging.warning(
                         "Flow not converted due to lack of unit correspondence")
                     
             else:
                 self.save_file()
+                print("Flow not converted due to lack of elementary flow correspondence in the mapping file")
                 logging.warning(
                     "Flow not converted due to lack of elementary flow correspondence in the mapping file")
         else:
@@ -274,13 +277,12 @@ class ILCD1ToILCD1BasicFieldMapping(FieldMapping, ABC):
         self._elem_mapping = self._dict_from_file(
             ef_map or type(self)._default_elem_mapping, 'SourceFlowUUID')
         self.ElementaryFlowConversion.elem_flow_mapping = self._elem_mapping
-
+    
     def __init__(self):
         self.ElementaryFlowConversion = ILCD1ToILCD1ElementaryFlowConversion
-
+        
     def start_conversion(self):
         self.ElementaryFlowConversion.default_files = type(self)._default_files
-        self.ElementaryFlowConversion.ilcd_extracted_dir = type(self)._ilcd_extracted_dir
 
     def end_conversion(self):
         self.get_statistics()
@@ -289,7 +291,8 @@ class ILCD1ToILCD1BasicFieldMapping(FieldMapping, ABC):
         pass
 
     def set_file_info(self, path, save_path):
-        self.ElementaryFlowConversion.save_dir = Path(save_path, 'ILCD-algorithm')
+        self.ElementaryFlowConversion.save_dir = Path(save_path)
+        self.ElementaryFlowConversion.ilcd_extracted_dir = path
 
     def set_output_class_defaults(self, cl_struct):
         self.ElementaryFlowConversion.exc_holder = cl_struct.exchanges
