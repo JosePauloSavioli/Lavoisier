@@ -731,18 +731,18 @@ olcailcd_unit_to_fp = {
     #'Items*a': ('', '1acf7c0f-aa9d-4022-a4b7-fe0b54ea0b91', 'Units of items*time'),
     'EUR': ('fdfecf14-ff8a-4e17-b2b2-f938c4b5cc27', 'a55b7fe7-fa09-47ef-be62-e07b8e6f4351', 'Units of currency'),#
     #'mol': ('341fd786-b2ad-4552-a762-5eafcab45dee', 'f170abd3-f010-45f4-8e7c-9871a5c0421b', 'Units of mole'),
-    'm*a': ('b7ffb330-95a8-4815-a78c-47fcdee3b768', 'f7fe0af2-e764-4984-bb9f-2cbff6cd2f18', 'Units of length*time'),#
+    'm*a': ('e07b4169-bd86-4337-8fa6-1f76916475bf', 'b4cac580-5ce8-11df-a08a-0800200c9a66', 'Units of length*time'),#
     'd': ('c0447923-0e60-4b3c-97c2-a86dddd9eea5', '11074cfd-08a4-449b-adad-18ce24a1b275', 'Units of time'),#
     'Items*km': ('0ddc622a-bc4a-4cf8-a551-9e112864b77f', '2abb86b6-e71b-4de5-a766-a20e80e59b6d', 'Units of items*length'),#
-    'm': ('838aaa23-0117-11db-92e3-0800200c9a66', '3d314eab-ef11-4ff3-a35e-9bc5cd858694', 'Units of length'),#
-    't*km': ('838aaa20-0117-11db-92e3-0800200c9a66', '0dea4ed8-bb6b-4049-b2b4-b2c413ef2180', 'Units of mass*length'),#
-    'kg': ('93a60a56-a3c8-11da-a746-0800200b9a66', '20aadc24-a391-41cf-b340-3e4529f44bde', 'Units of mass'),#
+    'm': ('838aaa23-0117-11db-92e3-0800200c9a66', '838aaa22-0117-11db-92e3-0800200c9a66', 'Units of length'),#
+    't*km': ('838aaa20-0117-11db-92e3-0800200c9a66', '838aaa21-0117-11db-92e3-0800200c9a66', 'Units of mass*length'),#
+    'kg': ('93a60a56-a3c8-11da-a746-0800200b9a66', '93a60a57-a4c8-11da-a746-0800200c9a66', 'Units of mass'),#
     'm3*a': ('441238a3-ba09-46ec-b35b-c30cfba746d1', 'ee5f2241-18af-4444-b457-b275660e5a20', 'Units of volume*time'),#
     'm2*a': ('93a60a56-a3c8-21da-a746-0800200c9a66', 'c7266b67-4ea2-457f-b391-9b94e26e195a', 'Units of area*time'),#
     'm2': ('93a60a56-a3c8-19da-a746-0800200c9a66', '3ce61faa-5716-41c1-aef6-b5920054acc9', 'Units of area'),#
-    'kbq': ('93a60a56-a3c8-17da-a746-0800200c9a66', 'e9773595-284e-46dd-9671-5fc9ff406833', 'Units of radioactivity'),#
-    'm3': ('93a60a56-a3c8-22da-a746-0800200c9a66', '1c3a9695-398d-4b1f-b07e-a8715b610f70', 'Units of volume'),#
-    'mj': ('f6811440-ee37-11de-8a39-0800200c9a66', '52765a6c-3896-43c2-b2f4-c679acf13efe', 'Units of energy'), # NET
+    'kbq': ('93a60a56-a3c8-17da-a746-0800200c9a66', '93a60a57-a3c8-16da-a746-0800200c9a66', 'Units of radioactivity'),#
+    'm3': ('93a60a56-a3c8-22da-a746-0800200c9a66', '93a60a57-a3c8-12da-a746-0800200c9a66', 'Units of volume'),#
+    'mj': ('f6811440-ee37-11de-8a39-0800200c9a66', '93a60a57-a3c8-11da-a746-0800200c9a66', 'Units of energy'), # NET
     'kg*a': ('4e10f566-0358-489a-8e3a-d687b66c50e6', 'b2ad404c-3e4f-4a7a-a604-46fb36654823', 'Units of mass*time'),#
-    'Item(s)': ('01846770-4cfe-4a25-8ad9-919d8d378345', '6dabe201-aaac-4509-92f0-d00c26cb72ab', 'Units of items')#
+    'Item(s)': ('01846770-4cfe-4a25-8ad9-919d8d378345', '5beb6eed-33a9-47b8-9ede-1dfe8f679159', 'Units of items')#
     }

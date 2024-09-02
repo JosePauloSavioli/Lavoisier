@@ -16,6 +16,12 @@ from .converter import (
     ConverterFactory
 )
 
+# from .download_external_files import (
+#     download
+# )
+
+# download()
+
 __version__ = "2.0.19"
 __title__ = "Lavoisier"
 __summary__ = "This package converts Life Cycle Assessment inventory formats. Lavoisier is developed by the Center of Life Cycle Sustainable Assessment (Gyro) of the Federal University of Technology - Paraná (UTFPR) and the  Brazilian Institute for Information in Science and Technology (IBICT)"

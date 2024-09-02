@@ -17,6 +17,8 @@ import logging
 import xmltodict
 from copy import deepcopy
 import warnings
+import xml.etree.ElementTree as ET
+# import os
 
 # TODO make it so that the output flow is respected (copy and paste every file in the folders
 
@@ -56,11 +58,26 @@ class ILCD1ToILCD1ElementaryFlowConversion:
     # [!] Fluxo no OpenLCA sempre está de acordo com a unidade padrão no unitgroups
     # [!] Fluxo do OpenLCA é sempre convertido para a unidade/propriedade padrão do ILCD
     # Há o caso de que a unidade foi modificada e não é a esperada, mas pode estar no flowProperties
+    # TODO Intermediate Exchanges have to be converted for unit (such as kWh to mj)
     def __init__(self, x):
         n = type(self).elem_flow_mapping.get(x['referenceToFlowDataSet']['@refObjectId'], None)
-        print(x['referenceToFlowDataSet']['@refObjectId'], type(n))
+        # print(x['referenceToFlowDataSet']['@refObjectId'], type(n))
         self.get_uri(x) # Old uri   
         self.nx = deepcopy(x)
+        
+        # print('--->', self.nx.get('@unitId'))
+        # TODO Make all the flow properties and units be converted in a better way using unit and flow tables and properties
+        ounit = self.get_unit(self.nx.get('@unitId'))
+        
+        if 'olca' in list(ounit):
+            amount = float(self.nx['@amount']) * ounit['olca'][0][1]
+            unit = ounit['olca'][0][0].replace('kBq', 'kbq')
+            main_unit_for_file = ounit['main'][0][0].replace('kBq', 'kbq')
+        else:
+            amount = float(self.nx['resultingAmount'])
+            unit = ounit['main'][0][0].replace('kBq', 'kbq')
+            main_unit_for_file = ounit['main'][0][0].replace('kBq', 'kbq')
+        
         if n is not None:
             if n['MapType'] not in ("NO_MATCH_MAPPING", "NO MATCH"):
                 
@@ -74,25 +91,24 @@ class ILCD1ToILCD1ElementaryFlowConversion:
                 conversionFactor = float(n['ConversionFactor']) if n['ConversionFactor'] not in ("", "n/a") else 1.0
                 
                 # [!] The olca parameters aren't changed
-                ounit = self.get_unit(self.nx.get('@unitId'))
+                # ounit = self.get_unit(self.nx.get('@unitId'))
                 iunit = n['SourceUnit']
                 nunit = n['TargetUnit']
 
+                info = ilcd_unit_to_fp[nunit]
+                # print(info)
+                self.save_original(info[0]+'.xml', dir_='flowproperties', type_='flow property')
+                self.save_original(info[1]+'.xml', dir_='unitgroups', type_='unit group')
+                
                 # print(ounit, iunit, nunit)
 
                 # 1ª Conversão de unidades [OLCA to MainILCD (kJ to MJ for CO2)]
                 if 'olca' in list(ounit):
                     amount = float(self.nx['@amount']) * ounit['olca'][0][1]
-                    unit = ounit['olca'][0][0]
+                    unit = ounit['olca'][0][0].replace('kBq', 'kbq')
                 else:
                     amount = float(self.nx['resultingAmount'])
-                    unit = ounit['main'][0][0]
-
-                if iunit != nunit:
-                    info = ilcd_unit_to_fp[nunit]
-                    print(info)
-                    self.save_original(info[0]+'.xml', dir_='flowproperties', type_='flow property')
-                    self.save_original(info[1]+'.xml', dir_='unitgroups', type_='unit group')
+                    unit = ounit['main'][0][0].replace('kBq', 'kbq')
                 
                 # 2ª Conversão de unidades [MainILCD to Source (MJ to kg for CO2)]
                 # 3ª Conversão de unidades [Source to Target (kg to kBq for example)]
@@ -104,7 +120,8 @@ class ILCD1ToILCD1ElementaryFlowConversion:
                     self.nx['resultingAmount'] = amount * conversionFactor
                     if self.nx.get('@amount'):
                         self.nx['@amount'] = amount * conversionFactor
-                        info = olcailcd_unit_to_fp[nunit]
+                        info = olcailcd_unit_to_fp[nunit] # TODO Usage of olcailcd because the flow dataset has the ilcd flow property :D
+                        # print(self.nx['@unitId'], info[1])
                         self.nx['@unitId'] = info[1]
                         self.nx['@propertyId'] = info[0]
                     if self.nx.get('uncertaintyDistributionType'):
@@ -117,6 +134,7 @@ class ILCD1ToILCD1ElementaryFlowConversion:
                     if self.nx.get('@amount'): # Align so both are equal
                         self.nx['@amount'] = amount * factor
                         info = olcailcd_unit_to_fp[nunit]
+                        # print(self.nx['@unitId'], info[1])
                         self.nx['@unitId'] = info[1]
                         self.nx['@propertyId'] = info[0]
                     if self.nx.get('uncertaintyDistributionType'):
@@ -126,19 +144,52 @@ class ILCD1ToILCD1ElementaryFlowConversion:
                 else:
                     self.get_uri(x)
                     self.save_file()
-                    print("Flow not converted due to lack of unit correspondence")
+                    # print(x['referenceToFlowDataSet']['@refObjectId'], unit, iunit, nunit, "Flow not converted due to lack of unit correspondence")
                     logging.warning(
                         "Flow not converted due to lack of unit correspondence")
                     
             else:
+                self.get_uri(x)
                 self.save_file()
-                print("Flow not converted due to lack of elementary flow correspondence in the mapping file")
+                # print("Flow not converted due to lack of elementary flow correspondence in the mapping file")
                 logging.warning(
                     "Flow not converted due to lack of elementary flow correspondence in the mapping file")
         else:
+            self.nx['resultingAmount'] = amount
+            if self.nx.get('referenceToVariable'):
+                self.nx['referenceToVariable'] = self.get_var(self.nx['referenceToVariable'], unit, main_unit_for_file, conversionFactor, amount, conversion=False)
+                
+            if main_unit_for_file != 'EUR' and 'Item' not in main_unit_for_file:
+                 main_unit_for_file = main_unit_for_file.lower()
+                 
+            # print(main_unit_for_file)
+            info = olcailcd_unit_to_fp[main_unit_for_file] # TODO one has to have all OpenLCA units in the proper Lavoisier default folder
+            # print(info)
+            if self.nx.get('@amount'):
+                # print('->', self.nx['@unitId'], info[1])
+                self.nx['@amount'] = amount
+                self.nx['@unitId'] = info[1]
+                self.nx['@propertyId'] = info[0]
+            self.save_original(info[0]+'.xml', dir_='flowproperties', type_='flow property')
+            self.save_original(info[1]+'.xml', dir_='unitgroups', type_='unit group')
+            
+            self.get_uri(x)
+            
+            # Had to save the flow property and unit group when the OpenLCA flow property is not in the EF flow properties
+            tree = ET.parse(Path(type(self).ilcd_extracted_dir, self.uri))
+            root = tree.getroot()
+            xml_fp = root[3][0][0]
+            if xml_fp.attrib['refObjectId'] != info[0]:
+                shutil.copy(Path(Path(__file__).parent.parent.resolve(), type(self).default_files['flow property'], info[0]+'.xml'),
+                            Path(type(self).ilcd_extracted_dir, 'flowproperties', info[0]+'.xml'))
+                shutil.copy(Path(Path(__file__).parent.parent.resolve(), type(self).default_files['unit group'], info[1]+'.xml'),
+                            Path(type(self).ilcd_extracted_dir, 'unitgroups', info[1]+'.xml'))
+                xml_fp.attrib |= {'refObjectId': info[0], 'uri': f'../flowproperties/{info[0]}.xml'}
+            tree.write(Path(type(self).ilcd_extracted_dir, self.uri))
+            
             self.save_file()
-            logging.info(
-                "Flow not converted as the flow is not present on the elementary flow mapping file")
+            # logging.info(
+            #     "Flow not converted as the flow is not present on the elementary flow mapping file")
             
         self.field = type(self).exc_holder.get_class('exchange')(self.nx)
         
@@ -224,19 +275,35 @@ class ILCD1ToILCD1ElementaryFlowConversion:
             
             with open(Path(type(self).ilcd_extracted_dir, self.uri), 'r') as f:
                 file, n = get_struct(f, "http://lca.jrc.it/ILCD/FlowProperty")
-            u = file[n+':flowPropertiesInformation'][n+':quantitativeReference']
-            self.get_uri(u, (n+':referenceToReferenceUnitGroup', 'unitgroups/'))
+            
+            # Flow property and unit group files had to be copied from default to extracted as the OpenLCA flow property
+            #   is not in the EF flow property pack
+            try: # TODO this could be with or without the namespace
+                u = file[n+':flowPropertiesInformation'][n+':quantitativeReference']
+                self.get_uri(u, (n+':referenceToReferenceUnitGroup', 'unitgroups/'))
+            except:
+                u = file['flowPropertiesInformation']['quantitativeReference']
+                self.get_uri(u, ('referenceToReferenceUnitGroup', 'unitgroups/'))
             
             with open(Path(type(self).ilcd_extracted_dir, self.uri), 'r') as f:
                 file, n = get_struct(f, "http://lca.jrc.it/ILCD/UnitGroup")
-            u = file[n+':unitGroupInformation'][n+':quantitativeReference'][n+':referenceToReferenceUnit']
+            try:
+                u = file[n+':unitGroupInformation'][n+':quantitativeReference'][n+':referenceToReferenceUnit']
+                uu = file[n+':units'][n+':unit']
+                
+                for ug in uu:
+                    if olca_unit_id:
+                        if ug['@olca:unitId'] == olca_unit_id:
+                            units.append(('olca', ug[n+':name'], float(ug[n+':meanValue'])))
+                    if ug['@dataSetInternalID'] == u:
+                        units.append((name, ug[n+':name'], float(mv)))
+                
+            except:
+                u = file['unitGroupInformation']['quantitativeReference']['referenceToReferenceUnit']
+                uu = file['units']['unit']
+                if uu['@dataSetInternalID'] == u:
+                    units.append((name, uu['name'], float(mv)))
             
-            for ug in file[n+':units'][n+':unit']:
-                if olca_unit_id:
-                    if ug['@olca:unitId'] == olca_unit_id:
-                        units.append(('olca', ug[n+':name'], float(ug[n+':meanValue'])))
-                if ug['@dataSetInternalID'] == u:
-                    units.append((name, ug[n+':name'], float(mv)))
             if not units:
                 raise Exception("Unit not found")
         
@@ -247,11 +314,20 @@ class ILCD1ToILCD1ElementaryFlowConversion:
         return units_
 
     def save_file(self, type_='flows'):
+        # print('--->', Path(type(self).ilcd_extracted_dir, self.uri), Path(type(self).save_dir, type_))
         Path(type(self).save_dir, type_).mkdir(exist_ok=True)
         shutil.copy(Path(type(self).ilcd_extracted_dir, self.uri),
                     Path(type(self).save_dir, type_))
         
     def save_original(self, id_, dir_='flows', type_='elementary flow'):
+        # if dir_ != 'flows':
+        #     pass
+            # print()
+            # print(id_, dir_, type_, type(self).save_dir)
+            # print()
+            # print(Path(Path(__file__).parent.parent.resolve(),
+            #      type(self).default_files[type_],
+            #      id_), Path(type(self).save_dir, dir_))
         Path(type(self).save_dir, dir_).mkdir(exist_ok=True)
         shutil.copy(
             Path(Path(__file__).parent.parent.resolve(),
@@ -293,12 +369,20 @@ class ILCD1ToILCD1BasicFieldMapping(FieldMapping, ABC):
     def set_file_info(self, path, save_path):
         self.ElementaryFlowConversion.save_dir = Path(save_path)
         self.ElementaryFlowConversion.ilcd_extracted_dir = path
+        
+        # TODO place this code in other place where it suits the code better
+        for type_ in ('sources', 'contacts'):
+            for file in Path(path, type_).iterdir():
+                shutil.copy(file,
+                            Path(save_path, type_))
 
     def set_output_class_defaults(self, cl_struct):
         self.ElementaryFlowConversion.exc_holder = cl_struct.exchanges
         self.ElementaryFlowConversion.math_holder = cl_struct.mathematicalRelations
 
 class ILCD1ToILCD1FieldMapping(ILCD1ToILCD1BasicFieldMapping):
+
+    # TODO Delete method that can delete all temporary files    
 
     # File pre-mapping attribute
     _flow_internal_refs = None

@@ -22,7 +22,8 @@ class MappingFactory:
     
     ef_mapping = {
         ('ecoinvent3.7', 'EF3.0'): Path("Mappings/ecs2_to_ilcd1_elementary_flows.json"),
-        ('EF3.0', 'ecoinvent3.7'): Path("Mappings/ilcd1_to_ecs2_elementary_flows.json")
+        ('EF3.0', 'ecoinvent3.7'): Path("Mappings/ilcd1_to_ecs2_elementary_flows.json"),
+        ('OpenLCA', 'EF3.1'): Path("Mappings/data_final.json")
         }
     
     ef_default_files = {
@@ -31,7 +32,13 @@ class MappingFactory:
             'unit group': "Lavoisier_Default_Files/ILCD_EF30_UnitGroups",
             'elementary flow': "Lavoisier_Default_Files/ILCD_EF30_ElementaryFlows"
             },
-        'ecoinvent3.7': {}
+        'EF3.1': {
+            'flow property': "Lavoisier_Default_Files/ILCD_EF30_FlowProperties",
+            'unit group': "Lavoisier_Default_Files/ILCD_EF30_UnitGroups",
+            'elementary flow': "Lavoisier_Default_Files/ILCD_EF30_ElementaryFlows"
+            },
+        'ecoinvent3.7': {},
+        'OpenLCA': {}
         }
     
     # The best here is to change the value in the file. Ex: version 2.0
