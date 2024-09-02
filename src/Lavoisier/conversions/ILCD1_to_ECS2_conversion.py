@@ -696,8 +696,8 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
         self.field.amount = self.amount.m
 
         if self.isReference:
-            print(type(self)._reference_flows)
-            print(self.id_, self._name)
+            # print(type(self)._reference_flows)
+            # print(self.id_, self._name)
             self.field.outputGroup = 0
         else:
             if self.group == 'Input':
@@ -1001,7 +1001,7 @@ class ILCD1ToECS2FlowReferenceConversion(ILCD1ToECS2ReferenceConversion):
                         'elementaryExchange')()
                     n = type(self).elem_flow_mapping.get(self.flow.id_, None)
                     if n is not None:
-                        if n['MapType'] not in ("NO_MATCH_MAPPING", "NO MATCH"):
+                        if n['MapType'].strip() not in ("NO_MATCH_MAPPING", "NO MATCH", "NO_FLOW_MATCH_MANUAL", "NO_MAPPING"):
                             self.flow.info = info
                             self.flow.get_elementary_flow_info(n, self.file)
                         else:
@@ -1293,7 +1293,7 @@ class ILCD1ToECS2BasicFieldMapping(FieldMapping, ABC):
         self.FlowConversion.Property.amountClass = self.Amount
         
         # self.reset_conversion()
-        print('->', self.FlowConversion._reference_flows)
+        # print('->', self.FlowConversion._reference_flows)
 
     def end_conversion(self):
         ILCD1ToECS2BasicFieldMapping.reset_conversion(self)
