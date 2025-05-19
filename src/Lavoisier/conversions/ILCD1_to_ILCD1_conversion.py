@@ -156,8 +156,15 @@ class ILCD1ToILCD1ElementaryFlowConversion:
                     "Flow not converted due to lack of elementary flow correspondence in the mapping file")
         else:
             self.nx['resultingAmount'] = amount
+            
             if self.nx.get('referenceToVariable'):
-                self.nx['referenceToVariable'] = self.get_var(self.nx['referenceToVariable'], unit, main_unit_for_file, conversionFactor, amount, conversion=False)
+                self.nx['referenceToVariable'] = self.get_var(
+                    self.nx['referenceToVariable'],
+                    unit,
+                    main_unit_for_file,
+                    1.0,
+                    amount,
+                    conversion=False)
                 
             if main_unit_for_file != 'EUR' and 'Item' not in main_unit_for_file:
                  main_unit_for_file = main_unit_for_file.lower()
@@ -201,7 +208,7 @@ class ILCD1ToILCD1ElementaryFlowConversion:
             var1 = {'@name': '__'+unit+'_to_'+nunit+'__',
                     'meanValue': factor}
             type(self).math_rel.append(var1)
-        
+            
             # var 2: temp_olca_param
             vars_ = ensure_list(type(self).math_rel)
             ivar, var2 = [(i,v) for i,v in enumerate(vars_) if v['@name']==var_name][0]
@@ -404,6 +411,7 @@ class ILCD1ToILCD1FieldMapping(ILCD1ToILCD1BasicFieldMapping):
         for var in self.ElementaryFlowConversion.math_rel:
             vp = self.ElementaryFlowConversion.math_holder.get_class('variableParameter')(var)
             setattr(self.ElementaryFlowConversion.math_holder, 'variableParameter', vp)
+        self.ElementaryFlowConversion.math_rel = []
             
         if not end:
             super().reset_conversion()
@@ -439,7 +447,7 @@ class ILCD1ToILCD1FieldMapping(ILCD1ToILCD1BasicFieldMapping):
             '/processDataSet/processInformation/geography':
                 lambda cl_struct, x: setattr(cl_struct, 'geography', cl_struct.Geography(self.place_index(x, 0))),
             '/processDataSet/processInformation/mathematicalRelations': # Can't be set here due to changes
-                lambda cl_struct, x: setattr(self.ElementaryFlowConversion, 'math_rel', x.get('variableParameter', [])), # Done later
+                lambda cl_struct, x: setattr(self.ElementaryFlowConversion, 'math_rel', ensure_list(x.get('variableParameter', []))), # Done later
             '/processDataSet/modellingAndValidation':
                 lambda cl_struct, x: setattr(cl_struct, 'modellingAndValidation', cl_struct.ModellingAndValidation(self.place_index(x, 0))),
             '/processDataSet/administrativeInformation':
