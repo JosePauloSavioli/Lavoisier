@@ -27,6 +27,7 @@ from .utils import (
     uuid_from_string,
     ensure_list,
     copy_file,
+    correct_dimensionality,
     FieldMapping,
     Print
 )
@@ -84,7 +85,7 @@ class ECS2ToILCD1UncertaintyConversion:  # Not intrusive. Doesn't modify the unc
                 for k, v in unc['pedigreeMatrix'].items():
                     p += pedigree[k[1:].capitalize().replace('corr',
                                                              ' corr').replace('technology', ' technological')][int(v)-1]
-                if abs((float(self._d['@variance'])+p)-float(self._d['@varianceWithPedigreeUncertainty'])) > 0.000001:
+                if abs((float(self._d['@variance'])+p)-float(self._d['@varianceWithPedigreeUncertainty'])) > 0.0001:
                     logging.warning(
                         f"\t\tUncertainty: Pedigree uncertainty does not match the variance. {self._d['@variance']} + {p} != {self._d['@varianceWithPedigreeUncertainty']}")
                     Print.output(f"\tUncertainty: Pedigree uncertainty does not match the variance. {self._d['@variance']} + {p} != {self._d['@varianceWithPedigreeUncertainty']}")
@@ -509,7 +510,8 @@ class ECS2ToILCD1Amount(AmountWithVariable):
 
     # can't place the cache here since two amounts can result in the same answer
     def to_ilcd_unit(self, qtt):
-        uuid_ = uuid_from_string(str(qtt.dimensionality))
+        dim = correct_dimensionality(qtt.dimensionality)
+        uuid_ = uuid_from_string(dim)
         if uuid_ in pint_to_ilcd_def.keys():
             unit = pint_to_ilcd_def[uuid_][-1]
             if str(qtt.u) != unit:  # Just for time gain
@@ -882,9 +884,11 @@ class ECS2ToILCD1FlowConversion(ECS2ToILCD1QuantitativeObject):
                 else:
                     return uuid_
 
+            dim = correct_dimensionality(dimensionality)
+                
             # Used variables
             unit_id = get_energy_prop(cls, uuid_from_string(
-                str(dimensionality)))
+                dim))
 
             # Set fields
             field.dataSetInternalID = '0'
@@ -901,7 +905,7 @@ class ECS2ToILCD1FlowConversion(ECS2ToILCD1QuantitativeObject):
                     'unit_id': pint_to_ilcd_fp.get(unit_id)[1]
                 }).field
             except:
-                raise ValueError(f"Unit with dimensions '{dimensionality}' not found in the unit table")
+                raise ValueError(f"Unit with dimensions '{dim}' not found in the unit table")
             field.meanValue = 1.0
             field.generalComment = ILCD1Helper.text_dict_from_text(
                 1, 'Main flow unit')
@@ -1034,13 +1038,11 @@ class ECS2ToILCD1FlowConversion(ECS2ToILCD1QuantitativeObject):
                               self.field if elem_not_converted_ref_field is None else elem_not_converted_ref_field,
                               self.not_converted)
             if hasattr(self, 'allocation_property') and prop['@propertyId'] == self.allocation_property:
-                
                 logging.info(
                     f"\tAllocated flow by property {ILCD1Helper.return_text(prop['name'])}")
                 ECS2ToILCD1FlowConversion._allocation_properties.update(
                     {self.id_: p.amount.o.m * self.amount.o.m})
             if p.is_considered:
-                
                 self.properties[ILCD1Helper.return_text(prop['name'])] = p
         self.properties = self.Property.get_ilcd_equivalent(
             self.properties, self)
@@ -1333,14 +1335,14 @@ class ECS2ToILCD1ElementaryFlowConversion(ECS2ToILCD1FlowConversion):
             self.not_converted.elementaryExchangeContextId = x['@elementaryExchangeContextId']
 
     def get_flow_dict(self, x):
-        fp = [self.Property.get_unit_property(self.amount.dimensionality)]
+        fp = [self.Property.get_unit_property(self.amount.a.to_compact().dimensionality)]
         for p in self.remaining_properties:
             fp.append(p.get_dict())
         for f in fp:
             f['referenceToFlowPropertyDataSet'][0]['common:shortDescription'] = f['referenceToFlowPropertyDataSet'][0].pop(
                 'common:shortDescription')
 
-        self.__args = ['flow', (False, self.ilcd_id), self.name + ', ' + self._last_context + ', ' + self.unit]
+        self.__args = ['flow', (False, self.ilcd_id), self.name]
         ref = self.ref_conversion(*self.__args)
 
         # def send_data_to_make_dataset(version, ref):
@@ -1593,7 +1595,7 @@ class ECS2ToILCD1ReferenceConversion:
         self.field.refObjectId = self.uuid
         if type_ != 'flow':
             self.field.version = self.version
-            self.field.uri = self.uri 
+            self.field.uri = self.uri
         self.field.shortDescription = ILCD1Helper.text_dict_from_text(
             1, shortDesc)
         if subRef is not None:
