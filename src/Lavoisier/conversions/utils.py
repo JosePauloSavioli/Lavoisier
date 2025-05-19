@@ -88,6 +88,21 @@ def copy_file(save_path, default_files_path, folder, id_):
     folder_path.mkdir(exist_ok=True)
     _copy_file(str(path), str(folder_path)+'/'+id_+".xml")
 
+def correct_dimensionality(dim):
+    # Dimensionality now can vary with pint
+    dim = str(dim)
+    if dim == "[mass] * [length] ** 2 / [time] ** 2":
+        dim = "[length] ** 2 * [mass] / [time] ** 2"
+    elif dim == "[mass] * [length]":
+        dim = "[length] * [mass]"
+    elif dim == "[time] * [length]":
+        dim = "[length] * [time]"
+    elif dim == "[time] * [length] ** 2":
+        dim = "[length] ** 2 * [time]"
+    elif dim == "[time] * [length] ** 3":
+        dim = "[length] ** 3 * [time]"
+    return dim
+
 class FieldMapping(ABC):
 
     _uuid_conv_spec: tuple
