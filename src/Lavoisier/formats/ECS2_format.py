@@ -23,21 +23,22 @@ class ECS2Input(InputTemplate):
                                                                        self._valid_extensions)))
 
 class ECS2Output(OutputTemplate):
-
+    
     def start_conversion(self):
         self.log_path = Path(self.path, f"{self.filename.replace('/', '_per_')}.log")
         self.log.start_log(self.log_path)
 
     def write_process(self):
         process_dict = self.struct.get_dict()
-        name = self.struct.get_filename(self._hash)
-        name = self.check_name_for_existence(name, '.spold')
+        self.name = self.struct.get_filename(self._hash)
+        self.name = self.check_name_for_existence(self.name, '.spold')
         
-        with open(Path(self.path, name+'.spold'), 'w') as c:
+        with open(Path(self.path, self.name+'.spold'), 'w') as c:
             c.write(xmltodict.unparse(process_dict,
                     pretty=True, newl='\n', indent="  "))
 
     def end_conversion(self):
         self.end_single_output_file()
         self.log.end_log(self.log_path)
+        return str(Path(self.path, self.name+'.spold'))
         

@@ -76,6 +76,7 @@ class ILCD1Output(OutputTemplate):
             ("ILCD_Compliance_Rules_Draft_88d4f8d9-60f9-43d1-9ea3-329c10d7d727.pdf", # For the default sources
              "ILCD-Data-Network_Compliance-Entry-level_Version1.1_Jan2012.pdf")
     }
+    converted_files = []
     
     def start_conversion(self):
         self._tempdir = tempfile.TemporaryDirectory() # Has to be closed after
@@ -112,7 +113,9 @@ class ILCD1Output(OutputTemplate):
         zipdir(self._tempdir.name, ilcd_zipfile)
         ilcd_zipfile.close()
         self._tempdir.cleanup()
-            
+        
+        return str(Path(self.path, name+'.zip'))
+        
     def handle_error(self):
         super().handle_error()
         if hasattr(self, '_tempdir'):
