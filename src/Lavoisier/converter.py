@@ -239,7 +239,7 @@ class Converter:
 
     def end_conversion(self):
         self._field_mapping.end_conversion()
-        self._data.end_conversion()
+        self._filenames.append(self._data.end_conversion())
 
     def iterate(self, file):
         with open(file, 'r') as f:
@@ -250,6 +250,8 @@ class Converter:
                 self.__mapping[path](self._data.struct, t)
     
     def convert(self, type_):
+        
+        self._filenames = []
         
         if type_ == 'to_database' and self._names[0] == 'EcoSpold2' and self._names[1] in ('ILCD1', 'OLCAILCD1'):
             warnings.warn('Conversion of EcoSpold2 to ILCD1 in database mode: different sets of property values for the same flow are converted to different versions of the same flow (and named as such). This is an ILCD1 feature not easily recognized by softwares, so this type of conversion is not recommended. It is recommended to use the mode "to file" or change the Converter attribute "convert_properties" to False', UserWarning)
@@ -262,6 +264,7 @@ class Converter:
                     self.end_conversion()
                 else:
                     self.reset_conversion()
+            return self._filenames
         except Exception as e:
             if 'file' in locals():
                 if not isinstance(file, PosixPath):
