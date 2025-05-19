@@ -407,7 +407,7 @@ ilcd_to_ecs2_un = {
     'e07b4169-bd86-4337-8fa6-1f76916475bf': ('8266bd67-ebd3-4d31-b972-eee3cf0da36f','m*year'),
     'f170abd3-f010-45f4-8e7c-9871a5c0421b': ('ca2f7f9a-ae4e-3c80-9388-b7bc26a8bf4d','mol'),
     '371b6515-6488-399b-9364-b9125dcf5ef2': ('ff8ed45d-bbfb-4531-8c7b-9b95e52bd41d','m3*km'),
-    # Necessery for unitId recognition in master data properties
+    # Necessary for unitId recognition in master data properties
     'specific_dimensionless': ('ef6ecb4d-863b-4cee-adb4-95076bded0a1','dimensionless'), # Dimensionless properties will not have an specific property
     '67b63204-ef91-44b2-a927-2f4ead1fae17': ('7b75baf0-cbee-45e6-bf66-af119da06553','EUR2005'),
     'b3f0f892-c5a3-4c66-a432-c09e3d1e9bd6': ('241450a3-3497-4648-8c68-e44d04f64ac7','kg*day'),
@@ -729,20 +729,20 @@ ilcd_unit_to_fp = {
 # GLAD mapping unit is the key (thats why MJ is mj)
 olcailcd_unit_to_fp = {
     #'Items*a': ('', '1acf7c0f-aa9d-4022-a4b7-fe0b54ea0b91', 'Units of items*time'),
-    'EUR': ('fdfecf14-ff8a-4e17-b2b2-f938c4b5cc27', 'a55b7fe7-fa09-47ef-be62-e07b8e6f4351', 'Units of currency'),#
+    'EUR': ('fdfecf14-ff8a-4e17-b2b2-f938c4b5cc27', '03cc996d-7177-4738-aa32-1572a5172ccc', 'Units of currency'),#
     #'mol': ('341fd786-b2ad-4552-a762-5eafcab45dee', 'f170abd3-f010-45f4-8e7c-9871a5c0421b', 'Units of mole'),
     'm*a': ('e07b4169-bd86-4337-8fa6-1f76916475bf', 'b4cac580-5ce8-11df-a08a-0800200c9a66', 'Units of length*time'),#
-    'd': ('c0447923-0e60-4b3c-97c2-a86dddd9eea5', '11074cfd-08a4-449b-adad-18ce24a1b275', 'Units of time'),#
-    'Items*km': ('0ddc622a-bc4a-4cf8-a551-9e112864b77f', '2abb86b6-e71b-4de5-a766-a20e80e59b6d', 'Units of items*length'),#
+    'd': ('c0447923-0e60-4b3c-97c2-a86dddd9eea5', 'af638906-3ec7-4314-8de7-f76039f2dd01', 'Units of time'),#
+    'Items*km': ('0ddc622a-bc4a-4cf8-a551-9e112864b77f', '5454b231-270e-45e6-89b2-7f4f3e482245', 'Units of items*length'),#
     'm': ('838aaa23-0117-11db-92e3-0800200c9a66', '838aaa22-0117-11db-92e3-0800200c9a66', 'Units of length'),#
     't*km': ('838aaa20-0117-11db-92e3-0800200c9a66', '838aaa21-0117-11db-92e3-0800200c9a66', 'Units of mass*length'),#
     'kg': ('93a60a56-a3c8-11da-a746-0800200b9a66', '93a60a57-a4c8-11da-a746-0800200c9a66', 'Units of mass'),#
-    'm3*a': ('441238a3-ba09-46ec-b35b-c30cfba746d1', 'ee5f2241-18af-4444-b457-b275660e5a20', 'Units of volume*time'),#
-    'm2*a': ('93a60a56-a3c8-21da-a746-0800200c9a66', 'c7266b67-4ea2-457f-b391-9b94e26e195a', 'Units of area*time'),#
-    'm2': ('93a60a56-a3c8-19da-a746-0800200c9a66', '3ce61faa-5716-41c1-aef6-b5920054acc9', 'Units of area'),#
+    'm3*a': ('441238a3-ba09-46ec-b35b-c30cfba746d1', '93a60a57-a3c8-23da-a746-0800200c9a66', 'Units of volume*time'),#
+    'm2*a': ('93a60a56-a3c8-21da-a746-0800200c9a66', '93a60a57-a3c8-20da-a746-0800200c9a66', 'Units of area*time'),#
+    'm2': ('93a60a56-a3c8-19da-a746-0800200c9a66', '93a60a57-a3c8-18da-a746-0800200c9a66', 'Units of area'),#
     'kbq': ('93a60a56-a3c8-17da-a746-0800200c9a66', '93a60a57-a3c8-16da-a746-0800200c9a66', 'Units of radioactivity'),#
     'm3': ('93a60a56-a3c8-22da-a746-0800200c9a66', '93a60a57-a3c8-12da-a746-0800200c9a66', 'Units of volume'),#
     'mj': ('f6811440-ee37-11de-8a39-0800200c9a66', '93a60a57-a3c8-11da-a746-0800200c9a66', 'Units of energy'), # NET
-    'kg*a': ('4e10f566-0358-489a-8e3a-d687b66c50e6', 'b2ad404c-3e4f-4a7a-a604-46fb36654823', 'Units of mass*time'),#
+    'kg*a': ('4e10f566-0358-489a-8e3a-d687b66c50e6', '59f191d6-5dd3-4553-af88-1a32accfe308', 'Units of mass*time'),#
     'Item(s)': ('01846770-4cfe-4a25-8ad9-919d8d378345', '5beb6eed-33a9-47b8-9ede-1dfe8f679159', 'Units of items')#
     }
