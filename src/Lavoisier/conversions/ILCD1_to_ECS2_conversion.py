@@ -276,6 +276,7 @@ class ILCD1ToECS2VariableConversion:
     _non_conform_variables = {}
     
     def __init__(self, x, not_converted):
+        self.__x = x
         self.not_converted = not_converted
 
         self.name = x['@name']
@@ -302,12 +303,17 @@ class ILCD1ToECS2VariableConversion:
         type(self)._available_variables[self.o_name] = {
             'used?': False, 'self': self}
 
+    def __copy__(self):
+        return ILCD1ToECS2VariableConversion(self.__x, self.not_converted)
+
     @classmethod
-    def change_formula(cls, instance):
+    def change_formula(cls, instance, factor = '1.0'):
         if instance.formula:
             for n in cls._non_conform_variables: # __ha_to_m2__ is not valid as it has to start with a letter
                 if n in instance.formula:
                     instance.formula = instance.formula.replace(n, cls._non_conform_variables[n])
+            if factor != '1.0':
+                instance.formula = '(' + instance.formula + ')*' + str(factor)
 
     @classmethod
     def create_parameters(cls):  # It doesn't really have a unit name actualy
@@ -338,12 +344,27 @@ class ILCD1ToECS2VariableConversion:
             setattr(cls.master_field, 'parameter', master)
 
     @classmethod
-    def get_variable(cls, name):
+    def get_variable(cls, name, factor):
         cls._available_variables[name]['used?'] = True
         self = cls._available_variables[name]['self']
         cls.change_formula(self)
         cls._available_variables[name]['self'] = self
+        
+        if factor != '1.0':
+            n_self = self.__copy__()
+            n_self.formula = name
+        
+            cls._available_variables[name]['used?'] = False
+            cls.change_formula(n_self, factor)
+            
+            cls._available_variables[name + '_original'] = {'used?': True, 'self': n_self}
+            
+        
         return cls._available_variables[name]['self']
+
+    @classmethod
+    def reset_variable(cls, name):
+        cls._available_variables[name]['used?'] = False
 
 
 class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not conversible
@@ -382,10 +403,13 @@ class ILCD1ToECS2FlowConversion:  # Originally, the production volume is not con
         self.comment = []
         for n in ensure_list(x.get('generalComment', {}), ensure_text=True):
             self.comment.append(ILCD1Helper.text_add_index(n))
+        for n in ('location', 'functionType', 'dataSourceType', 'dataDerivationTypeStatus'):
+            if x.get(n, '') != '':
+                self.comment.append(ILCD1Helper.text_add_index(x[n], prefix=n+': '))
 
         if x.get('referenceToVariable'):
             self.variable = type(self).variable_conversion.get_variable(
-                x['referenceToVariable'])
+                x['referenceToVariable'], x.get('meanAmount', '1.0'))
         self.group = x['exchangeDirection']
         self.isReference = True if x['@dataSetInternalID'] in type(
             self)._reference_flows else False
@@ -910,7 +934,8 @@ class ILCD1ToECS2ContactReferenceConversion(ILCD1ToECS2ReferenceConversion):
         
         # This is done due to problems with lack of contact files (even with self.isConvertible being False)
         if hasattr(self, 'id_'):
-            setattr(self.field, self.attrname['id'], self.id_)
+            id_ = uuid_from_uuid(self.id_, b'\__Lav_IL1EC2__/', "flow_conversion_2")
+            setattr(self.field, self.attrname['id'], id_)
             setattr(self.field, self.attrname['name'], self.shortDescription.get('#text', ''))
             if self.attrname.get('email'):
                 setattr(self.field, self.attrname['email'], '')
@@ -940,7 +965,7 @@ class ILCD1ToECS2ContactReferenceConversion(ILCD1ToECS2ReferenceConversion):
                 info = {}
                 for path, t in XMLStreamIterable(f, map_):
                     map_[path](info, t)
-
+                
                 id_ = uuid_from_uuid(self.id_, b'\__Lav_IL1EC2__/', "flow_conversion_2")
                 setattr(self.field, self.attrname['id'], id_)
                 # The reference name is enough
@@ -956,6 +981,7 @@ class ILCD1ToECS2ContactReferenceConversion(ILCD1ToECS2ReferenceConversion):
 class ILCD1ToECS2FlowReferenceConversion(ILCD1ToECS2ReferenceConversion):
 
     type_ = 'flows'
+    variable_conversion = None
 
     def __init__(self, x, not_converted, flow):
         super().__init__(x, not_converted)
@@ -1028,6 +1054,9 @@ class ILCD1ToECS2FlowReferenceConversion(ILCD1ToECS2ReferenceConversion):
                     #         self).class_conversion.organize(classifications, 'CPC'))
                     # else:
                     #     pass # Implement not converted instance for elementary exchanges
+                else:
+                    if hasattr(self.flow, 'variable'): 
+                        type(self).variable_conversion.reset_variable(self.flow.variable.o_name)
 
         else:
             self.flow.isConvertible = False
@@ -1152,7 +1181,7 @@ class ILCD1ToECS2ReviewConversion:
         for review in ensure_list(x.get('otherReviewDetails', {}), ensure_text=True):
             self.field.otherDetails = ILCD1Helper.text_add_index(review)
 
-        self.ref = x.get('referenceToNameOfReviewerAndInstitution', {}) # Som as more then 1, which are combined into 1
+        self.ref = x.get('referenceToNameOfReviewerAndInstitution', {}) # Some as more then 1, which are combined into 1
         self.rev_name = []
         for ref in ensure_list(self.ref):
             # This is really one and only one field in ECS2, but in ILCD it is 0 or more
@@ -1170,7 +1199,7 @@ class ILCD1ToECS2ReviewConversion:
                 2], v[3]
             type(self)._version[2] += 1
             
-        if self.field.get('reviewerName') == '/'.join(self.rev_name): # Depends on the contact info
+        if self.field.get('reviewerName') == '/'.join(self.rev_name) and len(self.rev_name) > 1: # Depends on the contact info
             self.field.reviewerId = uuid_from_string('/'.join(self.rev_name))
 
         self.get_not_converted(x)
@@ -1287,6 +1316,7 @@ class ILCD1ToECS2BasicFieldMapping(FieldMapping, ABC):
         self.FlowConversion.variable_conversion = self.VariableConversion
         self.ReviewConversion.contact_ref_conversion = self.ContactReferenceConversion
         self.FlowConversion.source_ref_conversion = self.SourceReferenceConversion
+        self.FlowReferenceConversion.variable_conversion = self.VariableConversion
 
         self.VariableConversion.amountClass = self.Amount
         self.FlowConversion.amountClass = self.Amount
@@ -1693,6 +1723,9 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
             '/processDataSet/processInformation/geography/locationOfOperationSupplyOrProduction/@latituteAndLongitude':
                 lambda cl_struct, x: setattr(
                     self.NotConverted, 'latitudeAndLongitude', x),
+            '/processDataSet/processInformation/geography/subLocationOfOperationSupplyOrProduction/descriptionOfRestrictions':
+                lambda cl_struct, x: setattr(
+                    cl_struct.activityDescription.geography.comment, 'text',  ILCD1Helper.text_add_index(x)),
             '/processDataSet/processInformation/geography/subLocationOfOperationSupplyOrProduction':
                 lambda cl_struct, x: setattr(
                     self.NotConverted, 'subLocationOfOperationSupplyOrProduction', x),
@@ -1764,7 +1797,7 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
                                              ILCD1Helper.text_add_index(x, prefix="Deviations from Data Selection and Combination Principles: ")) if x['#text'] != 'none' else None,
             '/processDataSet/modellingAndValidation/dataSourcesTreatmentAndRepresentativeness/dataTreatmentAndExtrapolationsPrinciples':
                 lambda cl_struct, x: setattr(cl_struct.modellingAndValidation.representativeness,
-                                             'samplingProcedure',
+                                             'extrapolations',
                                              ILCD1Helper.text_add_index(x, prefix="Data Treatment and Extrapolations Principles: ")),
             '/processDataSet/modellingAndValidation/dataSourcesTreatmentAndRepresentativeness/deviationsFromTreatmentAndExtrapolationPrinciples':
                 lambda cl_struct, x: setattr(cl_struct.modellingAndValidation.representativeness,
@@ -1812,10 +1845,13 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
                 lambda cl_struct, x: (logging.warning("\tCompliance information could not be converted as EcoSpold 2 doesn't have matching field(s) for the information"),
                                       Print.output("\tCompliance information could not be converted as EcoSpold 2 doesn't have matching field(s) for the information"),
                                       setattr(self.NotConverted, 'compliance', x)),
-            # TODO [!] Can be better
-            '/processDataSet/administrativeInformation/commissionerAndGoal':
-                lambda cl_struct, x: setattr(
-                    self.NotConverted, 'commissionerAndGoal', x),
+            # '/processDataSet/administrativeInformation/commissionerAndGoal/referenceToCommissioner':
+            #     lambda cl_struct, x: setattr(
+            #         self.NotConverted, 'referenceToCommissioner', x),
+            '/processDataSet/administrativeInformation/commissionerAndGoal/project':
+                lambda cl_struct, x: setattr(cl_struct.activityDescription.activity.generalComment, 'text',                         ILCD1Helper.text_add_index(ILCD1Helper.text_add_index(x, prefix="Project: "))),
+            '/processDataSet/administrativeInformation/commissionerAndGoal/intendedApplications':
+                lambda cl_struct, x: setattr(cl_struct.activityDescription.activity.generalComment, 'text',                         ILCD1Helper.text_add_index(ILCD1Helper.text_add_index(x, prefix="Intended applications: "))),
             '/processDataSet/administrativeInformation/dataGenerator/referenceToPersonOrEntityGeneratingTheDataSet':
                 lambda cl_struct, x: self.ContactReferenceConversion(x, self.NotConverted,
                                                                      cl_struct.administrativeInformation.dataGeneratorAndPublication,
@@ -1847,10 +1883,10 @@ class ILCD1ToECS2FieldMapping(ILCD1ToECS2BasicFieldMapping):
                 lambda cl_struct, x: (setattr(cl_struct.administrativeInformation.fileAttributes, 'majorRelease', int(x.split('.')[0])),
                                       setattr(
                                           cl_struct.administrativeInformation.fileAttributes, 'minorRelease', 0),
-                                      setattr(cl_struct.administrativeInformation.fileAttributes, 'majorRevision', int(
-                                          x.split('.')[1])),
+                                      setattr(cl_struct.administrativeInformation.fileAttributes, 'majorRevision', 0),
                                       # Here the version can be 00.00, so there is no 'third' element in the split
-                                      setattr(cl_struct.administrativeInformation.fileAttributes, 'minorRevision', int(x.split('.')[2] if len(x.split('.'))==3 else '000'))),
+                                      setattr(cl_struct.administrativeInformation.fileAttributes, 'minorRevision', int(
+                                          x.split('.')[1]))),
             '/processDataSet/administrativeInformation/publicationAndOwnership/referenceToPrecedingDataSetVersion':
                 lambda cl_struct, x: setattr(
                     self.NotConverted, 'referenceToPrecedingDataSetVersion', x),
