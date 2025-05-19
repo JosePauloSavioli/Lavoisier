@@ -48,13 +48,14 @@ class DotDict(dict):
             return dict.__new__(cls)
 
     def __init__(self, value=None):
+
         if value is None or isinstance(value, DotDict):
             pass
         elif isinstance(value, dict):
             for key in value:
                 self.__setitem__(key, value[key])
         # A DotDict class (not instance) can be received at __setitem__ and propagated to here
-        elif issubclass(value, DotDict):
+        elif issubclass(value.__class__, DotDict):
             raise TypeError('Received DotDict class instead of instance')
         else:
             raise TypeError('Expected dict')
