@@ -52,7 +52,7 @@ OutputGroupIntermediateINT = return_collection({0,2,3,5})
 InputGroupElementaryINT = return_collection({4})
 OutputGroupElementaryINT = return_collection({4})
 
-CASNumber = return_pattern(r'\d{1,6}-\d{2,2}-\d')
+CASNumber = return_pattern(r'\d{1,7}-\d{2}-\d')
 
 class Date(Date):
     def end(self):
