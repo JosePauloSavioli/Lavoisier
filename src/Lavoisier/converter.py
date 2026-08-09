@@ -193,7 +193,7 @@ class Converter:
     def _get_pre_instance_file_information(self, file):
         self.file_info = {}
         self._o_version = getattr(self, '_version', None)
-        with open(file, 'r') as f:
+        with open(file, 'rb') as f:
             for i, (path, t) in enumerate(self.iterator(f, self._initial_info)):
                 gmp = self._initial_info[path]
                 if gmp[0] not in self.file_info:
@@ -242,7 +242,7 @@ class Converter:
         self._filenames.append(self._data.end_conversion())
 
     def iterate(self, file):
-        with open(file, 'r') as f:
+        with open(file, 'rb') as f:
             print(f"\tConverting {str(file).rpartition('/')[-1]}")
             for i, (path, t) in enumerate(self.iterator(f, self.__mapping)):
                 if i == 0:
