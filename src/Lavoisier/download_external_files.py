@@ -57,3 +57,6 @@ def install_default_files():
 
     print("Lavoisier default files successfully downloaded")
 
+if __name__ == "__main__":
+    install_default_files()
+
