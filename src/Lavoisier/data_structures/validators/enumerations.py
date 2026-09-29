@@ -228,3 +228,24 @@ DataDerivationTypeStatusValues = (
     "Estimated",
     "Unknown derivation"
     )
+
+FlowTypeValues = (
+    "Elementary flow",
+    "Product flow",
+    "Waste flow",
+    "Other flow"
+    )
+
+PublicationTypeValues = (
+    "Undefined",
+    "Article in periodical",
+    "Chapter in anthology",
+    "Monograph",
+    "Direct measurement",
+    "Oral communication",
+    "Personal written communication",
+    "Questionnaire",
+    "Software or database",
+    "Other unpublished and grey literature"
+    )
+

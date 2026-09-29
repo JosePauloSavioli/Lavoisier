@@ -1,3 +1,10 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jun 13 16:26:36 2024
+
+@author: jotape42p
+"""
 
 from pathlib import Path, PosixPath
 from collections.abc import Iterator
@@ -25,6 +32,10 @@ from .data_structures import (
     StructureFactory,
     StructureTemplate
     )
+
+from download_external_files import install_default_files
+install_default_files()
+
 class Converter:
 
     def __init__(self,
@@ -218,10 +229,10 @@ class Converter:
         self._apply_configurations('general_option')
         self._get_pre_instance_file_information(file)
         if not hasattr(self, '_data'):
-            self._data = self._output_manager(self.save_path, self.save_path, self._sfactory.get_structure(self._output_struct, self._output_version))
+            self._data = self._output_manager(self.save_path, self.save_path, self._sfactory.get_structure(self._output_version, self._output_struct))
             self._set_format()
         if (self._o_version != self._version) or (self._o_version is None and self._version is None):
-            # self._data.struct = self._sfactory.get_structure(self._output_struct, self._version)()
+            # self._data.struct = self._sfactory.get_structure(self._version, self._output_struct)()
             self._field_mapping = self._mfactory.get_mapping(self._mapping_config, self._version)
             self._set_field_mapping(file)
         self._field_mapping.set_output_class_defaults(self._data.struct)
@@ -473,3 +484,4 @@ def get_converter(input_: tuple, output: tuple, path: str, save_path: str, hash_
         raise OSError(f'{save_path} is not a valid directory path')
 
     return ConverterFactory.get_converter(input_, output, path, save_path, hash_)
+

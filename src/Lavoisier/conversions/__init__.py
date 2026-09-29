@@ -44,3 +44,8 @@ from .ILCD1_to_ECS2_conversion import (
     ILCD1ToECS2ClassificationConversion,
     ILCD1ToECS2ReviewConversion
 )
+
+from .ECS2_to_canonical_conversion import ECS2ToCanonical
+
+from .canonical_to_ECS2_conversion import CanonicalToECS2
+

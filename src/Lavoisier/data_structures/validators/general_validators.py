@@ -63,8 +63,14 @@ class Validator(ABC):
     def end(self):
         self._end_validate()
         return self._x
+    def value(self):
+        return self._x
 
 ### General validator classes
+
+class Any(Validator):
+    def _validate(self, x):
+        return x
 
 class Real(Validator):
     def _validate(self, x):
@@ -201,8 +207,16 @@ class BasicDictString(Validator, ABC):
             raise KeyError(f'{self.__class__.__name__}: Key {n} not found in {x}')
     
     def _validate(self, x):
+        if isinstance(x, str):
+            x = {'#text': x}
         if not isinstance(x, dict):
             raise TypeError(f'{self.__class__.__name__}: Expected a dict, recieved {x} of type {type(x)}')
+        if '@xml:lang' in x:
+            if '@lang' in self._keys:
+                x['@lang'] = x.pop('@xml:lang')
+            else:
+                x.pop('@xml:lang')
+        x.setdefault('#text', '')
         for key in x.keys():
             if key not in self._keys:
                 raise KeyError(f"{self.__class__.__name__}: {key} can't be used as a valid key entrance for this class, use: {self._keys}")
@@ -261,7 +275,7 @@ class IndexedString(BasicDictString):
     
     def _validate(self, x):
         x = super()._validate(x)
-        self._key_check('@index', x)
+        x.setdefault('@index', 0)
         try:
             x['@index'] = int(x['@index'])
         except:
@@ -281,9 +295,12 @@ class IndexedString(BasicDictString):
 class MultiLangString(IndexedString): # One of each language
 
     _keys = ('@index', '@lang', '#text')
+    _default_lang = None
     
     def _validate(self, x):
         x = super()._validate(x)
+        if self._default_lang:
+            x.setdefault('@lang', self._default_lang)
         self._key_check('@lang', x)
         if not isinstance(x['@lang'], str) or not len(x['@lang']) == 2 :
             raise ValueError(f'{self.__class__.__name__}: {x["@lang"]} is not a valid language')
@@ -333,4 +350,4 @@ class IndexedMultiLangString(MultiLangString): # Index is maintained
         x = [dict((k if k!='@lang' else '@xml:lang', v) for k, v in y.items()) for y in x]
         x = self._end_validate(x)
         return x
-        
+

@@ -44,8 +44,8 @@ TypeINT = return_collection(set(range(1,4))) # Check
 SpecialActivityTypeINT = return_collection(set(range(11)))
 EnergyValuesINT = return_collection(set(range(3)))
 TechnologyLevelINT = return_collection(set(range(6)))
-DataPublishedInINT = return_collection(set(range(2)))
-AccessRestrictedToINT = return_collection(set(range(3)))
+DataPublishedInINT = return_collection(set(range(3)))
+AccessRestrictedToINT = return_collection(set(range(4)))
 PedigreeINT = return_collection(set(range(1,6)))
 InputGroupIntermediateINT = return_collection({1,2,3,5})
 OutputGroupIntermediateINT = return_collection({0,2,3,5})
@@ -79,7 +79,7 @@ UniqueBaseString80 = return_limited_string(80, add_func=_add)
 ReviewString = return_limited_string(40, _sep='/')
 
 # If the _add function is not added here, it assumes the separator_add function, which is not wanted
-class VariableName(return_pattern(r'\w\S*'), return_limited_string(40, add_func=_add)):
+class VariableName(return_pattern(r'\w\S*')): # No 40 char limit here
     pass
 
 class NamedString(BasicDictString):
@@ -98,8 +98,7 @@ class NamedString(BasicDictString):
             if r['@name']._x in _dupl: 
                 raise ValueError(f'{self.__class__.__name__}: Tried to add the same name {r["@name"]}')
             else: _dupl.append(deepcopy(r['@name']._x))
-            if r['#text']._x and not r['#text']._x.isspace():
-                n.append(r)
+            n.append(r)
         return n
 
     def _validate(self, x):
@@ -172,6 +171,8 @@ class ExchangeNameString80(NoLangRestrictionMultiLangString):
         x = deepcopy(sorted(self._x, key=lambda x:x['@index']))
         x = [dict((k if k!='@lang' else '@xml:lang', v) for k, v in y.items() if k != '@index') for y in x]
         x = [x[0]] if x else x # Only one entry is possible here; 0 is chosen because the main name is expected first
+        if x:
+            x[0]['#text'].ignore_limit = True
         x = super()._end_validate(x)[0] if x else [] # This has to be done to assure that it is only one
         return x
     
@@ -184,3 +185,4 @@ class Name(NoLangRestrictionMultiLangString): # Activity Name is better off with
         x = super()._end_validate(x)[0] if x else [] # This has to be done to assure that it is only one
         return x
         
+

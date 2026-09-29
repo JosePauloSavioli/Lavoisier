@@ -6,6 +6,8 @@ Created on Fri Oct  7 05:29:17 2022
 @author: jotape42p
 """
 
+import xmltodict
+import zipfile
 from .main import DotDict
 from .abstractions import StructureTemplate
 from .validators.enumerations import (
@@ -28,7 +30,9 @@ from .validators.enumerations import (
     LicenseTypeValues,
     ExchangeFunctionTypeValues,
     ExchangeDirectionValues,
-    DataSourceTypeValues
+    DataSourceTypeValues,
+    FlowTypeValues,
+    PublicationTypeValues
     )
 from .validators.general_validators import (
     Validator,
@@ -38,10 +42,11 @@ from .validators.general_validators import (
     Bool,
     Int,
     UUID,
-    Str
+    Str,
+    Any
     )
 from .validators.ILCD1_validators import (
-    Int1,
+    Int1, Int5,
     Int6, Int6List,
     Year,
     Version,
@@ -50,6 +55,9 @@ from .validators.ILCD1_validators import (
     ReviewDateTime,
     String,
     NullableString,
+    CASNumber,
+    Perc,
+    ST,
     MatV,
     STMultiLang,
     StringMultiLang,
@@ -57,6 +65,11 @@ from .validators.ILCD1_validators import (
     )
 
 ### GENERAL StrUCTURES
+
+OTHER = {
+    'other': {'xml_type': 'nms:common', 'type': Any, 'mandatory': False, 'order': 999, 'unique': True}
+}
+
 
 class ILCD1Reference(DotDict):
 
@@ -75,8 +88,8 @@ class ILCD1Classification(DotDict):
         
         VALID = {
             'level': {'xml_type': 'attribute', 'type': Int1, 'mandatory': True, 'order': 0, 'unique': True},
-            'classId': {'xml_type': 'attribute', 'type': Str, 'mandatory': True, 'order': 0, 'unique': True},
-            'text': {'xml_type': 'text', 'type': String, 'mandatory': True, 'order': 0}  # It has a text
+            'classId': {'xml_type': 'attribute', 'type': Str, 'mandatory': False, 'order': 0, 'unique': True}, # Actually mandatory
+            'text': {'xml_type': 'text', 'type': String, 'mandatory': False, 'order': 0}  # Can have length 0
         }
 
     VALID = {
@@ -88,16 +101,16 @@ class ILCD1Classification(DotDict):
 class ILCD1FlowProperty(DotDict): # [!] FlowDataSets can have a location, how to transcrible it from ECS2?
 
     VALID = {
-        'dataSetInternalID': {'xml_type': 'attribute', 'type': Int6, 'mandatory': True, 'order': 0, 'unique': True},
+        'dataSetInternalID': {'xml_type': 'attribute', 'type': Int5, 'mandatory': False, 'order': 0, 'unique': True},
         'referenceToFlowPropertyDataSet': {'type': ILCD1Reference, 'mandatory': True, 'order': 1, 'unique': True},
         'meanValue': {'type': Real, 'mandatory': True, 'order': 2, 'unique': True},
         'minimumValue': {'type': Real, 'mandatory': False, 'order': 3, 'unique': True},
         'maximumValue': {'type': Real, 'mandatory': False, 'order': 4, 'unique': True},
         'uncertaintyDistributionType': {'type': return_enum(UncertaintyDistributionTypeValues), 'mandatory': False, 'order': 5, 'unique': True},
-        'relativeStandardDeviation95In': {'type': Real, 'mandatory': False, 'order': 6, 'unique': True}, # [!] Perc
+        'relativeStandardDeviation95In': {'type': Perc, 'mandatory': False, 'order': 6, 'unique': True},
         'dataDerivationTypeStatus': {'type': return_enum(DataDerivationTypeStatusValues), 'mandatory': False, 'order': 7, 'unique': True},
         'generalComment': {'type': StringMultiLang, 'mandatory': False, 'order': 16}
-    }
+    } | OTHER
 
 ### MAIN StrUCTURE
 
@@ -110,7 +123,7 @@ class Name(DotDict):
         'treatmentStandardsRoutes': {'type': StringMultiLang, 'mandatory': False, 'order': 2},
         'mixAndLocationTypes': {'type': StringMultiLang, 'mandatory': False, 'order': 3},
         'functionalUnitFlowProperties': {'type': StringMultiLang, 'mandatory': False, 'order': 4}
-    }
+    } | OTHER
 
 class ComplementingProcesses(DotDict):
     
@@ -135,7 +148,7 @@ class DataSetInformation(DotDict):
         'classificationInformation': {'type': ClassificationInformation, 'mandatory': False, 'order': 6, 'unique': True},
         'generalComment': {'xml_type': 'nms:common', 'type': FTMultiLang, 'mandatory': False, 'order': 7},
         'referenceToExternalDocumentation': {'type': ILCD1Reference, 'mandatory': False, 'order': 8}
-    }
+    } | OTHER
 
 ##########################
 
@@ -145,7 +158,7 @@ class QuantitativeReference(DotDict): # Optional
         'type': {'xml_type': 'attribute', 'type': return_enum(TypeOfQuantitativeReferenceValues), 'mandatory': True, 'order': 0, 'unique': True},
         'referenceToReferenceFlow': {'type': Int6List, 'mandatory': False, 'order': 1},
         'functionalUnitOrOther': {'type': StringMultiLang, 'mandatory': False, 'order': 2}
-    }
+    } | OTHER
     
 ##########################
 
@@ -172,7 +185,7 @@ class LocationOfOperationSupplyOrProduction(DotDict):
         'location': {'xml_type': 'attribute', 'type': NullableString, 'mandatory': True, 'order': 0, 'unique': True},
         'latitudeAndLongitude': {'xml_type': 'attribute', 'type': GIS, 'mandatory': False, 'order': 0, 'unique': True},
         'descriptionOfRestrictions': {'type': FTMultiLang, 'mandatory': False, 'order': 1}
-    }
+    } | OTHER
 
 class SubLocationOfOperationSupplyOrProduction(DotDict):
 
@@ -180,14 +193,14 @@ class SubLocationOfOperationSupplyOrProduction(DotDict):
         'subLocation': {'xml_type': 'attribute', 'type': String, 'mandatory': False, 'order': 0, 'unique': True},
         'latitudeAndLongitude': {'xml_type': 'attribute', 'type': GIS, 'mandatory': False, 'order': 0, 'unique': True},
         'descriptionOfRestrictions': {'type': FTMultiLang, 'mandatory': False, 'order': 1}
-    }
+    } | OTHER
 
 class Geography(DotDict):
 
     VALID = {
         'locationOfOperationSupplyOrProduction': {'type': LocationOfOperationSupplyOrProduction, 'mandatory': False, 'order': 1, 'unique': True},
         'subLocationOfOperationSupplyOrProduction': {'type': SubLocationOfOperationSupplyOrProduction, 'mandatory': False, 'order': 2}
-    }
+    } | OTHER
     
 ##########################
 
@@ -199,7 +212,7 @@ class Technology(DotDict):
         'technologicalApplicability': {'type': FTMultiLang, 'mandatory': False, 'order': 3},
         'referenceToTechnologyPictogramme': {'type': ILCD1Reference, 'mandatory': False, 'order': 4, 'unique': True},
         'referenceToTechnologyFlowDiagrammOrPicture': {'type': ILCD1Reference, 'mandatory': False, 'order': 5}
-    }
+    } | OTHER
     
 ##########################
         
@@ -214,7 +227,7 @@ class VariableParameter(DotDict):
         'uncertaintyDistributionType': {'type': return_enum(UncertaintyDistributionTypeValues), 'mandatory': False, 'order': 5, 'unique': True},
         'relativeStandardDeviation95In': {'type': Real, 'mandatory': False, 'order': 6, 'unique': True},
         'comment': {'type': StringMultiLang, 'mandatory': False, 'order': 7}
-    }
+    } | OTHER
 
 class OLCAVariableParameter(DotDict):
     
@@ -227,7 +240,7 @@ class MathematicalRelations(DotDict):
     VALID = {
         'modelDescription': {'type': FTMultiLang, 'mandatory': False, 'order': 1},
         'variableParameter': {'type': VariableParameter, 'mandatory': False, 'order': 2}
-    }
+    } | OTHER
     
 class OLCAMathematicalRelations(DotDict):
 
@@ -248,7 +261,7 @@ class LCIMethodAndAllocation(DotDict):
           'modellingConstants': {'type': FTMultiLang, 'mandatory': False, 'order': 6},
           'deviationsFromModellingConstants': {'type': FTMultiLang, 'mandatory': False, 'order': 7},
           'referenceToLCAMethodDetails': {'type': ILCD1Reference, 'mandatory': False, 'order': 8}
-      }
+      } | OTHER
 
 class DataSourcesTreatmentAndRepresentativeness(DotDict):
 
@@ -267,7 +280,7 @@ class DataSourcesTreatmentAndRepresentativeness(DotDict):
         'dataCollectionPeriod': {'type': StringMultiLang, 'mandatory': False, 'order': 12},
         'uncertaintyAdjustments': {'type': FTMultiLang, 'mandatory': False, 'order': 13},
         'useAdviceForDataSet': {'type': FTMultiLang, 'mandatory': False, 'order': 14}
-    }
+    } | OTHER
 
 class CompletenessElementaryFlows(DotDict):
 
@@ -283,7 +296,7 @@ class Completeness(DotDict):
         'referenceToSupportedImpactAssessmentMethods': {'type': ILCD1Reference, 'mandatory': False, 'order': 2},
         'completenessElementaryFlows': {'type': CompletenessElementaryFlows, 'mandatory': False, 'order': 3},
         'completenessOtherProblemField': {'type': FTMultiLang, 'mandatory': False, 'order': 4}
-    }
+    } | OTHER
 
 class Method(DotDict):
 
@@ -294,7 +307,7 @@ class Method(DotDict):
 class Scope(DotDict):
 
     VALID = {
-        'name': {'xml_type': 'attribute', 'type': return_enum(ScopeOfReviewValues), 'mandatory': True, 'order': 0, 'unique': True},
+        'name': {'xml_type': 'attribute', 'type': return_enum(ScopeOfReviewValues), 'mandatory': False, 'order': 0, 'unique': True}, # Actually mandatory
         'method': {'xml_type': 'nms:common', 'type': Method, 'mandatory': False, 'order': 1}
     }
 
@@ -302,7 +315,8 @@ class DataQualityIndicator(DotDict):
 
     VALID = {
         'name': {'xml_type': 'attribute', 'type': return_enum(DataQualityIndicatorValues), 'mandatory': True, 'order': 0, 'unique': True},
-        'value': {'xml_type': 'attribute', 'type': return_enum(QualityValues), 'mandatory': True, 'order': 0, 'unique': True}
+        'value': {'xml_type': 'attribute', 'type': return_enum(QualityValues), 'mandatory': True, 'order': 0, 'unique': True},
+        'numericValue': {'xml_nms': 'ext', 'xml_type': 'attribute', 'type': Real, 'mandatory': False, 'order': 0, 'unique': True}
     }
     
 class DataQualityIndicators(DotDict):
@@ -321,13 +335,13 @@ class Review(DotDict):
         'referenceToNameOfReviewerAndInstitution': {'xml_type': 'nms:common', 'type': ILCD1Reference, 'mandatory': False, 'order': 4},
         'otherReviewDetails': {'xml_type': 'nms:common', 'type': FTMultiLang, 'mandatory': False, 'order': 5},
         'referenceToCompleteReviewReport': {'xml_type': 'nms:common', 'type': ILCD1Reference, 'mandatory': False, 'order': 6, 'unique': True}
-    }
+    } | OTHER
 
 class Validation(DotDict):
 
     VALID = {
         'review': {'type': Review, 'mandatory': False, 'order': 1}
-    }
+    } | OTHER
 
 class Compliance(DotDict):
 
@@ -339,13 +353,13 @@ class Compliance(DotDict):
         'reviewCompliance': {'xml_type': 'nms:common', 'type': return_enum(ComplianceValues), 'mandatory': False, 'order': 5, 'unique': True},
         'documentationCompliance': {'xml_type': 'nms:common', 'type': return_enum(ComplianceValues), 'mandatory': False, 'order': 6, 'unique': True},
         'qualityCompliance': {'xml_type': 'nms:common', 'type': return_enum(ComplianceValues), 'mandatory': False, 'order': 7, 'unique': True}
-    }
+    } | OTHER
 
 class ComplianceDeclarations(DotDict):
 
     VALID = {
         'compliance': {'type': Compliance, 'mandatory': True, 'order': 1}
-    }
+    } | OTHER
 
 class ModellingAndValidation(DotDict):
 
@@ -355,7 +369,7 @@ class ModellingAndValidation(DotDict):
         'completeness': {'type': Completeness, 'mandatory': False, 'order': 3, 'unique': True},
         'validation': {'type': Validation, 'mandatory': False, 'order': 4, 'unique': True},
         'complianceDeclarations': {'type': ComplianceDeclarations, 'mandatory': False, 'order': 5, 'unique': True}
-    }
+    } | OTHER
     
 ##########################
 
@@ -371,7 +385,7 @@ class DataGenerator(DotDict):
 
     VALID = {
         'referenceToPersonOrEntityGeneratingTheDataSet': {'xml_type': 'nms:common', 'type': ILCD1Reference, 'mandatory': False, 'order': 1}
-    }
+    } | OTHER
 
 class DataEntryBy(DotDict):
 
@@ -381,7 +395,7 @@ class DataEntryBy(DotDict):
         'referenceToConvertedOriginalDataSetFrom': {'xml_type': 'nms:common', 'type': ILCD1Reference, 'mandatory': False, 'order': 3, 'unique': True},
         'referenceToPersonOrEntityEnteringTheData': {'xml_type': 'nms:common', 'type': ILCD1Reference, 'mandatory': False, 'order': 4, 'unique': True},
         'referenceToDataSetUseApproval': {'xml_type': 'nms:common', 'type': ILCD1Reference, 'mandatory': False, 'order': 5}
-    }
+    } | OTHER
 
 class PublicationAndOwnership(DotDict):
 
@@ -399,7 +413,7 @@ class PublicationAndOwnership(DotDict):
         'referenceToEntitiesWithExclusiveAccess': {'xml_type': 'nms:common', 'type': ILCD1Reference, 'mandatory': False, 'order': 11},
         'licenseType': {'xml_type': 'nms:common', 'type': return_enum(LicenseTypeValues), 'mandatory': False, 'order': 12}, # 'unique': True but can override the default in ECS2
         'accessRestrictions': {'xml_type': 'nms:common', 'type': FTMultiLang, 'mandatory': False, 'order': 13}
-    }
+    } | OTHER
 
 class AdministrativeInformation(DotDict):
 
@@ -408,7 +422,7 @@ class AdministrativeInformation(DotDict):
         'dataGenerator': {'type': DataGenerator, 'mandatory': False, 'order': 2, 'unique': True},
         'dataEntryBy': {'type': DataEntryBy, 'mandatory': False, 'order': 3, 'unique': True},
         'publicationAndOwnership': {'type': PublicationAndOwnership, 'mandatory': False, 'order': 4, 'unique': True}
-    }
+    } | OTHER
     
 ##########################
 
@@ -429,7 +443,7 @@ class ReferencesToDataSource(DotDict):
 
     VALID = {
         'referenceToDataSource': {'type': ILCD1Reference, 'mandatory': False, 'order': 1}
-    }
+    } | OTHER
 
 class Exchange(DotDict):
 
@@ -451,7 +465,7 @@ class Exchange(DotDict):
         'dataDerivationTypeStatus': {'type': return_enum(DataDerivationTypeStatusValues), 'mandatory': False, 'order': 14, 'unique': True},
         'referencesToDataSource': {'type': ReferencesToDataSource, 'mandatory': False, 'order': 15, 'unique': True},
         'generalComment': {'type': StringMultiLang, 'mandatory': False, 'order': 16}
-    }
+    } | OTHER
 
 class OLCAExchange(DotDict):
     
@@ -471,15 +485,466 @@ class Exchanges(DotDict):
 
     VALID = {
         'exchange': {'type': Exchange, 'mandatory': False, 'order': 1}
-    }
+    } | OTHER
     
 class OLCAExchanges(DotDict):
 
     VALID = {
         'exchange': {'type': OLCAExchange, 'mandatory': False, 'order': 1}
-    }
+    } | OTHER
     
 ##########################
+
+class ReferenceDataSetDataEntryBy(DotDict):
+
+    VALID = {
+        'timeStamp': {'xml_type': 'nms:common', 'type': DateTime, 'mandatory': False, 'order': 1, 'unique': True},
+        'referenceToDataSetFormat': {'xml_type': 'nms:common', 'type': ILCD1Reference, 'mandatory': False, 'order': 2}
+    } | OTHER
+
+
+class FlowDataEntryBy(DotDict):
+
+    VALID = ReferenceDataSetDataEntryBy.VALID | {
+        'referenceToPersonOrEntityEnteringTheData': {'xml_type': 'nms:common', 'type': ILCD1Reference, 'mandatory': False, 'order': 3, 'unique': True}
+    }
+
+
+class ReferenceDataSetPublicationAndOwnership(DotDict):
+
+    VALID = {
+        'dataSetVersion': {'xml_type': 'nms:common', 'type': Version, 'mandatory': True, 'order': 1, 'unique': True},
+        'referenceToPrecedingDataSetVersion': {'xml_type': 'nms:common', 'type': ILCD1Reference, 'mandatory': False, 'order': 2},
+        'permanentDataSetURI': {'xml_type': 'nms:common', 'type': Str, 'mandatory': False, 'order': 3, 'unique': True},
+        'referenceToOwnershipOfDataSet': {'xml_type': 'nms:common', 'type': ILCD1Reference, 'mandatory': False, 'order': 4, 'unique': True}
+    } | OTHER
+
+
+class ReferenceDataSetAdministrativeInformation(DotDict):
+
+    VALID = {
+        'dataEntryBy': {'type': ReferenceDataSetDataEntryBy, 'mandatory': False, 'order': 1, 'unique': True},
+        'publicationAndOwnership': {'type': ReferenceDataSetPublicationAndOwnership, 'mandatory': False, 'order': 2, 'unique': True}
+    } | OTHER
+
+
+class FlowAdministrativeInformation(DotDict):
+
+    VALID = ReferenceDataSetAdministrativeInformation.VALID | {
+        'dataEntryBy': {'type': FlowDataEntryBy, 'mandatory': False, 'order': 1, 'unique': True}
+    }
+
+
+class ReferenceDataSetCompliance(DotDict):
+
+    VALID = {
+        'referenceToComplianceSystem': {'xml_type': 'nms:common', 'type': ILCD1Reference, 'mandatory': True, 'order': 1, 'unique': True},
+        'approvalOfOverallCompliance': {'xml_type': 'nms:common', 'type': return_enum(ComplianceValues), 'mandatory': False, 'order': 2, 'unique': True}
+    } | OTHER
+
+
+class ReferenceDataSetComplianceDeclarations(DotDict):
+
+    VALID = {
+        'compliance': {'type': ReferenceDataSetCompliance, 'mandatory': True, 'order': 1}
+    } | OTHER
+
+
+class ILCD1FlowCategorization(DotDict):
+
+    class __Category(DotDict):
+
+        VALID = {
+            'level': {'xml_type': 'attribute', 'type': Int1, 'mandatory': True, 'order': 0, 'unique': True},
+            'catId': {'xml_type': 'attribute', 'type': Str, 'mandatory': False, 'order': 0, 'unique': True},
+            'text': {'xml_type': 'text', 'type': String, 'mandatory': False, 'order': 0} # Can have length 0
+        }
+
+    VALID = {
+        'name': {'xml_type': 'attribute', 'type': Str, 'mandatory': False, 'order': 0, 'unique': True},
+        'categories': {'xml_type': 'attribute', 'type': Str, 'mandatory': False, 'order': 0, 'unique': True},
+        'category': {'xml_type': 'nms:common', 'type': __Category, 'mandatory': True, 'order': 1}
+    }
+
+
+class FlowClassificationInformation(DotDict):
+
+    VALID = {
+        'elementaryFlowCategorization': {'xml_type': 'nms:common', 'type': ILCD1FlowCategorization, 'mandatory': False, 'order': 1},
+        'classification': {'xml_type': 'nms:common', 'type': ILCD1Classification, 'mandatory': False, 'order': 2}
+    }
+
+
+class FlowName(DotDict):
+
+    VALID = {
+        'baseName': {'type': StringMultiLang, 'mandatory': True, 'order': 1},
+        'treatmentStandardsRoutes': {'type': StringMultiLang, 'mandatory': False, 'order': 2},
+        'mixAndLocationTypes': {'type': StringMultiLang, 'mandatory': False, 'order': 3},
+        'flowProperties': {'type': StringMultiLang, 'mandatory': False, 'order': 4}
+    } | OTHER
+
+
+class FlowDataSetInformation(DotDict):
+
+    VALID = {
+        'UUID': {'xml_type': 'nms:common', 'type': UUID, 'mandatory': True, 'order': 1, 'unique': True},
+        'name': {'type': FlowName, 'mandatory': False, 'order': 2, 'unique': True},
+        'synonyms': {'xml_type': 'nms:common', 'type': FTMultiLang, 'mandatory': False, 'order': 3},
+        'classificationInformation': {'type': FlowClassificationInformation, 'mandatory': False, 'order': 4, 'unique': True},
+        'CASNumber': {'type': CASNumber, 'mandatory': False, 'order': 5, 'unique': True},
+        'sumFormula': {'type': String, 'mandatory': False, 'order': 6, 'unique': True},
+        'generalComment': {'xml_type': 'nms:common', 'type': FTMultiLang, 'mandatory': False, 'order': 7}
+    } | OTHER
+
+
+class FlowQuantitativeReference(DotDict):
+
+    VALID = {
+        'referenceToReferenceFlowProperty': {'type': Int5, 'mandatory': True, 'order': 1, 'unique': True}
+    } | OTHER
+
+
+class FlowGeography(DotDict):
+
+    VALID = {
+        'locationOfSupply': {'type': StringMultiLang, 'mandatory': True, 'order': 1}
+    } | OTHER
+
+
+class FlowTechnology(DotDict):
+
+    VALID = {
+        'technologicalApplicability': {'type': FTMultiLang, 'mandatory': False, 'order': 1},
+        'referenceToTechnicalSpecification': {'type': ILCD1Reference, 'mandatory': False, 'order': 2}
+    } | OTHER
+
+
+class FlowLCIMethod(DotDict):
+
+    VALID = {
+        'typeOfDataSet': {'type': return_enum(FlowTypeValues), 'mandatory': True, 'order': 1, 'unique': True}
+    } | OTHER
+
+
+class FlowModellingAndValidation(DotDict):
+
+    VALID = {
+        'LCIMethod': {'type': FlowLCIMethod, 'mandatory': False, 'order': 1, 'unique': True},
+        'complianceDeclarations': {'type': ReferenceDataSetComplianceDeclarations, 'mandatory': False, 'order': 2, 'unique': True}
+    } | OTHER
+
+
+class FlowProperties(DotDict):
+
+    VALID = {
+        'flowProperty': {'type': ILCD1FlowProperty, 'mandatory': True, 'order': 1}
+    } | OTHER
+
+
+class FlowPropertyDataSetInformation(DotDict):
+
+    VALID = {
+        'UUID': {'xml_type': 'nms:common', 'type': UUID, 'mandatory': True, 'order': 1, 'unique': True},
+        'name': {'xml_type': 'nms:common', 'type': StringMultiLang, 'mandatory': False, 'order': 2},
+        'synonyms': {'xml_type': 'nms:common', 'type': FTMultiLang, 'mandatory': False, 'order': 3},
+        'classificationInformation': {'type': ClassificationInformation, 'mandatory': False, 'order': 4, 'unique': True},
+        'generalComment': {'xml_type': 'nms:common', 'type': FTMultiLang, 'mandatory': False, 'order': 5}
+    } | OTHER
+
+
+class FlowPropertyQuantitativeReference(DotDict):
+
+    VALID = {
+        'referenceToReferenceUnitGroup': {'type': ILCD1Reference, 'mandatory': True, 'order': 1, 'unique': True}
+    } | OTHER
+
+
+class FlowPropertyDataSourcesTreatmentAndRepresentativeness(DotDict):
+
+    VALID = {
+        'referenceToDataSource': {'type': ILCD1Reference, 'mandatory': False, 'order': 1}
+    } | OTHER
+
+
+class FlowPropertyModellingAndValidation(DotDict):
+
+    VALID = {
+        'dataSourcesTreatmentAndRepresentativeness': {'type': FlowPropertyDataSourcesTreatmentAndRepresentativeness, 'mandatory': False, 'order': 1, 'unique': True},
+        'complianceDeclarations': {'type': ReferenceDataSetComplianceDeclarations, 'mandatory': False, 'order': 2, 'unique': True}
+    } | OTHER
+
+
+class UnitGroupDataSetInformation(DotDict):
+
+    VALID = {
+        'UUID': {'xml_type': 'nms:common', 'type': UUID, 'mandatory': True, 'order': 1, 'unique': True},
+        'name': {'xml_type': 'nms:common', 'type': StringMultiLang, 'mandatory': False, 'order': 2},
+        'classificationInformation': {'type': ClassificationInformation, 'mandatory': False, 'order': 3, 'unique': True},
+        'generalComment': {'xml_type': 'nms:common', 'type': FTMultiLang, 'mandatory': False, 'order': 4}
+    } | OTHER
+
+
+class UnitGroupQuantitativeReference(DotDict):
+
+    VALID = {
+        'referenceToReferenceUnit': {'type': Int5, 'mandatory': True, 'order': 1, 'unique': True}
+    } | OTHER
+
+
+class Unit(DotDict):
+
+    VALID = {
+        'dataSetInternalID': {'xml_type': 'attribute', 'type': Int5, 'mandatory': False, 'order': 0, 'unique': True},
+        'name': {'type': String, 'mandatory': True, 'order': 1, 'unique': True},
+        'meanValue': {'type': Real, 'mandatory': True, 'order': 2, 'unique': True},
+        'generalComment': {'type': StringMultiLang, 'mandatory': False, 'order': 3}
+    } | OTHER
+
+
+class Units(DotDict):
+
+    VALID = {
+        'unit': {'type': Unit, 'mandatory': True, 'order': 1}
+    } | OTHER
+
+
+class ReferenceDataSetModellingAndValidation(DotDict):
+
+    VALID = {
+        'complianceDeclarations': {'type': ReferenceDataSetComplianceDeclarations, 'mandatory': False, 'order': 1, 'unique': True}
+    } | OTHER
+
+
+class ContactDataSetInformation(DotDict):
+
+    VALID = {
+        'UUID': {'xml_type': 'nms:common', 'type': UUID, 'mandatory': True, 'order': 1, 'unique': True},
+        'shortName': {'xml_type': 'nms:common', 'type': StringMultiLang, 'mandatory': False, 'order': 2},
+        'name': {'xml_type': 'nms:common', 'type': StringMultiLang, 'mandatory': False, 'order': 3},
+        'classificationInformation': {'type': ClassificationInformation, 'mandatory': False, 'order': 4, 'unique': True},
+        'contactAddress': {'type': STMultiLang, 'mandatory': False, 'order': 5},
+        'telephone': {'type': String, 'mandatory': False, 'order': 6, 'unique': True},
+        'telefax': {'type': String, 'mandatory': False, 'order': 7, 'unique': True},
+        'email': {'type': String, 'mandatory': False, 'order': 8, 'unique': True},
+        'WWWAddress': {'type': ST, 'mandatory': False, 'order': 9, 'unique': True},
+        'centralContactPoint': {'type': STMultiLang, 'mandatory': False, 'order': 10},
+        'contactDescriptionOrComment': {'type': STMultiLang, 'mandatory': False, 'order': 11},
+        'referenceToContact': {'type': ILCD1Reference, 'mandatory': False, 'order': 12},
+        'referenceToLogo': {'type': ILCD1Reference, 'mandatory': False, 'order': 13, 'unique': True}
+    } | OTHER
+
+
+class ReferenceToDigitalFile(DotDict):
+
+    VALID = {
+        'uri': {'xml_type': 'attribute', 'type': Str, 'mandatory': False, 'order': 0, 'unique': True}
+    }
+
+
+class SourceDataSetInformation(DotDict):
+
+    VALID = {
+        'UUID': {'xml_type': 'nms:common', 'type': UUID, 'mandatory': True, 'order': 1, 'unique': True},
+        'shortName': {'xml_type': 'nms:common', 'type': StringMultiLang, 'mandatory': False, 'order': 2},
+        'classificationInformation': {'type': ClassificationInformation, 'mandatory': False, 'order': 3, 'unique': True},
+        'sourceCitation': {'type': ST, 'mandatory': False, 'order': 4, 'unique': True},
+        'publicationType': {'type': return_enum(PublicationTypeValues), 'mandatory': False, 'order': 5, 'unique': True},
+        'sourceDescriptionOrComment': {'type': FTMultiLang, 'mandatory': False, 'order': 6},
+        'referenceToDigitalFile': {'type': ReferenceToDigitalFile, 'mandatory': False, 'order': 7},
+        'referenceToContact': {'type': ILCD1Reference, 'mandatory': False, 'order': 8},
+        'referenceToLogo': {'type': ILCD1Reference, 'mandatory': False, 'order': 9, 'unique': True}
+    } | OTHER
+
+
+def _remove_empty(value):
+    if isinstance(value, dict):
+        return {
+            key: _remove_empty(entry)
+            for key, entry in value.items()
+            if entry is not None
+        }
+
+    if isinstance(value, list):
+        return [
+            _remove_empty(entry)
+            for entry in value
+            if entry is not None
+        ]
+
+    return value
+
+
+def _remove_prefix(value, prefix):
+    if isinstance(value, dict):
+        return {
+            key.removeprefix(prefix): _remove_prefix(entry, prefix)
+            for key, entry in value.items()
+        }
+
+    if isinstance(value, list):
+        return [_remove_prefix(entry, prefix) for entry in value]
+
+    return value
+
+
+def _xml_data(file, root):
+    if isinstance(file, (bytes, bytearray)):
+        data = xmltodict.parse(file)
+    else:
+        with open(file, "rb") as f:
+            data = xmltodict.parse(f)
+
+    key = next(key for key in data if key.split(':')[-1] == root)
+
+    if ':' in key:
+        prefix = key.rsplit(':', 1)[0] + ':'
+        data[key] = _remove_prefix(data[key], prefix)
+
+    return _remove_empty(data[key])
+
+
+class ILCD1MasterDataStructure(StructureTemplate):
+
+    ROOT = None
+    NAMESPACE = None
+    INFORMATION = None
+    FIELDS = {}
+    INFORMATION_FIELDS = ()
+    DATA_FIELDS = ()
+
+    def __init__(self):
+        for key, type_ in self.FIELDS.items():
+            setattr(self, key, type_())
+
+    def get_filename(self, hash_):
+        return self.dataSetInformation.get('UUID')+hash_
+
+    @classmethod
+    def from_xml(cls, file):
+        data = _xml_data(file, cls.ROOT)
+        information = data[cls.INFORMATION]
+        obj = cls()
+
+        for key in cls.INFORMATION_FIELDS:
+            if key in information:
+                setattr(obj, key, cls.FIELDS[key](information[key]))
+
+        if "common:other" in information:
+            obj.informationOther = information["common:other"]
+
+        for key in cls.DATA_FIELDS:
+            if key in data:
+                setattr(obj, key, cls.FIELDS[key](data[key]))
+
+        if "common:other" in data:
+            obj.other = data["common:other"]
+
+        return obj
+
+    def get_dict(self):
+        information = {
+            'dataSetInformation': self.dataSetInformation.get_dict()
+        }
+        for key in self.INFORMATION_FIELDS[1:]:
+            value = getattr(self, key)
+            if value:
+                information[key] = value.get_dict()
+
+        if hasattr(self, "informationOther"):
+            information["common:other"] = self.informationOther
+
+        data = {
+            '@xmlns': self.NAMESPACE,
+            '@xmlns:common': 'http://lca.jrc.it/ILCD/Common',
+            '@version': '1.1',
+            self.INFORMATION: information
+        }
+        for key in self.DATA_FIELDS:
+            value = getattr(self, key)
+            if value:
+                data[key] = value.get_dict()
+
+        if hasattr(self, "other"):
+            data["common:other"] = self.other
+
+        return {self.ROOT: data}
+
+
+class ILCD1FlowStructure(ILCD1MasterDataStructure):
+
+    ROOT = 'flowDataSet'
+    NAMESPACE = 'http://lca.jrc.it/ILCD/Flow'
+    INFORMATION = 'flowInformation'
+    FIELDS = {
+        'dataSetInformation': FlowDataSetInformation,
+        'quantitativeReference': FlowQuantitativeReference,
+        'geography': FlowGeography,
+        'technology': FlowTechnology,
+        'modellingAndValidation': FlowModellingAndValidation,
+        'administrativeInformation': FlowAdministrativeInformation,
+        'flowProperties': FlowProperties
+    }
+    INFORMATION_FIELDS = ('dataSetInformation', 'quantitativeReference', 'geography', 'technology')
+    DATA_FIELDS = ('modellingAndValidation', 'administrativeInformation', 'flowProperties')
+
+
+class ILCD1FlowPropertyStructure(ILCD1MasterDataStructure):
+
+    ROOT = 'flowPropertyDataSet'
+    NAMESPACE = 'http://lca.jrc.it/ILCD/FlowProperty'
+    INFORMATION = 'flowPropertiesInformation'
+    FIELDS = {
+        'dataSetInformation': FlowPropertyDataSetInformation,
+        'quantitativeReference': FlowPropertyQuantitativeReference,
+        'modellingAndValidation': FlowPropertyModellingAndValidation,
+        'administrativeInformation': ReferenceDataSetAdministrativeInformation
+    }
+    INFORMATION_FIELDS = ('dataSetInformation', 'quantitativeReference')
+    DATA_FIELDS = ('modellingAndValidation', 'administrativeInformation')
+
+
+class ILCD1UnitGroupStructure(ILCD1MasterDataStructure):
+
+    ROOT = 'unitGroupDataSet'
+    NAMESPACE = 'http://lca.jrc.it/ILCD/UnitGroup'
+    INFORMATION = 'unitGroupInformation'
+    FIELDS = {
+        'dataSetInformation': UnitGroupDataSetInformation,
+        'quantitativeReference': UnitGroupQuantitativeReference,
+        'modellingAndValidation': ReferenceDataSetModellingAndValidation,
+        'administrativeInformation': ReferenceDataSetAdministrativeInformation,
+        'units': Units
+    }
+    INFORMATION_FIELDS = ('dataSetInformation', 'quantitativeReference')
+    DATA_FIELDS = ('modellingAndValidation', 'administrativeInformation', 'units')
+
+
+class ILCD1ContactStructure(ILCD1MasterDataStructure):
+
+    ROOT = 'contactDataSet'
+    NAMESPACE = 'http://lca.jrc.it/ILCD/Contact'
+    INFORMATION = 'contactInformation'
+    FIELDS = {
+        'dataSetInformation': ContactDataSetInformation,
+        'administrativeInformation': ReferenceDataSetAdministrativeInformation
+    }
+    INFORMATION_FIELDS = ('dataSetInformation',)
+    DATA_FIELDS = ('administrativeInformation',)
+
+
+class ILCD1SourceStructure(ILCD1MasterDataStructure):
+
+    ROOT = 'sourceDataSet'
+    NAMESPACE = 'http://lca.jrc.it/ILCD/Source'
+    INFORMATION = 'sourceInformation'
+    FIELDS = {
+        'dataSetInformation': SourceDataSetInformation,
+        'administrativeInformation': ReferenceDataSetAdministrativeInformation
+    }
+    INFORMATION_FIELDS = ('dataSetInformation',)
+    DATA_FIELDS = ('administrativeInformation',)
+
 
 class ILCD1Structure(StructureTemplate):
     
@@ -509,28 +974,70 @@ class ILCD1Structure(StructureTemplate):
             f"{self.time.get('referenceYear')} - {self.time.get('dataSetValidUntil')}"+\
             f"{hash_}"
         return name.replace('/', ' per ')
-        
+
+    @classmethod
+    def from_xml(cls, file):
+        if not isinstance(file, (bytes, bytearray)) and zipfile.is_zipfile(file):
+            return ILCD1Package.from_xml(file)
+
+        data = _xml_data(file, "processDataSet")
+        process = data["processInformation"]
+        obj = cls()
+
+        for key in (
+            "dataSetInformation",
+            "quantitativeReference",
+            "time",
+            "geography",
+            "technology",
+            "mathematicalRelations",
+        ):
+            if key in process:
+                setattr(obj, key, type(getattr(obj, key))(process[key]))
+
+        if "common:other" in process:
+            obj.processInformationOther = process["common:other"]
+
+        for key in (
+            "modellingAndValidation",
+            "administrativeInformation",
+            "exchanges",
+        ):
+            if key in data:
+                setattr(obj, key, type(getattr(obj, key))(data[key]))
+
+        if "common:other" in data:
+            obj.other = data["common:other"]
+
+        return obj
+
     def get_dict(self):
-        return {
-            'processDataSet': {
-                '@xmlns': 'http://lca.jrc.it/ILCD/Process',
-                '@xmlns:common': 'http://lca.jrc.it/ILCD/Common',
-                '@version': '1.1', 
-                '@locations': '../ILCDLocations.xml',
-                '@metaDataOnly': "false",
-                'processInformation': {
-                    'dataSetInformation': self.dataSetInformation.get_dict(),
-                    'quantitativeReference': self.quantitativeReference.get_dict(),
-                    'time': self.time.get_dict(),
-                    'geography': self.geography.get_dict(),
-                    'technology': self.technology.get_dict(),
-                    'mathematicalRelations': self.mathematicalRelations.get_dict()
-                    },
-                'modellingAndValidation': self.modellingAndValidation.get_dict(),
-                'administrativeInformation': self.administrativeInformation.get_dict(),
-                'exchanges': self.exchanges.get_dict()
-                }
-            }
+        process = {
+            'dataSetInformation': self.dataSetInformation.get_dict(),
+            'quantitativeReference': self.quantitativeReference.get_dict(),
+            'time': self.time.get_dict(),
+            'geography': self.geography.get_dict(),
+            'technology': self.technology.get_dict(),
+            'mathematicalRelations': self.mathematicalRelations.get_dict()
+        }
+        if hasattr(self, "processInformationOther"):
+            process["common:other"] = self.processInformationOther
+
+        data = {
+            '@xmlns': 'http://lca.jrc.it/ILCD/Process',
+            '@xmlns:common': 'http://lca.jrc.it/ILCD/Common',
+            '@version': '1.1',
+            '@locations': '../ILCDLocations.xml',
+            '@metaDataOnly': "false",
+            'processInformation': process,
+            'modellingAndValidation': self.modellingAndValidation.get_dict(),
+            'administrativeInformation': self.administrativeInformation.get_dict(),
+            'exchanges': self.exchanges.get_dict()
+        }
+        if hasattr(self, "other"):
+            data["common:other"] = self.other
+
+        return {'processDataSet': data}
 
 class OLCAILCD1Structure(ILCD1Structure):
     # https://www.javatips.net/api/olca-modules-master/olca-ilcd/src/main/java/org/openlca/ilcd/util/ProcessInfoExtension.java
@@ -554,6 +1061,61 @@ class OLCAILCD1Structure(ILCD1Structure):
         p = super().get_dict()
         p['processDataSet']['@xmlns:olca'] = 'http://openlca.org/ilcd-extensions'
         return p
+
+
+class ILCD1Package:
+
+    DATA_SETS = {
+        'processes': ('processes', ILCD1Structure),
+        'flows': ('flows', ILCD1FlowStructure),
+        'sources': ('sources', ILCD1SourceStructure),
+        'contacts': ('contacts', ILCD1ContactStructure),
+        'flowproperties': ('flow_properties', ILCD1FlowPropertyStructure),
+        'unitgroups': ('unit_groups', ILCD1UnitGroupStructure)
+    }
+
+    REFERENCES = {
+        'process data set': 'processes',
+        'flow data set': 'flows',
+        'source data set': 'sources',
+        'contact data set': 'contacts',
+        'flow property data set': 'flow_properties',
+        'unit group data set': 'unit_groups'
+    }
+
+    def __init__(self):
+        self.processes = {}
+        self.flows = {}
+        self.sources = {}
+        self.contacts = {}
+        self.flow_properties = {}
+        self.unit_groups = {}
+
+    @classmethod
+    def from_xml(cls, file):
+        obj = cls()
+
+        with zipfile.ZipFile(file) as z:
+            for name in z.namelist():
+                if not name.endswith(".xml"):
+                    continue
+
+                parts = name.split("/")
+                for folder, (collection, structure) in cls.DATA_SETS.items():
+                    if folder not in parts:
+                        continue
+
+                    data = structure.from_xml(z.read(name))
+                    getattr(obj, collection)[data.dataSetInformation.get("UUID")] = data
+                    break
+
+        return obj
+
+    def resolve(self, reference):
+        collection = self.REFERENCES.get(reference.get("type"))
+        if collection is None:
+            return None
+        return getattr(self, collection).get(reference.get("refObjectId"))
 
 # TODO Retirar
 
@@ -662,3 +1224,5 @@ class ECS2ToILCD1DataNotConverted(DotDict):
         'flows': {'type': Flow, 'mandatory': True},
         'parameter': {'type': Parameter, 'mandatory': True}
     }
+
+

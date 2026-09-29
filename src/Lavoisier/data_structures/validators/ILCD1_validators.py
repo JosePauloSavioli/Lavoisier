@@ -6,6 +6,8 @@ Created on Sun Jan 29 20:27:53 2023
 @author: jotape42p
 """
 
+from decimal import Decimal
+
 from .enumerations import Languages
 from .general_validators import (
     list_add,
@@ -15,16 +17,30 @@ from .general_validators import (
     MultiLangString,
     return_limited_int,
     return_limited_string,
-    return_pattern
+    return_pattern,
+    Real
     )
 
 Int1 = return_limited_int(1)
+Int5 = return_limited_int(5, func=lambda x,y: x>y)
 Int6 = return_limited_int(6, func=lambda x,y: x>y)
 Int6List = return_limited_int(6, func=lambda x,y: x>y, add_func=list_add)
 Year = return_limited_int(4)
 
 Version = return_pattern(r'\d{2}\.\d{2}(\.\d{3})?')
+CASNumber = return_pattern(r'\d{1,7}-\d{2}-\d')
 GIS = return_pattern(r'\s*([\-+]?(([0-8]?\d)(\.\d*)?)|(90(\.0{0,2})?))\s*;\s*(([\-+]?(((1[0-7]\d)(\.\d*)?)|([0-9]\d(\.\d*)?)|(\d(\.\d*)?)|(180(\.[0]*)?))))\s*')
+
+
+class Perc(Real):
+    def _validate(self, x):
+        value = super()._validate(x)
+        decimal = Decimal(str(x)).normalize()
+        digits = len(decimal.as_tuple().digits)
+        fraction = max(-decimal.as_tuple().exponent, 0)
+        if digits > 5 or fraction > 3:
+            raise ValueError(f'{self.__class__.__name__}: {x} is not a valid ILCD percentage')
+        return value
 
 class DateTime(Date):
     def end(self):
@@ -41,7 +57,17 @@ MatV = return_limited_string(50)
 
 class MultiLang(MultiLangString):
     
+    _default_lang = 'en'
+    
     def _validate(self, x):
+        if x is None:
+            x = ''
+        if isinstance(x, dict):
+            x = x.copy()
+            if x.get('@xml:lang') == '':
+                x['@xml:lang'] = self._default_lang
+            if x.get('@lang') == '':
+                x['@lang'] = self._default_lang
         x = super()._validate(x)
         if x['@lang'] not in Languages:
             raise ValueError(f'{self.__class__.__name__}: {x["@lang"]} is not a valid language')
@@ -53,3 +79,4 @@ class FTMultiLang(MultiLang):
     _text = FT
 class STMultiLang(MultiLang):
     _text = ST
+

@@ -29,7 +29,7 @@ class StructureFactory:
     def __init__(self, output_name):
         self.map_struct = self._mapping.get(output_name, None)
         
-    def get_structure(self, struct, version):
+    def get_structure(self, version, struct=None):
         if struct is None:
             return self.map_struct[version]
         else:

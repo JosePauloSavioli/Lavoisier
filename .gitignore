@@ -1,6 +1,6 @@
 # Deployment
+src/Lavoisier/Lavoisier_Default_Files
 src/static
-src/uploads
 src/app.py
 scripts/
 docker/

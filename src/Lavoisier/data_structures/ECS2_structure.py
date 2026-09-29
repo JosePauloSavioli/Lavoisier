@@ -6,6 +6,7 @@ Created on Mon Oct 31 19:20:32 2022
 @author: jotape42p
 """
 
+import xmltodict
 from .main import DotDict
 from .abstractions import StructureTemplate
 from .validators.general_validators import (
@@ -576,7 +577,7 @@ class Activity(DotDict):
         'inheritanceDepth': {'xml_type': 'attribute', 'type': InheritanceDepthINT, 'mandatory': True, 'order': 0, 'unique': False}, # [DEFAULT] Actualy not mandatory but can be filled with default
         'type': {'xml_type': 'attribute', 'type': TypeINT, 'mandatory': True, 'order': 0, 'unique': True},
         'specialActivityType': {'xml_type': 'attribute', 'type': SpecialActivityTypeINT, 'mandatory': True, 'order': 0, 'unique': False}, # Actualy unique, but double entry
-        'energyValues': {'xml_type': 'attribute', 'type': EnergyValuesINT, 'mandatory': True, 'order': 0, 'unique': False}, # DOUBLE [DEFAULT]
+        'energyValues': {'xml_type': 'attribute', 'type': EnergyValuesINT, 'mandatory': False, 'order': 0, 'unique': False}, # DOUBLE [DEFAULT]
         'masterAllocationPropertyId': {'xml_type': 'attribute', 'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
         'masterAllocationPropertyIdOverwrittenByChild': {'xml_type': 'attribute', 'type': Bool, 'mandatory': False, 'order': 0, 'unique': True},
         'masterAllocationPropertyContextId': {'xml_type': 'attribute', 'type': UUID, 'mandatory': False, 'order': 0, 'unique': True},
@@ -814,7 +815,7 @@ class ImpactIndicator(DotDict):
 class FlowData(DotDict):
     
     VALID = {
-        'intermediateExchange': {'type': IntermediateExchange, 'mandatory': True, 'order': 1, 'unique': False},
+        'intermediateExchange': {'type': IntermediateExchange, 'mandatory': False, 'order': 1, 'unique': False},
         'elementaryExchange': {'type': ElementaryExchange, 'mandatory': False, 'order': 2, 'unique': False},
         'parameter': {'type': Parameter, 'mandatory': False, 'order': 3, 'unique': False},
         'impactIndicator': {'type': ImpactIndicator, 'mandatory': False, 'order': 4, 'unique': False}
@@ -836,7 +837,7 @@ class ECS2Structure(StructureTemplate):
         self.property = ECS2CustomExchange()
         self.userMaster = ECS2UsedUserMasterData()
         
-        # User master (testing)
+        # User master
         self.activityNameMaster = ActivityNameMaster
         self.classificationSystemMaster = ClassificationSystemMaster
         self.companyMaster = CompanyMaster
@@ -873,12 +874,43 @@ class ECS2Structure(StructureTemplate):
             f"{ads.timePeriod.get('startDate')[:4]} - {ads.timePeriod.get('endDate')[:4]}"+\
             f"{hash_}"
         return name.replace('/', ' per ')
-        
+    
+    @classmethod
+    def from_xml(cls, file):
+        with open(file) as f:
+            data = xmltodict.parse(f.read())["ecoSpold"]
+
+        dataset_type = "activityDataset" if "activityDataset" in data else "childActivityDataset"
+        process = data[dataset_type]
+        obj = cls()
+        obj.main_activity_type = dataset_type
+        obj.activityDescription = ActivityDescription(process["activityDescription"])
+        obj.flowData = FlowData(process["flowData"])
+        obj.modellingAndValidation = ModellingAndValidation(process["modellingAndValidation"])
+        obj.administrativeInformation = AdministrativeInformation(process["administrativeInformation"])
+        if "usedUserMasterData" in data:
+            obj.userMaster = ECS2UsedUserMasterData(data["usedUserMasterData"])
+
+        return obj
+    
+    def to_canonical(self, config):
+        from ..conversions import ECS2ToCanonical
+        return ECS2ToCanonical(self, config).convert()
+    
+    @classmethod
+    def from_canonical(cls, canonical, config):
+        from ..conversions.canonical_to_ECS2_conversion import CanonicalToECS2
+        return CanonicalToECS2(canonical, cls, config).convert()
+    
     def get_dict(self):
         return {
             'ecoSpold': {
-                '@xmlns': 'http://www.EcoInvent.org/EcoSpold02',
-                'activityDataset': { # self.main_activity_type [child datasets are not accept by ecoeditor]
+                '@xmlns': (
+                    'http://www.EcoInvent.org/EcoSpold02Child'
+                    if self.main_activity_type == 'childActivityDataset'
+                    else 'http://www.EcoInvent.org/EcoSpold02'
+                ),
+                self.main_activity_type: {
                     'activityDescription': self.activityDescription.get_dict(),
                     'flowData': self.flowData.get_dict(),
                     'modellingAndValidation': self.modellingAndValidation.get_dict(),
@@ -935,3 +967,4 @@ class ILCD1ToECS2DataNotConverted(DotDict):
         'referenceToOwnershipOfDataSet': {'type': LIST, 'mandatory': False},
         'accessRestrictions': {'type': Str, 'mandatory': False},
     }
+
